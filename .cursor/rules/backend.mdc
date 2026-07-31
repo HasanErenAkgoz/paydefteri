@@ -1,0 +1,38 @@
+---
+description: ASP.NET Core / Clean Architecture backend conventions and domain formulas
+globs: "**/src/api/**/*.cs,**/*.cs"
+alwaysApply: false
+---
+
+# Backend
+
+## Layers
+- **Api**: thin controllers, auth, mapping DTOs ↔ commands
+- **Application**: use cases, FluentValidation, interfaces
+- **Domain**: entities, share/settlement math, invariants
+- **Infrastructure**: EF Core, JWT, file/export services
+
+## Money & dates
+- Money: `decimal` only (never `double`/`float`)
+- Persist UTC; display `tr-TR` on the client
+- Installment due dates: store as `DateOnly`; accept TR `DD.MM.YYYY` at boundaries
+
+## Share formulas (must match HTML spec)
+```
+custom  → customShares[partnerId]
+equal   → totalAmount / partnersCount
+default → totalAmount * partner.defaultPct / 100
+```
+- Validate: `defaultPct` sum ≈ 100; custom shares sum = `totalAmount`
+- Status: `paidCount == 0` → pending; `< partners` → partial; else full
+
+## Settlement
+- If `paidByPartnerId != ownerPartnerId`, credit payer / debit owner by share amount
+- N-party: compute full net balances (not single debtor/creditor pair)
+- `SettleUp` must audit — do not silently rewrite payment history without an event
+
+## Conventions
+- Controllers call Application handlers only
+- Soft delete + audit fields on mutable aggregates
+- ProblemDetails for errors; no stack traces to clients
+- Import JSON: schema-validate before mutate

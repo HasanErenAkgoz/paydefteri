@@ -1,0 +1,34 @@
+<section class="auth-page">
+  <form class="auth-card" (ngSubmit)="submit()">
+    <h1>Kayıt Ol</h1>
+    <p class="muted">Taksitle’ye katılın — yeni hesap oluşturun.</p>
+
+    @if (error()) {
+      <div class="alert alert-danger">{{ error() }}</div>
+    }
+
+    <label>
+      Görünen ad
+      <input type="text" name="displayName" [(ngModel)]="displayName" required autocomplete="name" />
+    </label>
+
+    <label>
+      E-posta
+      <input type="email" name="email" [(ngModel)]="email" required autocomplete="email" />
+    </label>
+
+    <label>
+      Şifre
+      <input type="password" name="password" [(ngModel)]="password" required minlength="6" autocomplete="new-password" />
+    </label>
+
+    <button class="btn btn-primary" type="submit" [disabled]="loading()">
+      {{ loading() ? 'Kaydediliyor…' : 'Kayıt Ol' }}
+    </button>
+
+    <p class="auth-footer">
+      Zaten hesabınız var mı?
+      <a routerLink="/login">Giriş yapın</a>
+    </p>
+  </form>
+</section>

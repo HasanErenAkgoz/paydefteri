@@ -1,0 +1,28 @@
+---
+description: Future AI features (OCR, PDF plan parse, SMS match) — human-in-the-loop only
+globs: "**/ai/**,**/*Ocr*,**/*Ai*,**/AiProcessing/**"
+alwaysApply: false
+---
+
+# AI Processing
+
+## Status
+Not in the HTML prototype. Treat as **optional future** capabilities — do not block MVP parity.
+
+## Allowed capabilities (when built)
+| Capability | Input | Output |
+|------------|-------|--------|
+| Dekont OCR | receipt image | draft note + paidDate suggestion |
+| Plan PDF parse | company ödeme planı PDF | draft installment list |
+| Bank SMS match | SMS text | suggested installment + partner |
+
+## Hard rules
+- **Opt-in** only — never auto-run on every upload without user intent
+- AI output is a **draft**; user must confirm before persist
+- Never silently overwrite payments, shares, or totals
+- Keep prompts/PII out of third-party logs where possible; document data flow
+- Isolate AI in Application services behind interfaces for easy disable
+
+## Anti-patterns
+- Treating template marketing numbers as ground truth without validation
+- Auto-settlement or auto-mark-paid from AI confidence scores alone

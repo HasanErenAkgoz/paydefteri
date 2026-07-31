@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çok Ortaklı Borç & Taksit Takip Sistemi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #26334d;
+            --border-color: rgba(99, 102, 241, 0.18);
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0284c7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        /* Top Navigation */
+        .navbar {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 14px 24px;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+
+        .brand-text h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            gap: 4px;
+        }
+
+        .nav-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-tab.active {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-tab:hover:not(.active) {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Layout Container */
+        .container {
+            max-width: 1400px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+        }
+
+        /* Views */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Special Highlights Grid */
+        .highlights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .highlight-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .highlight-card.delivery-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(15, 23, 42, 0.9));
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .highlight-card.settlement-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(15, 23, 42, 0.9));
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .highlight-card.alert-card {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.9));
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .card-header-sm {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .card-title-sm {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .countdown-timer {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #34d399;
+            margin-bottom: 4px;
+        }
+
+        .settlement-balance {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #818cf8;
+            margin-bottom: 8px;
+        }
+
+        /* Metric Cards Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .metric-card .title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .metric-card .value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-card .subtitle {
+            font-size: 0.75rem;
+            margin-top: 6px;
+            color: var(--text-muted);
+        }
+
+        .partner-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .partner-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px;
+            border-left: 4px solid var(--partner-color, var(--primary));
+        }
+
+        .partner-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .partner-name {
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .partner-badge {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--partner-color, var(--primary));
+        }
+
+        .partner-pct {
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+        }
+
+        .partner-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .partner-stats span { color: var(--text-muted); }
+        .partner-stats strong { color: var(--text-main); }
+
+        /* Progress Bar */
+        .progress-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-bg {
+            height: 10px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            border-radius: 100px;
+            transition: width 0.5s ease;
+        }
+
+        /* Filter Controls */
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 16px 10px 38px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.88rem;
+            outline: none;
+        }
+
+        .search-box input:focus { border-color: var(--primary-light); }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn.active {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: none;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .btn-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover { background: rgba(16, 185, 129, 0.25); }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.25); }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        /* Table Design */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .table-responsive { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 850px;
+        }
+
+        thead th {
+            background: #172033;
+            padding: 14px 16px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover { background: rgba(99, 102, 241, 0.04); }
+
+        tbody tr.paid-row { background: rgba(16, 185, 129, 0.04); }
+        tbody tr.upcoming-urgent { background: rgba(245, 158, 11, 0.06); border-left: 3px solid #f59e0b; }
+
+        tbody td {
+            padding: 14px 16px;
+            font-size: 0.88rem;
+            color: #cbd5e1;
+            vertical-align: middle;
+        }
+
+        .installment-title {
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .installment-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .amount-badge {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        /* Checkbox styling */
+        .partner-check-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .check-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 2px solid #475569;
+            background: rgba(15, 23, 42, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: transparent;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .check-btn.checked {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .check-btn:hover:not(.checked) {
+            border-color: var(--primary-light);
+            transform: scale(1.05);
+        }
+
+        .partner-share-info { line-height: 1.2; }
+        .partner-share-amount { font-weight: 700; font-size: 0.85rem; color: var(--text-main); }
+        .partner-share-pct { font-size: 0.7rem; color: var(--text-muted); }
+
+        .note-badge {
+            display: inline-block;
+            font-size: 0.68rem;
+            color: #a78bfa;
+            background: rgba(167, 139, 250, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 3px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-pill.full { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .status-pill.partial { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .status-pill.pending { background: rgba(148, 163, 184, 0.12); color: #94a3b8; }
+
+        /* Config Form Styles */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .form-input:focus, .form-select:focus { border-color: var(--primary-light); }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .partners-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .partner-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: 10px;
+        }
+
+        .color-picker {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            background: none;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 580px;
+            padding: 28px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title { font-size: 1.2rem; font-weight: 800; }
+        .close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; }
+
+        .custom-shares-box {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+
+        /* Quick Templates Cards */
+        .template-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .template-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .template-card:hover {
+            border-color: var(--primary-light);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .template-card h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--primary-light);
+        }
+
+        .template-card p { font-size: 0.78rem; color: var(--text-muted); }
+
+        /* PRINT STYLES */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                padding: 0 !important;
+            }
+            .navbar, .controls-bar, .nav-tabs, .btn, .filter-buttons, .search-box, .modal-overlay, #view-setup, #view-data {
+                display: none !important;
+            }
+            .view-section { display: block !important; }
+            .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .card, .table-card, .metric-card, .highlight-card, .progress-wrapper {
+                background: #ffffff !important;
+                border: 1px solid #ddd !important;
+                color: #000000 !important;
+                box-shadow: none !important;
+            }
+            table { width: 100% !important; color: #000 !important; }
+            thead th { background: #f1f5f9 !important; color: #000 !important; border-bottom: 2px solid #333 !important; }
+            tbody tr { border-bottom: 1px solid #eee !important; }
+            tbody td { color: #000 !important; }
+            .check-btn { border: 1px solid #000 !important; }
+            .check-btn.checked { background: #10b981 !important; color: #fff !important; }
+            .print-signature-block {
+                display: block !important;
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 1px solid #ccc;
+            }
+        }
+
+        .print-signature-block { display: none; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar { padding: 12px 16px; }
+            .container { padding: 0 12px; margin-top: 16px; }
+            .nav-tabs { width: 100%; justify-content: space-between; }
+            .nav-tab { padding: 6px 12px; font-size: 0.78rem; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .card { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="brand">
+                <div class="brand-icon">🤝</div>
+                <div class="brand-text">
+                    <h1 id="navPlanTitle">Borç & Taksit Takip</h1>
+                    <p id="navPlanSubtitle">Çok Ortaklı Dinamik Finans Takibi</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <div class="nav-tabs">
+                    <button class="nav-tab active" onclick="switchView('dashboard')">
+                        📊 Takip Tablosu
+                    </button>
+                    <button class="nav-tab" onclick="switchView('setup')">
+                        ⚙️ Plan & Ortaklar
+                    </button>
+                    <button class="nav-tab" onclick="switchView('data')">
+                        💾 Yedek & Rapor
+                    </button>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="window.print()">
+                    🖨️ Yazdır / PDF
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- ================= VIEW 1: DASHBOARD ================= -->
+        <div id="view-dashboard" class="view-section active">
+
+            <!-- Highlights Grid (Tahsisat Sayaç, İç Mahsuplaşma, Yaklaşan Vade) -->
+            <div class="highlights-grid">
+                <!-- Tahsisat / Teslimat Sayaç Card -->
+                <div class="highlight-card delivery-card">
+                    <div>
+                        <div class="card-header-sm">
+                            <span class="card-title-sm">🏠 Ev / Araba Teslimatı</span>
+                            <span class="status-pill full" id="deliveryBadge">6. Taksit</span>
+                        </div>
+                        <div class="countdown-timer" id="deliveryTimer">-- Ay -- Gün</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);" id="deliverySub">
+                            Tahsisat Hedef Tarihi: <strong>05.10.2026</strong>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <button class="btn btn-secondary btn-sm" onclick="switchView('setup')" style="width:100%; justify-content:center;">
+                            🎯 Teslimat Ayını Değiştir
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ortaklar Arası İç Mahsuplaşma ("Kim Kime Borçlu") Card -->
+                <div class="highlight-card settlement-card">
+                    <div>
+                        <div class="card-header-sm">
+                            <span class="card-title-sm">🔄 Ortaklar Arası Mahsuplaşma</span>
+                            <span style="font-size:0.75rem; color:var(--primary-light);">İç Borç Bakiyesi</span>
+                        </div>
+                        <div class="settlement-balance" id="settlementBalanceText">Hesaplar Dengede (0 ₺)</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);" id="settlementSub">
+                            Birbiriniz adına ödediğiniz tutarlar burada mahsuplaşılır.
+                        </div>
+                    </div>
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button class="btn btn-primary btn-sm" onclick="settleUpAll()" style="flex:1; justify-content:center;">
+                            ✅ Hesabı Kapat / Sıfırla
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Yaklaşan Vade Uyarısı Card -->
+                <div class="highlight-card alert-card">
+                    <div>
+                        <div class="card-header-sm">
+                            <span class="card-title-sm">🔔 Yaklaşan Vade Uyarısı</span>
+                            <span class="status-pill partial" id="upcomingCountBadge">0 Taksit</span>
+                        </div>
+                        <div style="font-size:1.1rem; font-weight:800; color: #fbbf24;" id="upcomingTitle">
+                            Sıradaki Ödeme
+                        </div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;" id="upcomingSub">
+                            Yaklaşan taksit bulunmamaktadır.
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <button class="btn btn-success btn-sm" onclick="exportICSFile()" style="width:100%; justify-content:center;">
+                            📅 Takvime Ekle (.ics İndir)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Summary Metrics Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="title">Toplam Maliyet / Borç</div>
+                    <div class="value" id="mTotal">0 ₺</div>
+                    <div class="subtitle" id="mTotalSub">0 Kalem Taksit</div>
+                </div>
+                <div class="metric-card">
+                    <div class="title">Toplam Ödenen</div>
+                    <div class="value" style="color: var(--success);" id="mPaid">0 ₺</div>
+                    <div class="subtitle" id="mPaidSub">%0 Tamamlandı</div>
+                </div>
+                <div class="metric-card">
+                    <div class="title">Kalan Toplam Borç</div>
+                    <div class="value" style="color: var(--warning);" id="mRemaining">0 ₺</div>
+                    <div class="subtitle" id="mRemainingSub">Ödenmesi Gereken</div>
+                </div>
+                <div class="metric-card">
+                    <div class="title">Tamamlanan Ay / Taksit</div>
+                    <div class="value" style="color: var(--primary-light);" id="mCompletedCount">0 / 0</div>
+                    <div class="subtitle" id="mCompletedSub">Taksit Durumu</div>
+                </div>
+            </div>
+
+            <!-- Dynamic Partner Summary Cards -->
+            <div class="partner-summary-grid" id="partnerSummaryCards">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-wrapper">
+                <div class="progress-meta">
+                    <span>Genel Ödeme İlerlemesi</span>
+                    <span id="progressText">%0 Ödendi</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Table Controls -->
+            <div class="controls-bar">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Taksit adı veya tarih ara..." oninput="renderDashboard()">
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="setFilter('all', this)">Tümü</button>
+                    <button class="filter-btn" onclick="setFilter('pending', this)">⏳ Bekleyenler</button>
+                    <button class="filter-btn" onclick="setFilter('partial', this)">⚡ Kısmi Ödenenler</button>
+                    <button class="filter-btn" onclick="setFilter('paid', this)">✅ Tamamlananlar</button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-secondary" onclick="openBulkIncreaseModal()">
+                        📈 Taksit Artış Simülatörü
+                    </button>
+                    <button class="btn btn-primary" onclick="openAddInstallmentModal()">
+                        ➕ Taksit Ekle
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Table -->
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table id="mainTable">
+                        <thead>
+                            <tr id="tableHeaderRow">
+                                <th>#</th>
+                                <th>Taksit & Tarih</th>
+                                <th>Toplam Tutar</th>
+                                <!-- Dynamic Partner Columns injected here -->
+                                <th>Durum</th>
+                                <th style="text-align: right;">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Print Signature Block -->
+            <div class="print-signature-block">
+                <h3 style="margin-bottom:8px;">Fuzul Ev / Borç Takip İbraname ve Hesaplaşma Raporu</h3>
+                <p style="font-size:0.85rem; color:#555;">Yukarıda detayları yer alan ödeme planı ve ortaklar arası hesaplaşma durumu onaylanmıştır.</p>
+                <div style="display:flex; justify-content:space-around; margin-top:50px;">
+                    <div style="text-align:center;">
+                        <strong>İmza / Tarih</strong><br><br>____________________<br>Eren
+                    </div>
+                    <div style="text-align:center;">
+                        <strong>İmza / Tarih</strong><br><br>____________________<br>Yusuf
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= VIEW 2: SETUP & CONFIG ================= -->
+        <div id="view-setup" class="view-section">
+            <div class="grid-2">
+                <!-- Plan General Info -->
+                <div class="card">
+                    <div class="card-title">📌 Plan & Teslimat Ayı Ayarları</div>
+                    <div class="form-group">
+                        <label class="form-label">Plan Adı</label>
+                        <input type="text" id="planTitleInput" class="form-input" placeholder="Örn: Fuzul Ev Konut Projesi">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Açıklama / Notlar</label>
+                        <input type="text" id="planDescInput" class="form-input" placeholder="Örn: Kağıthane Şubesi Taksitli Sözleşme">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🏠 Tahsisat / Ev-Araba Teslimat Ayı</label>
+                        <select id="deliveryInstallmentSelect" class="form-select">
+                            <!-- Injected via JS -->
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="savePlanMeta()">
+                        💾 Plan Bilgilerini Kaydet
+                    </button>
+                </div>
+
+                <!-- Quick Templates -->
+                <div class="card">
+                    <div class="card-title">⚡ Finansal Katılım Şirketi Şablonu Yükle</div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">
+                        Türkiye'deki önde gelen Tasarruf Finansman (Katılım) sistemlerinin örnek ödeme planlarını tek tıkla yükleyebilirsiniz:
+                    </p>
+                    <div class="template-cards">
+                        <div class="template-card">
+                            <h4>🏠 FuzulEv (20 Aylık Tam Plan)</h4>
+                            <p style="margin-bottom: 12px;"><strong>1,070,000 ₺ Total:</strong> Peşinat, Org. Ücretleri & Finansman Taksitleri (Eren & Yusuf).</p>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm" style="flex: 1; justify-content: center;" onclick="previewTemplate('fuzul')">👁️ Ön İzle</button>
+                                <button class="btn btn-primary btn-sm" style="flex: 1; justify-content: center;" onclick="loadNamedTemplate('fuzul')">📥 Yükle</button>
+                            </div>
+                        </div>
+                        <div class="template-card">
+                            <h4>🏡 Eminevim (Çekilişli Konut Planı)</h4>
+                            <p style="margin-bottom: 12px;"><strong>1,605,000 ₺ Total:</strong> 1.5M ₺ Konut + 105 Bin ₺ Org. Ücreti, Peşinatlı Sabit Tasarruf Taksitleri.</p>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm" style="flex: 1; justify-content: center;" onclick="previewTemplate('eminevim')">👁️ Ön İzle</button>
+                                <button class="btn btn-primary btn-sm" style="flex: 1; justify-content: center;" onclick="loadNamedTemplate('eminevim')">📥 Yükle</button>
+                            </div>
+                        </div>
+                        <div class="template-card">
+                            <h4>🚗 Birevim (Serbest Planlı Araç)</h4>
+                            <p style="margin-bottom: 12px;"><strong>540,000 ₺ Total:</strong> 500 Bin ₺ Araç + 40 Bin ₺ Çalışma Bedeli (Peşinatsız 24 Ay Model).</p>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm" style="flex: 1; justify-content: center;" onclick="previewTemplate('birevim')">👁️ Ön İzle</button>
+                                <button class="btn btn-primary btn-sm" style="flex: 1; justify-content: center;" onclick="loadNamedTemplate('birevim')">📥 Yükle</button>
+                            </div>
+                        </div>
+                        <div class="template-card">
+                            <h4>🏢 Katılımevim (Tasarruf Dönemli Konut)</h4>
+                            <p style="margin-bottom: 12px;"><strong>2,140,000 ₺ Total:</strong> 2M ₺ Konut + 140 Bin ₺ Katılım Ücreti (Peşinatlı Esnek Plan).</p>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm" style="flex: 1; justify-content: center;" onclick="previewTemplate('katilimevim')">👁️ Ön İzle</button>
+                                <button class="btn btn-primary btn-sm" style="flex: 1; justify-content: center;" onclick="loadNamedTemplate('katilimevim')">📥 Yükle</button>
+                            </div>
+                        </div>
+                        <div class="template-card">
+                            <h4>🏬 Sinpaş Yapı Tasarruf (Eşit Taksit)</h4>
+                            <p style="margin-bottom: 12px;"><strong>3,210,000 ₺ Total:</strong> 3M ₺ Konut + 180 Bin ₺ Org. Ücreti (Eşit Taksitli Model).</p>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm" style="flex: 1; justify-content: center;" onclick="previewTemplate('sinpas')">👁️ Ön İzle</button>
+                                <button class="btn btn-primary btn-sm" style="flex: 1; justify-content: center;" onclick="loadNamedTemplate('sinpas')">📥 Yükle</button>
+                            </div>
+                        </div>
+                        <div class="template-card">
+                            <h4>📄 Sıfır Özel Plan Oluştur</h4>
+                            <p style="margin-bottom: 12px;">Tüm verileri temizleyip kendi özel borç ve taksit planınızı sıfırdan yapabilirsiniz.</p>
+                            <button class="btn btn-secondary btn-sm" style="width: 100%; justify-content: center;" onclick="loadEmptyTemplate()">✨ Boş Plan Yap</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partner Management -->
+            <div class="card">
+                <div class="card-title">
+                    <span>👥 Ortaklar ve Varsayılan Pay Oranları</span>
+                    <button class="btn btn-secondary btn-sm" onclick="addPartnerRow()">➕ Ortak Ekle</button>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">
+                    Borca ortak olan kişileri ekleyin. Varsayılan pay yüzdeleri yeni eklenen taksitlerde varsayılan olarak kullanılır.
+                </p>
+
+                <div class="partners-list" id="partnersList">
+                    <!-- Dynamic Partner Inputs -->
+                </div>
+                <button class="btn btn-primary" onclick="savePartners()">
+                    💾 Ortakları Güncelle & Kaydet
+                </button>
+            </div>
+
+            <!-- Installments List Management -->
+            <div class="card">
+                <div class="card-title">
+                    <span>📋 Taksit / Borç Kalemleri Listesi</span>
+                    <button class="btn btn-primary btn-sm" onclick="openAddInstallmentModal()">➕ Yeni Taksit Ekle</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Taksit Adı</th>
+                                <th>Tarih</th>
+                                <th>Tutar</th>
+                                <th>Paylaşım Tipi</th>
+                                <th style="text-align: right;">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="setupInstallmentTable">
+                            <!-- Injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW 3: DATA EXPORT/IMPORT & REPORTS ================= -->
+        <div id="view-data" class="view-section">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">📤 Verileri Dışa Aktar (Yedekle & Takvim)</div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+                        Tüm ortaklar, taksitler ve ödeme durumlarını JSON, Excel/CSV veya Google/Apple Takvim dosyası olarak indirin.
+                    </p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="exportDataJSON()">
+                            📄 JSON Yedek İndir
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportDataCSV()">
+                            📊 Excel / CSV İndir
+                        </button>
+                        <button class="btn btn-success" onclick="exportICSFile()">
+                            📅 Takvime Ekle (.ics İndir)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📥 Veri Yükle (Geri Yükle)</div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+                        Daha önce indirdiğiniz JSON yedek dosyasını seçerek tüm sistemi geri yükleyin.
+                    </p>
+                    <input type="file" id="importFileInput" accept=".json" class="form-input" style="margin-bottom: 12px;">
+                    <button class="btn btn-primary" onclick="importDataJSON()">
+                        📂 Yedeği Yükle
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🖨️ Yazdırılabilir A4 Özet ve Borç İbranamesi</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+                    Mevcut borç durumunu, ortakların ödediği ve kalan miktarlarını resmi A4 formatında çıktı alabilir veya PDF olarak kaydedebilirsiniz.
+                </p>
+                <button class="btn btn-secondary" onclick="window.print()">
+                    🖨️ A4 Formatında Yazdır / PDF Al
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PAYMENT DETAILS / CHECK MODAL ================= -->
+    <div class="modal-overlay" id="paymentDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">💳 Ödeme Detayı & Dekont Notu</h3>
+                <button class="close-btn" onclick="closePaymentDetailsModal()">✕</button>
+            </div>
+            <form id="paymentDetailsForm" onsubmit="handlePaymentDetailsSubmit(event)">
+                <input type="hidden" id="pModalInstId">
+                <input type="hidden" id="pModalPartnerId">
+
+                <div class="form-group">
+                    <label class="form-label" id="pModalLabel">Ödeme Durumu</label>
+                    <select id="pModalStatus" class="form-select">
+                        <option value="true">✅ Ödendi İşaretle</option>
+                        <option value="false">❌ Ödenmedi İşaretle</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ödeme Tarihi</label>
+                    <input type="date" id="pModalDate" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fiilen Ödeyen Kişi (Ortaklar Arası Mahsuplaşma İçin)</label>
+                    <select id="pModalPaidBy" class="form-select">
+                        <!-- Injected via JS -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Dekont / Banka Notu (İsteğe Bağlı)</label>
+                    <input type="text" id="pModalNote" class="form-input" placeholder="Örn: Garanti Bankası - Dekont #94821">
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closePaymentDetailsModal()">İptal</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= ADD / EDIT INSTALLMENT MODAL ================= -->
+    <div class="modal-overlay" id="installmentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Taksit Ekle / Düzenle</h3>
+                <button class="close-btn" onclick="closeInstallmentModal()">✕</button>
+            </div>
+            <form id="installmentForm" onsubmit="handleInstallmentSubmit(event)">
+                <input type="hidden" id="editInstallmentId">
+
+                <div class="form-group">
+                    <label class="form-label">Taksit / Kalem Adı</label>
+                    <input type="text" id="instName" class="form-input" placeholder="Örn: 1. Tasarruf Taksiti" required>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Vade / Son Ödeme Tarihi</label>
+                        <input type="text" id="instDate" class="form-input" placeholder="Örn: 05.05.2026" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Aylık Toplam Tutar (₺)</label>
+                        <input type="number" step="0.01" id="instAmount" class="form-input" placeholder="25000" oninput="updateModalCustomShares()" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ortaklar Arası Paylaşım Şekli</label>
+                    <select id="shareTypeSelect" class="form-select" onchange="toggleShareModeInputs()">
+                        <option value="default">Varsayılan Ortak Yüzdeleri İle Böl</option>
+                        <option value="equal">Ortaklar Arasında Eşit Böl (50/50, 33/33 vb.)</option>
+                        <option value="custom">Her Ortak İçin Özel Tutar Belirle</option>
+                    </select>
+                </div>
+
+                <!-- Custom Shares Container -->
+                <div class="custom-shares-box" id="customSharesBox" style="display: none;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary-light); margin-bottom: 8px;">
+                        Kişi Başı Özel Ödeme Tutarları:
+                    </div>
+                    <div id="customSharesInputs">
+                        <!-- Dynamic inputs for each partner -->
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeInstallmentModal()">İptal</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= BULK RATE INCREASE MODAL ================= -->
+    <div class="modal-overlay" id="bulkIncreaseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📈 Taksit Artış Simülatörü (Enflasyon / TEFE)</h3>
+                <button class="close-btn" onclick="closeBulkIncreaseModal()">✕</button>
+            </div>
+            <form id="bulkIncreaseForm" onsubmit="handleBulkIncreaseSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">Hangi Taksitten İtibaren Artış Başlasın?</label>
+                    <select id="bulkStartInstId" class="form-select">
+                        <!-- Injected via JS -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Artış Türü</label>
+                    <select id="bulkType" class="form-select">
+                        <option value="percent">Yüzdelik Artış (%)</option>
+                        <option value="fixed">Sabit Eklenen Tutar (+ ₺)</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeBulkIncreaseModal()">İptal</button>
+                    <button type="submit" class="btn btn-primary">Toplu Artışı Uygula</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= TEMPLATE PREVIEW MODAL ================= -->
+    <div class="modal-overlay" id="templatePreviewModal">
+        <div class="modal-content" style="max-width: 720px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" id="prevModalTitle">👁️ Şablon Ön İzleme</h3>
+                    <p style="font-size:0.8rem; color:var(--text-muted);" id="prevModalDesc">Ödeme planı detayları</p>
+                </div>
+                <button class="close-btn" onclick="closeTemplatePreviewModal()">✕</button>
+            </div>
+
+            <!-- Preview Meta Summary Cards -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:18px;">
+                <div style="background:#0f172a; padding:12px 16px; border-radius:12px; border:1px solid var(--border-color);">
+                    <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">TOPLAM MALİYET</div>
+                    <div style="font-size:1.1rem; font-weight:800; color:var(--primary-light);" id="prevMetaTotal">0 ₺</div>
+                </div>
+                <div style="background:#0f172a; padding:12px 16px; border-radius:12px; border:1px solid var(--border-color);">
+                    <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">TAKSİT SAYISI</div>
+                    <div style="font-size:1.1rem; font-weight:800; color:#38bdf8;" id="prevMetaCount">0 Taksit</div>
+                </div>
+                <div style="background:#0f172a; padding:12px 16px; border-radius:12px; border:1px solid var(--border-color);">
+                    <div style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">TESLİMAT / TAHSİSAT</div>
+                    <div style="font-size:0.85rem; font-weight:800; color:#34d399;" id="prevMetaDelivery">-</div>
+                </div>
+            </div>
+
+            <!-- Preview Installments Table -->
+            <div class="table-responsive" style="max-height: 340px; overflow-y: auto; margin-bottom: 18px; border: 1px solid var(--border-color); border-radius: 12px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Taksit / Kalem Adı</th>
+                            <th>Vade Tarihi</th>
+                            <th>Aylık Toplam</th>
+                            <th>Örnek Kişi Başı (%50)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prevTableBody">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeTemplatePreviewModal()">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="confirmLoadPreviewedTemplate()">📥 Bu Şablonu Yükle ve Kullan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= APP STATE & STORAGE =================
+        const STORAGE_KEY = 'multi_partner_debt_tracker_v2';
+
+        const FUZUL_TEMPLATE = {
+            meta: {
+                title: "Fuzul Ev Konut Projesi",
+                desc: "Eren & Yusuf Ortak Ödeme Planı (1,070,000 ₺ Toplam Maliyet)",
+                deliveryInstId: 6 // 6. Tahsisat taksiti
+            },
+            partners: [
+                { id: "eren", name: "Eren", color: "#38bdf8", defaultPct: 50 },
+                { id: "yusuf", name: "Yusuf", color: "#fb923c", defaultPct: 50 }
+            ],
+            installments: [
+                { id: 1, name: "Peşinat + 1. Tasarruf Taksiti + Org. Peşinatı", date: "05.05.2026", totalAmount: 310000, shareType: "default", customShares: {}, payments: { eren: true, yusuf: true }, details: { eren: { paid: true, paidBy: "eren" }, yusuf: { paid: true, paidBy: "yusuf" } } },
+                { id: 2, name: "2. Tasarruf Taksiti + Org. Ücreti 1. Taksiti", date: "05.06.2026", totalAmount: 33750, shareType: "default", customShares: {}, payments: { eren: true, yusuf: true }, details: { eren: { paid: true, paidBy: "eren" }, yusuf: { paid: true, paidBy: "yusuf" } } },
+                { id: 3, name: "3. Tasarruf Taksiti + Org. Ücreti 2. Taksiti", date: "05.07.2026", totalAmount: 33750, shareType: "default", customShares: {}, payments: { eren: true, yusuf: true }, details: { eren: { paid: true, paidBy: "eren" }, yusuf: { paid: true, paidBy: "yusuf" } } },
+                { id: 4, name: "4. Tasarruf Taksiti + Org. Ücreti 3. Taksiti", date: "05.08.2026", totalAmount: 33750, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 5, name: "5. Tasarruf Taksiti + Org. Ücreti 4. Taksiti", date: "05.09.2026", totalAmount: 33750, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 6, name: "6. Tahsisat Taksiti (Ev Teslimat Ayı)", date: "05.10.2026", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 7, name: "7. Finansman Taksiti", date: "05.11.2026", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 8, name: "8. Finansman Taksiti", date: "05.12.2026", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 9, name: "9. Finansman Taksiti", date: "05.01.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 10, name: "10. Finansman Taksiti", date: "05.02.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 11, name: "11. Finansman Taksiti", date: "05.03.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 12, name: "12. Finansman Taksiti", date: "05.04.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 13, name: "13. Finansman Taksiti", date: "05.05.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 14, name: "14. Finansman Taksiti", date: "05.06.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 15, name: "15. Finansman Taksiti", date: "05.07.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 16, name: "16. Finansman Taksiti", date: "05.08.2027", totalAmount: 68250, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 17, name: "17. Finansman Taksiti", date: "05.09.2027", totalAmount: 68250, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 18, name: "18. Finansman Taksiti", date: "05.10.2027", totalAmount: 68250, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 19, name: "19. Finansman Taksiti", date: "05.11.2027", totalAmount: 68250, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } },
+                { id: 20, name: "20. Finansman Taksiti", date: "05.12.2027", totalAmount: 102000, shareType: "default", customShares: {}, payments: { eren: false, yusuf: false } }
+            ]
+        };
+
+        let state = loadState();
+        let currentFilter = 'all';
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) return JSON.parse(saved);
+            } catch (e) { console.error(e); }
+            return JSON.parse(JSON.stringify(FUZUL_TEMPLATE));
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            renderAll();
+        }
+
+        // ================= HELPERS =================
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(val || 0) + ' ₺';
+        }
+
+        function parseDateTR(dateStr) {
+            if (!dateStr) return new Date();
+            const parts = dateStr.split('.');
+            if (parts.length === 3) {
+                return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            }
+            return new Date(dateStr);
+        }
+
+        function getPartnerShare(installment, partnerId) {
+            const total = installment.totalAmount || 0;
+            const partnersCount = state.partners.length || 1;
+
+            if (installment.shareType === 'custom' && installment.customShares && installment.customShares[partnerId] !== undefined) {
+                return parseFloat(installment.customShares[partnerId]) || 0;
+            }
+            if (installment.shareType === 'equal') {
+                return total / partnersCount;
+            }
+            const partner = state.partners.find(p => p.id === partnerId);
+            const pct = partner ? (partner.defaultPct || 0) : (100 / partnersCount);
+            return (total * pct) / 100;
+        }
+
+        // ================= VIEW SWITCHING =================
+        function switchView(viewName) {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+
+            document.getElementById(`view-${viewName}`).classList.add('active');
+
+            const event = window.event;
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+
+            if (viewName === 'setup') renderSetupView();
+            else if (viewName === 'dashboard') renderDashboard();
+        }
+
+        function setFilter(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderDashboard();
+        }
+
+        // ================= DASHBOARD & HIGHLIGHTS RENDER =================
+        function renderDashboard() {
+            document.getElementById('navPlanTitle').textContent = state.meta.title || "Borç Takip";
+            document.getElementById('navPlanSubtitle').textContent = state.meta.desc || "Çok Ortaklı Dinamik Finans Takibi";
+
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            let grandTotal = 0;
+            let grandPaid = 0;
+            let completedInstallmentsCount = 0;
+
+            const partnerTotals = {};
+            const internalBalances = {}; // Track who paid for whom
+
+            state.partners.forEach(p => {
+                partnerTotals[p.id] = { total: 0, paid: 0, remaining: 0 };
+                internalBalances[p.id] = 0; // Positive = someone owes this person, Negative = this person owes
+            });
+
+            const today = new Date();
+            let upcomingUrgent = null;
+            let upcomingCount = 0;
+
+            state.installments.forEach(inst => {
+                grandTotal += inst.totalAmount;
+                let allPaid = true;
+
+                const instDateObj = parseDateTR(inst.date);
+                const daysDiff = Math.ceil((instDateObj - today) / (1000 * 60 * 60 * 24));
+
+                state.partners.forEach(p => {
+                    const share = getPartnerShare(inst, p.id);
+                    partnerTotals[p.id].total += share;
+
+                    const isPaid = inst.payments && inst.payments[p.id];
+                    const pDetails = (inst.details && inst.details[p.id]) || {};
+
+                    if (isPaid) {
+                        partnerTotals[p.id].paid += share;
+                        grandPaid += share;
+
+                        // Check who physically paid for internal settlement
+                        const paidByPerson = pDetails.paidBy || p.id;
+                        if (paidByPerson !== p.id && internalBalances[paidByPerson] !== undefined) {
+                            // paidByPerson paid on behalf of p.id
+                            internalBalances[paidByPerson] += share;
+                            internalBalances[p.id] -= share;
+                        }
+                    } else {
+                        partnerTotals[p.id].remaining += share;
+                        allPaid = false;
+                    }
+                });
+
+                if (allPaid && state.partners.length > 0) {
+                    completedInstallmentsCount++;
+                } else if (!allPaid) {
+                    if (daysDiff >= -5 && daysDiff <= 30) {
+                        upcomingCount++;
+                        if (!upcomingUrgent || daysDiff < upcomingUrgent.days) {
+                            upcomingUrgent = { inst, days: daysDiff };
+                        }
+                    }
+                }
+            });
+
+            const grandRemaining = grandTotal - grandPaid;
+            const grandPct = grandTotal > 0 ? ((grandPaid / grandTotal) * 100).toFixed(1) : 0;
+
+            // 1. Render Delivery Countdown Highlight Card
+            const delInstId = state.meta.deliveryInstId || 6;
+            const delInst = state.installments.find(i => i.id == delInstId) || state.installments[0];
+            if (delInst) {
+                const delDate = parseDateTR(delInst.date);
+                const totalDays = Math.ceil((delDate - today) / (1000 * 60 * 60 * 24));
+                const months = Math.floor(totalDays / 30);
+                const remDays = totalDays % 30;
+
+                document.getElementById('deliveryBadge').textContent = `${delInst.name}`;
+                document.getElementById('deliveryTimer').textContent = totalDays > 0 ? `${months > 0 ? months + ' Ay ' : ''}${remDays} Gün` : 'Tahsisat Ayı Geldi!';
+                document.getElementById('deliverySub').innerHTML = `Hedef Vade: <strong>${delInst.date}</strong>`;
+            }
+
+            // 2. Render Internal Settlement ("Kim Kime Borçlu") Card
+            let settlementText = "Hesaplar Dengede (0 ₺)";
+            let settlementSub = "Ortaklar birbirine borçlu değil.";
+            const debtor = Object.keys(internalBalances).find(id => internalBalances[id] < -1);
+            const creditor = Object.keys(internalBalances).find(id => internalBalances[id] > 1);
+
+            if (debtor && creditor) {
+                const amount = Math.abs(internalBalances[debtor]);
+                const pDebtor = state.partners.find(p => p.id === debtor);
+                const pCreditor = state.partners.find(p => p.id === creditor);
+                if (pDebtor && pCreditor) {
+                    settlementText = `${pDebtor.name} ➔ ${pCreditor.name}`;
+                    settlementSub = `Borç Tutarı: <strong style="color:var(--warning);">${formatCurrency(amount)}</strong>`;
+                }
+            }
+            document.getElementById('settlementBalanceText').textContent = settlementText;
+            document.getElementById('settlementSub').innerHTML = settlementSub;
+
+            // 3. Render Upcoming Payment Alert Card
+            document.getElementById('upcomingCountBadge').textContent = `${upcomingCount} Vade Yaklaştı`;
+            if (upcomingUrgent) {
+                document.getElementById('upcomingTitle').textContent = upcomingUrgent.inst.name;
+                document.getElementById('upcomingSub').innerHTML = `Vade: <strong>${upcomingUrgent.inst.date}</strong> (${upcomingUrgent.days} gün kaldı) • ${formatCurrency(upcomingUrgent.inst.totalAmount)}`;
+            } else {
+                document.getElementById('upcomingTitle').textContent = "Yaklaşan Ödeme Yok";
+                document.getElementById('upcomingSub').textContent = "Önümüzdeki 30 gün içinde ödemesi yaklaşan taksit bulunmuyor.";
+            }
+
+            // Render General Metrics Cards
+            document.getElementById('mTotal').textContent = formatCurrency(grandTotal);
+            document.getElementById('mTotalSub').textContent = `${state.installments.length} Kalem Taksit`;
+            document.getElementById('mPaid').textContent = formatCurrency(grandPaid);
+            document.getElementById('mPaidSub').textContent = `%${grandPct} Tamamlandı`;
+            document.getElementById('mRemaining').textContent = formatCurrency(grandRemaining);
+            document.getElementById('mCompletedCount').textContent = `${completedInstallmentsCount} / ${state.installments.length}`;
+
+            document.getElementById('progressBarFill').style.width = `${grandPct}%`;
+            document.getElementById('progressText').textContent = `%${grandPct} Ödendi (${formatCurrency(grandPaid)})`;
+
+            // Render Partner Cards
+            const pCardsContainer = document.getElementById('partnerSummaryCards');
+            let pCardsHtml = '';
+            state.partners.forEach(p => {
+                const stats = partnerTotals[p.id] || { total: 0, paid: 0, remaining: 0 };
+                const pct = stats.total > 0 ? ((stats.paid / stats.total) * 100).toFixed(1) : 0;
+
+                pCardsHtml += `
+                <div class="partner-card" style="--partner-color: ${p.color}">
+                    <div class="partner-card-header">
+                        <div class="partner-name">
+                            <span class="partner-badge"></span>
+                            ${p.name}
+                        </div>
+                        <span class="partner-pct">%${pct} Ödedi</span>
+                    </div>
+                    <div class="partner-stats">
+                        <span>Ödenen Pay:</span>
+                        <strong style="color: var(--success);">${formatCurrency(stats.paid)}</strong>
+                    </div>
+                    <div class="partner-stats">
+                        <span>Kalan Pay:</span>
+                        <strong style="color: var(--warning);">${formatCurrency(stats.remaining)}</strong>
+                    </div>
+                    <div class="partner-stats" style="margin-bottom: 0;">
+                        <span>Toplam Sorumluluk:</span>
+                        <strong>${formatCurrency(stats.total)}</strong>
+                    </div>
+                </div>`;
+            });
+            pCardsContainer.innerHTML = pCardsHtml;
+
+            // Build Table Header
+            const headerRow = document.getElementById('tableHeaderRow');
+            let thHtml = `
+                <th>#</th>
+                <th>Taksit & Tarih</th>
+                <th>Toplam Tutar</th>
+            `;
+            state.partners.forEach(p => {
+                thHtml += `<th><span style="color:${p.color}">●</span> ${p.name} Payı</th>`;
+            });
+            thHtml += `
+                <th>Durum</th>
+                <th style="text-align: right;">İşlemler</th>
+            `;
+            headerRow.innerHTML = thHtml;
+
+            // Filter & Render Rows
+            const tbody = document.getElementById('tableBody');
+            let rowsHtml = '';
+
+            const filteredInstallments = state.installments.filter(inst => {
+                const matchesSearch = inst.name.toLowerCase().includes(searchTerm) || inst.date.toLowerCase().includes(searchTerm);
+                if (!matchesSearch) return false;
+
+                let paidCount = 0;
+                state.partners.forEach(p => {
+                    if (inst.payments && inst.payments[p.id]) paidCount++;
+                });
+
+                const totalPartners = state.partners.length;
+                const isFull = totalPartners > 0 && paidCount === totalPartners;
+                const isPartial = paidCount > 0 && paidCount < totalPartners;
+                const isPending = paidCount === 0;
+
+                if (currentFilter === 'pending') return isPending;
+                if (currentFilter === 'partial') return isPartial;
+                if (currentFilter === 'paid') return isFull;
+
+                return true;
+            });
+
+            if (filteredInstallments.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${state.partners.length + 5}" style="text-align:center; padding: 30px; color: var(--text-muted);">Gösterilecek taksit bulunamadı.</td></tr>`;
+                return;
+            }
+
+            filteredInstallments.forEach((inst, index) => {
+                let paidCount = 0;
+                state.partners.forEach(p => {
+                    if (inst.payments && inst.payments[p.id]) paidCount++;
+                });
+
+                const totalPartners = state.partners.length;
+                const isFull = totalPartners > 0 && paidCount === totalPartners;
+                const isPartial = paidCount > 0 && paidCount < totalPartners;
+
+                const instDateObj = parseDateTR(inst.date);
+                const daysDiff = Math.ceil((instDateObj - today) / (1000 * 60 * 60 * 24));
+                const isUrgent = !isFull && (daysDiff >= 0 && daysDiff <= 7);
+
+                let rowClass = isFull ? 'paid-row' : (isUrgent ? 'upcoming-urgent' : '');
+
+                let statusBadge = '';
+                if (isFull) statusBadge = `<span class="status-pill full">✅ Tamamlandı</span>`;
+                else if (isPartial) statusBadge = `<span class="status-pill partial">⚡ Kısmi (${paidCount}/${totalPartners})</span>`;
+                else statusBadge = `<span class="status-pill pending">⏳ Bekliyor</span>`;
+
+                rowsHtml += `<tr class="${rowClass}">
+                    <td style="font-weight:700; color:var(--text-muted); width: 30px;">${inst.id || index + 1}</td>
+                    <td>
+                        <div class="installment-title">
+                            ${inst.name}
+                            ${isUrgent ? '<span class="status-pill partial" style="font-size:0.65rem;">🚨 Yaklaştı</span>' : ''}
+                        </div>
+                        <div class="installment-date">📅 ${inst.date}</div>
+                    </td>
+                    <td>
+                        <div class="amount-badge" style="font-size:0.95rem;">${formatCurrency(inst.totalAmount)}</div>
+                    </td>`;
+
+                // Partner check columns
+                state.partners.forEach(p => {
+                    const shareAmount = getPartnerShare(inst, p.id);
+                    const isChecked = inst.payments && inst.payments[p.id];
+                    const sharePct = inst.totalAmount > 0 ? ((shareAmount / inst.totalAmount) * 100).toFixed(0) : 0;
+                    const pDetail = (inst.details && inst.details[p.id]) || {};
+
+                    let noteText = '';
+                    if (pDetail.note) noteText = `📝 ${pDetail.note}`;
+                    else if (pDetail.paidBy && pDetail.paidBy !== p.id) {
+                        const paidByP = state.partners.find(x => x.id === pDetail.paidBy);
+                        if (paidByP) noteText = `👤 ${paidByP.name} Ödedi`;
+                    }
+
+                    rowsHtml += `
+                    <td>
+                        <div class="partner-check-cell">
+                            <div class="check-btn ${isChecked ? 'checked' : ''}" onclick="openPaymentDetailsModal(${inst.id}, '${p.id}')">
+                                ${isChecked ? '✓' : ''}
+                            </div>
+                            <div class="partner-share-info">
+                                <div class="partner-share-amount">${formatCurrency(shareAmount)}</div>
+                                <div class="partner-share-pct">%${sharePct} pay</div>
+                                ${noteText ? `<div class="note-badge">${noteText}</div>` : ''}
+                            </div>
+                        </div>
+                    </td>`;
+                });
+
+                rowsHtml += `
+                    <td>${statusBadge}</td>
+                    <td style="text-align: right;">
+                        <button class="btn btn-secondary btn-sm" onclick="editInstallment(${inst.id})">✏️ Düzenle</button>
+                    </td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = rowsHtml;
+        }
+
+        // ================= PAYMENT DETAILS MODAL HANDLERS =================
+        function openPaymentDetailsModal(instId, partnerId) {
+            const inst = state.installments.find(i => i.id === instId);
+            const partner = state.partners.find(p => p.id === partnerId);
+            if (!inst || !partner) return;
+
+            document.getElementById('pModalInstId').value = instId;
+            document.getElementById('pModalPartnerId').value = partnerId;
+            document.getElementById('pModalLabel').textContent = `${inst.name} - ${partner.name} Payı Ödemesi`;
+
+            const isChecked = inst.payments && inst.payments[partnerId];
+            document.getElementById('pModalStatus').value = isChecked ? "true" : "false";
+
+            const pDetail = (inst.details && inst.details[partnerId]) || {};
+            document.getElementById('pModalDate').value = pDetail.paidDate || new Date().toISOString().slice(0, 10);
+            document.getElementById('pModalNote').value = pDetail.note || '';
+
+            // Populate PaidBy Select
+            const paidBySelect = document.getElementById('pModalPaidBy');
+            let optsHtml = '';
+            state.partners.forEach(p => {
+                const selected = (pDetail.paidBy || partnerId) === p.id ? 'selected' : '';
+                optsHtml += `<option value="${p.id}" ${selected}>${p.name} Ödedi</option>`;
+            });
+            paidBySelect.innerHTML = optsHtml;
+
+            document.getElementById('paymentDetailsModal').classList.add('active');
+        }
+
+        function closePaymentDetailsModal() {
+            document.getElementById('paymentDetailsModal').classList.remove('active');
+        }
+
+        function handlePaymentDetailsSubmit(e) {
+            e.preventDefault();
+            const instId = document.getElementById('pModalInstId').value;
+            const partnerId = document.getElementById('pModalPartnerId').value;
+            const status = document.getElementById('pModalStatus').value === "true";
+            const paidDate = document.getElementById('pModalDate').value;
+            const paidBy = document.getElementById('pModalPaidBy').value;
+            const note = document.getElementById('pModalNote').value.trim();
+
+            const inst = state.installments.find(i => i.id == instId);
+            if (inst) {
+                if (!inst.payments) inst.payments = {};
+                if (!inst.details) inst.details = {};
+
+                inst.payments[partnerId] = status;
+                inst.details[partnerId] = { paid: status, paidDate, paidBy, note };
+            }
+
+            saveState();
+            closePaymentDetailsModal();
+        }
+
+        function settleUpAll() {
+            if (confirm('Ortaklar arasındaki iç mahsuplaşma bakiye kaydı sıfırlanacak (Tüm ödemeler sahiplerince yapılmış olarak işaretlenecek). Emin misiniz?')) {
+                state.installments.forEach(inst => {
+                    if (inst.details) {
+                        state.partners.forEach(p => {
+                            if (inst.details[p.id]) {
+                                inst.details[p.id].paidBy = p.id;
+                            }
+                        });
+                    }
+                });
+                saveState();
+                alert('İç hesaplaşma dengelendi!');
+            }
+        }
+
+        // ================= SETUP VIEW RENDER & EDIT =================
+        function renderSetupView() {
+            document.getElementById('planTitleInput').value = state.meta.title || '';
+            document.getElementById('planDescInput').value = state.meta.desc || '';
+
+            // Delivery Installment Select
+            const delSelect = document.getElementById('deliveryInstallmentSelect');
+            let delOpts = '';
+            state.installments.forEach(inst => {
+                const selected = (state.meta.deliveryInstId || 6) == inst.id ? 'selected' : '';
+                delOpts += `<option value="${inst.id}" ${selected}>#${inst.id} - ${inst.name} (${inst.date})</option>`;
+            });
+            delSelect.innerHTML = delOpts;
+
+            // Partners List
+            const pList = document.getElementById('partnersList');
+            let pHtml = '';
+            state.partners.forEach((p, idx) => {
+                pHtml += `
+                <div class="partner-item">
+                    <input type="color" value="${p.color}" class="color-picker" onchange="updatePartnerColor(${idx}, this.value)">
+                    <input type="text" class="form-input" style="flex:2;" value="${p.name}" placeholder="Ortak Adı" onchange="updatePartnerName(${idx}, this.value)">
+                    <div style="display:flex; align-items:center; gap:4px; flex:1;">
+                        <span style="font-size:0.8rem; color:var(--text-muted);">Varsayılan Pay %:</span>
+                        <input type="number" class="form-input" value="${p.defaultPct}" placeholder="50" onchange="updatePartnerPct(${idx}, this.value)">
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="deletePartner(${idx})">🗑️</button>
+                </div>`;
+            });
+            pList.innerHTML = pHtml;
+
+            // Installments Table
+            const instTbody = document.getElementById('setupInstallmentTable');
+            let instHtml = '';
+            state.installments.forEach((inst, idx) => {
+                let shareText = "Varsayılan % Oran";
+                if (inst.shareType === 'equal') shareText = "Eşit Paylaşım";
+                if (inst.shareType === 'custom') shareText = "Özel Tutar";
+
+                instHtml += `
+                <tr>
+                    <td>${inst.id || idx + 1}</td>
+                    <td style="font-weight:600;">${inst.name}</td>
+                    <td>${inst.date}</td>
+                    <td style="font-weight:700;">${formatCurrency(inst.totalAmount)}</td>
+                    <td><span class="status-pill pending">${shareText}</span></td>
+                    <td style="text-align: right;">
+                        <button class="btn btn-secondary btn-sm" onclick="editInstallment(${inst.id})">✏️</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteInstallment(${inst.id})">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            instTbody.innerHTML = instHtml;
+        }
+
+        function savePlanMeta() {
+            state.meta.title = document.getElementById('planTitleInput').value.trim();
+            state.meta.desc = document.getElementById('planDescInput').value.trim();
+            state.meta.deliveryInstId = parseInt(document.getElementById('deliveryInstallmentSelect').value) || 6;
+            saveState();
+            alert('Plan ve Teslimat bilgileri güncellendi!');
+        }
+
+        function addPartnerRow() {
+            const newId = 'partner_' + Date.now();
+            const colors = ['#38bdf8', '#fb923c', '#a855f7', '#ec4899', '#10b981', '#f59e0b'];
+            const randomColor = colors[state.partners.length % colors.length];
+
+            state.partners.push({
+                id: newId,
+                name: `Ortak ${state.partners.length + 1}`,
+                color: randomColor,
+                defaultPct: Math.floor(100 / (state.partners.length + 1))
+            });
+            saveState();
+            renderSetupView();
+        }
+
+        function updatePartnerColor(idx, color) { state.partners[idx].color = color; saveState(); }
+        function updatePartnerName(idx, name) { state.partners[idx].name = name; saveState(); }
+        function updatePartnerPct(idx, pct) { state.partners[idx].defaultPct = parseFloat(pct) || 0; saveState(); }
+
+        function deletePartner(idx) {
+            if (confirm('Bu ortağı silmek istediğinizden emin misiniz?')) {
+                state.partners.splice(idx, 1);
+                saveState();
+                renderSetupView();
+            }
+        }
+
+        function savePartners() {
+            saveState();
+            alert('Ortak bilgileri kaydedildi!');
+        }
+
+        function deleteInstallment(instId) {
+            if (confirm('Bu taksiti silmek istediğinize emin misiniz?')) {
+                state.installments = state.installments.filter(i => i.id !== instId);
+                saveState();
+                renderSetupView();
+            }
+        }
+
+        // ================= BULK RATE INCREASE SIMULATOR =================
+        function openBulkIncreaseModal() {
+            const select = document.getElementById('bulkStartInstId');
+            let opts = '';
+            state.installments.forEach(inst => {
+                opts += `<option value="${inst.id}">#${inst.id} - ${inst.name} (${formatCurrency(inst.totalAmount)})</option>`;
+            });
+            select.innerHTML = opts;
+            document.getElementById('bulkIncreaseModal').classList.add('active');
+        }
+
+        function closeBulkIncreaseModal() {
+            document.getElementById('bulkIncreaseModal').classList.remove('active');
+        }
+
+        function handleBulkIncreaseSubmit(e) {
+            e.preventDefault();
+            const startId = parseInt(document.getElementById('bulkStartInstId').value);
+            const type = document.getElementById('bulkType').value;
+            const val = parseFloat(document.getElementById('bulkValue').value) || 0;
+
+            let startIndex = state.installments.findIndex(i => i.id === startId);
+            if (startIndex === -1) return;
+
+            for (let i = startIndex; i < state.installments.length; i++) {
+                if (type === 'percent') {
+                    state.installments[i].totalAmount = Math.round(state.installments[i].totalAmount * (1 + val / 100));
+                } else if (type === 'fixed') {
+                    state.installments[i].totalAmount = state.installments[i].totalAmount + val;
+                }
+            }
+
+            saveState();
+            closeBulkIncreaseModal();
+            alert(`Taksit artışı #${startId} sonrasına başarıyla uygulandı!`);
+        }
+
+        // ================= INSTALLMENT MODAL HANDLERS =================
+        function openAddInstallmentModal() {
+            document.getElementById('editInstallmentId').value = '';
+            document.getElementById('modalTitle').textContent = 'Yeni Taksit Ekle';
+            document.getElementById('instName').value = '';
+            document.getElementById('instDate').value = new Date().toLocaleDateString('tr-TR');
+            document.getElementById('instAmount').value = '';
+            document.getElementById('shareTypeSelect').value = 'default';
+
+            toggleShareModeInputs();
+            document.getElementById('installmentModal').classList.add('active');
+        }
+
+        function editInstallment(instId) {
+            const inst = state.installments.find(i => i.id === instId);
+            if (!inst) return;
+
+            document.getElementById('editInstallmentId').value = inst.id;
+            document.getElementById('modalTitle').textContent = 'Taksit Düzenle';
+            document.getElementById('instName').value = inst.name;
+            document.getElementById('instDate').value = inst.date;
+            document.getElementById('instAmount').value = inst.totalAmount;
+            document.getElementById('shareTypeSelect').value = inst.shareType || 'default';
+
+            toggleShareModeInputs();
+
+            if (inst.shareType === 'custom' && inst.customShares) {
+                state.partners.forEach(p => {
+                    const input = document.getElementById(`custom_share_${p.id}`);
+                    if (input && inst.customShares[p.id] !== undefined) {
+                        input.value = inst.customShares[p.id];
+                    }
+                });
+            }
+
+            document.getElementById('installmentModal').classList.add('active');
+        }
+
+        function closeInstallmentModal() {
+            document.getElementById('installmentModal').classList.remove('active');
+        }
+
+        function toggleShareModeInputs() {
+            const shareType = document.getElementById('shareTypeSelect').value;
+            const box = document.getElementById('customSharesBox');
+
+            if (shareType === 'custom') {
+                box.style.display = 'block';
+                updateModalCustomShares();
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        function updateModalCustomShares() {
+            const shareType = document.getElementById('shareTypeSelect').value;
+            if (shareType !== 'custom') return;
+
+            const total = parseFloat(document.getElementById('instAmount').value) || 0;
+            const container = document.getElementById('customSharesInputs');
+
+            let html = '';
+            state.partners.forEach(p => {
+                const defaultVal = getPartnerShare({ totalAmount: total, shareType: 'default' }, p.id);
+                html += `
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:0.85rem; color:var(--text-main); font-weight:600;">● ${p.name}:</span>
+                    <input type="number" step="0.01" id="custom_share_${p.id}" class="form-input" style="width:140px;" value="${defaultVal}">
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function handleInstallmentSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editInstallmentId').value;
+            const name = document.getElementById('instName').value.trim();
+            const date = document.getElementById('instDate').value.trim();
+            const totalAmount = parseFloat(document.getElementById('instAmount').value) || 0;
+            const shareType = document.getElementById('shareTypeSelect').value;
+
+            const customShares = {};
+            if (shareType === 'custom') {
+                state.partners.forEach(p => {
+                    const val = parseFloat(document.getElementById(`custom_share_${p.id}`).value) || 0;
+                    customShares[p.id] = val;
+                });
+            }
+
+            if (editId) {
+                const inst = state.installments.find(i => i.id == editId);
+                if (inst) {
+                    inst.name = name;
+                    inst.date = date;
+                    inst.totalAmount = totalAmount;
+                    inst.shareType = shareType;
+                    inst.customShares = customShares;
+                }
+            } else {
+                const newId = state.installments.length > 0 ? Math.max(...state.installments.map(i => i.id || 0)) + 1 : 1;
+                state.installments.push({
+                    id: newId,
+                    name,
+                    date,
+                    totalAmount,
+                    shareType,
+                    customShares,
+                    payments: {},
+                    details: {}
+                });
+            }
+
+            saveState();
+            closeInstallmentModal();
+            renderAll();
+        }
+
+        // ================= QUICK TEMPLATES =================
+        const ALL_TEMPLATES = {
+            fuzul: FUZUL_TEMPLATE,
+            eminevim: {
+                meta: {
+                    title: "Eminevim Çekilişli Konut Planı",
+                    desc: "1,500,000 ₺ Konut + 105,000 ₺ Organizasyon Ücreti (60 Ay Sabit Model)",
+                    deliveryInstId: 6
+                },
+                partners: [
+                    { id: "ortak1", name: "Eren", color: "#38bdf8", defaultPct: 50 },
+                    { id: "ortak2", name: "Yusuf", color: "#fb923c", defaultPct: 50 }
+                ],
+                installments: [
+                    { id: 1, name: "Peşinat (300.000 ₺) + Org. Ücreti Peşinat (52.500 ₺)", date: "05.05.2026", totalAmount: 352500, shareType: "default", customShares: {}, payments: { ortak1: true, ortak2: true } },
+                    { id: 2, name: "Org. Ücreti 2. Taksit (52.500 ₺) + 1. Tasarruf (25.000 ₺)", date: "05.06.2026", totalAmount: 77500, shareType: "default", customShares: {}, payments: { ortak1: true, ortak2: true } },
+                    { id: 3, name: "2. Tasarruf Taksiti", date: "05.07.2026", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 4, name: "3. Tasarruf Taksiti", date: "05.08.2026", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 5, name: "4. Tasarruf Taksiti", date: "05.09.2026", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 6, name: "5. Tasarruf Taksiti (Tahsisat Ayı)", date: "05.10.2026", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 7, name: "6. Tasarruf Taksiti", date: "05.11.2026", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 8, name: "7. Tasarruf Taksiti", date: "05.12.2026", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 9, name: "8. Tasarruf Taksiti", date: "05.01.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 10, name: "9. Tasarruf Taksiti", date: "05.02.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 11, name: "10. Tasarruf Taksiti", date: "05.03.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 12, name: "11. Tasarruf Taksiti", date: "05.04.2027", totalAmount: 25000, shareType: "default", customShares: {}, payments: {} }
+                ]
+            },
+            birevim: {
+                meta: {
+                    title: "Birevim Serbest Planlı Araç Finansmanı",
+                    desc: "500,000 ₺ Araç Finansmanı + 40,000 ₺ Çalışma Bedeli (Peşinatsız 24 Ay Model)",
+                    deliveryInstId: 6
+                },
+                partners: [
+                    { id: "ortak1", name: "Ortak 1", color: "#38bdf8", defaultPct: 50 },
+                    { id: "ortak2", name: "Ortak 2", color: "#fb923c", defaultPct: 50 }
+                ],
+                installments: [
+                    { id: 1, name: "Çalışma Bedeli 1. Taksit (10.000 ₺) + 1. Tasarruf (20.833 ₺)", date: "01.05.2026", totalAmount: 30833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 2, name: "Çalışma Bedeli 2. Taksit (10.000 ₺) + 2. Tasarruf (20.833 ₺)", date: "01.06.2026", totalAmount: 30833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 3, name: "Çalışma Bedeli 3. Taksit (10.000 ₺) + 3. Tasarruf (20.833 ₺)", date: "01.07.2026", totalAmount: 30833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 4, name: "Çalışma Bedeli 4. Taksit (10.000 ₺) + 4. Tasarruf (20.833 ₺)", date: "01.08.2026", totalAmount: 30833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 5, name: "5. Tasarruf Taksiti", date: "01.09.2026", totalAmount: 20833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 6, name: "6. Tasarruf Taksiti (Teslimat Ayı)", date: "01.10.2026", totalAmount: 20833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 7, name: "7. Tasarruf Taksiti", date: "01.11.2026", totalAmount: 20833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 8, name: "8. Tasarruf Taksiti", date: "01.12.2026", totalAmount: 20833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 9, name: "9. Tasarruf Taksiti", date: "01.01.2027", totalAmount: 20833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 10, name: "10. Tasarruf Taksiti", date: "01.02.2027", totalAmount: 20833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 11, name: "11. Tasarruf Taksiti", date: "01.03.2027", totalAmount: 20833, shareType: "default", customShares: {}, payments: {} },
+                    { id: 12, name: "12. Tasarruf Taksiti", date: "01.04.2027", totalAmount: 20833, shareType: "default", customShares: {}, payments: {} }
+                ]
+            },
+            katilimevim: {
+                meta: {
+                    title: "Katılımevim Tasarruf Dönemli Konut Finansmanı",
+                    desc: "2,000,000 ₺ Konut + 140,000 ₺ Katılım Ücreti (Peşinatlı Model)",
+                    deliveryInstId: 6
+                },
+                partners: [
+                    { id: "ortak1", name: "Ortak 1", color: "#38bdf8", defaultPct: 50 },
+                    { id: "ortak2", name: "Ortak 2", color: "#fb923c", defaultPct: 50 }
+                ],
+                installments: [
+                    { id: 1, name: "Konut Peşinatı (400.000 ₺) + Katılım Ücreti Peşinat (70.000 ₺)", date: "15.05.2026", totalAmount: 470000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 2, name: "Katılım Ücreti 2. Taksit (35.000 ₺) + 1. Tasarruf (35.000 ₺)", date: "15.06.2026", totalAmount: 70000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 3, name: "Katılım Ücreti 3. Taksit (35.000 ₺) + 2. Tasarruf (35.000 ₺)", date: "15.07.2026", totalAmount: 70000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 4, name: "3. Tasarruf Taksiti", date: "15.08.2026", totalAmount: 35000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 5, name: "4. Tasarruf Taksiti", date: "15.09.2026", totalAmount: 35000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 6, name: "5. Tasarruf Taksiti (Tahsisat Ayı)", date: "15.10.2026", totalAmount: 35000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 7, name: "6. Tasarruf Taksiti", date: "15.11.2026", totalAmount: 35000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 8, name: "7. Tasarruf Taksiti", date: "15.12.2026", totalAmount: 35000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 9, name: "8. Tasarruf Taksiti", date: "15.01.2027", totalAmount: 35000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 10, name: "9. Tasarruf Taksiti", date: "15.02.2027", totalAmount: 35000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 11, name: "10. Tasarruf Taksiti", date: "15.03.2027", totalAmount: 35000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 12, name: "11. Tasarruf Taksiti", date: "15.04.2027", totalAmount: 35000, shareType: "default", customShares: {}, payments: {} }
+                ]
+            },
+            sinpas: {
+                meta: {
+                    title: "Sinpaş Yapı Tasarruf Konut Planı",
+                    desc: "3,000,000 ₺ Konut Finansmanı + 180,000 ₺ Org. Ücreti (Eşit Taksitli Model)",
+                    deliveryInstId: 7
+                },
+                partners: [
+                    { id: "ortak1", name: "Ortak 1", color: "#38bdf8", defaultPct: 50 },
+                    { id: "ortak2", name: "Ortak 2", color: "#fb923c", defaultPct: 50 }
+                ],
+                installments: [
+                    { id: 1, name: "Peşinat (500.000 ₺) + Org. Ücreti (180.000 ₺)", date: "10.05.2026", totalAmount: 680000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 2, name: "1. Tasarruf Taksiti", date: "10.06.2026", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 3, name: "2. Tasarruf Taksiti", date: "10.07.2026", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 4, name: "3. Tasarruf Taksiti", date: "10.08.2026", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 5, name: "4. Tasarruf Taksiti", date: "10.09.2026", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 6, name: "5. Tasarruf Taksiti", date: "10.10.2026", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 7, name: "6. Tasarruf Taksiti (Tahsisat Ayı)", date: "10.11.2026", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 8, name: "7. Tasarruf Taksiti", date: "10.12.2026", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 9, name: "8. Tasarruf Taksiti", date: "10.01.2027", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 10, name: "9. Tasarruf Taksiti", date: "10.02.2027", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 11, name: "10. Tasarruf Taksiti", date: "10.03.2027", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} },
+                    { id: 12, name: "11. Tasarruf Taksiti", date: "10.04.2027", totalAmount: 50000, shareType: "default", customShares: {}, payments: {} }
+                ]
+            }
+        };
+
+        let currentPreviewKey = null;
+
+        function previewTemplate(templateKey) {
+            const tmpl = ALL_TEMPLATES[templateKey];
+            if (!tmpl) return;
+
+            currentPreviewKey = templateKey;
+
+            document.getElementById('prevModalTitle').textContent = `👁️ Ön İzleme: ${tmpl.meta.title}`;
+            document.getElementById('prevModalDesc').textContent = tmpl.meta.desc;
+
+            const grandTotal = tmpl.installments.reduce((sum, i) => sum + i.totalAmount, 0);
+            const delInst = tmpl.installments.find(i => i.id === (tmpl.meta.deliveryInstId || 6));
+
+            document.getElementById('prevMetaTotal').textContent = formatCurrency(grandTotal);
+            document.getElementById('prevMetaCount').textContent = `${tmpl.installments.length} Taksit`;
+            document.getElementById('prevMetaDelivery').textContent = delInst ? `${delInst.name}` : '-';
+
+            const tbody = document.getElementById('prevTableBody');
+            let rowsHtml = '';
+            tmpl.installments.forEach((inst, idx) => {
+                const perPerson = inst.totalAmount / (tmpl.partners.length || 2);
+                rowsHtml += `
+                <tr>
+                    <td style="font-weight:700; color:var(--text-muted);">${inst.id || idx + 1}</td>
+                    <td style="font-weight:600;">${inst.name}</td>
+                    <td>📅 ${inst.date}</td>
+                    <td style="font-weight:800; color:var(--text-main);">${formatCurrency(inst.totalAmount)}</td>
+                    <td style="font-weight:700; color:var(--primary-light);">${formatCurrency(perPerson)}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = rowsHtml;
+
+            document.getElementById('templatePreviewModal').classList.add('active');
+        }
+
+        function closeTemplatePreviewModal() {
+            document.getElementById('templatePreviewModal').classList.remove('active');
+        }
+
+        function confirmLoadPreviewedTemplate() {
+            if (currentPreviewKey) {
+                closeTemplatePreviewModal();
+                loadNamedTemplate(currentPreviewKey);
+            }
+        }
+
+        function loadNamedTemplate(templateKey) {
+            const tmpl = ALL_TEMPLATES[templateKey];
+            if (!tmpl) return;
+
+            if (confirm(`${tmpl.meta.title} şablonu yüklenecek. Mevcut verileriniz yenilenecek. Onaylıyor musunuz?`)) {
+                state = JSON.parse(JSON.stringify(tmpl));
+                saveState();
+                switchView('dashboard');
+            }
+        }
+
+        function loadEmptyTemplate() {
+            if (confirm('Tüm veriler temizlenip boş bir plan oluşturulacak. Emin misiniz?')) {
+                state = {
+                    meta: { title: "Yeni Borç Takip Planı", desc: "Özel Takip Planı", deliveryInstId: 1 },
+                    partners: [
+                        { id: "ortak1", name: "Ortak 1", color: "#38bdf8", defaultPct: 50 },
+                        { id: "ortak2", name: "Ortak 2", color: "#fb923c", defaultPct: 50 }
+                    ],
+                    installments: []
+                };
+                saveState();
+                switchView('setup');
+            }
+        }
+
+        // ================= CALENDAR (.ICS) EXPORT =================
+        function exportICSFile() {
+            let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Borc Taksit Takip App//TR\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
+
+            state.installments.forEach(inst => {
+                const dateObj = parseDateTR(inst.date);
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const dtStr = `${year}${month}${day}`;
+
+                icsContent += "BEGIN:VEVENT\r\n";
+                icsContent += `SUMMARY:${inst.name} - ${formatCurrency(inst.totalAmount)}\r\n`;
+                icsContent += `DESCRIPTION:${state.meta.title} kapsamında ödenmesi gereken son vade tarihi.\\nToplam Tutar: ${formatCurrency(inst.totalAmount)}\r\n`;
+                icsContent += `DTSTART;VALUE=DATE:${dtStr}\r\n`;
+                icsContent += `DTEND;VALUE=DATE:${dtStr}\r\n`;
+                icsContent += `STATUS:CONFIRMED\r\n`;
+                icsContent += "END:VEVENT\r\n";
+            });
+
+            icsContent += "END:VCALENDAR\r\n";
+
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `taksit_takvimi_${new Date().toISOString().slice(0,10)}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        // ================= DATA IMPORT / EXPORT =================
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `borc_taksit_takip_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function exportDataCSV() {
+            let csv = "ID,Taksit Adi,Tarih,Toplam Tutar";
+            state.partners.forEach(p => { csv += `,${p.name} Payi,${p.name} Odeme Durumu,${p.name} Odeyen Kisı,${p.name} Dekont Notu`; });
+            csv += "\n";
+
+            state.installments.forEach(inst => {
+                csv += `"${inst.id}","${inst.name}","${inst.date}",${inst.totalAmount}`;
+                state.partners.forEach(p => {
+                    const share = getPartnerShare(inst, p.id);
+                    const isPaid = inst.payments && inst.payments[p.id] ? "ODENDI" : "BEKLIYOR";
+                    const pDetail = (inst.details && inst.details[p.id]) || {};
+                    const paidByP = state.partners.find(x => x.id === pDetail.paidBy);
+                    const paidByName = paidByP ? paidByP.name : p.name;
+                    const note = pDetail.note || "";
+
+                    csv += `,${share},${isPaid},"${paidByName}","${note}"`;
+                });
+                csv += "\n";
+            });
+
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `borc_taksit_takip_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function importDataJSON() {
+            const fileInput = document.getElementById('importFileInput');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Lütfen yüklenecek bir JSON dosyası seçin.');
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    if (importedState && importedState.partners && importedState.installments) {
+                        state = importedState;
+                        saveState();
+                        alert('Yedek başarıyla yüklendi!');
+                        switchView('dashboard');
+                    } else {
+                        alert('Geçersiz dosya formatı.');
+                    }
+                } catch (err) {
+                    alert('JSON okuma hatası: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function renderAll() {
+            renderDashboard();
+        }
+
+        // Initial Render
+        renderAll();
+    </script>
+</body>
+</html>

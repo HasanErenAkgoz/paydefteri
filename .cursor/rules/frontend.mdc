@@ -1,0 +1,32 @@
+---
+description: Angular frontend conventions for dashboard, setup, and data features
+globs: "**/src/web/**/*.{ts,html,scss},**/*.{ts,html,scss}"
+alwaysApply: false
+---
+
+# Frontend
+
+## Features (parity with HTML views)
+| Feature | Responsibility |
+|---------|----------------|
+| `dashboard` | Metrics, partner cards, installment table, payment modal, filters |
+| `setup` | Plan meta, partners CRUD, templates, installment list |
+| `data` | JSON/CSV/ICS export-import, print/report |
+
+## Patterns
+- Standalone components + `inject()`; prefer signals / `resource` over ad-hoc Subjects
+- HTTP only via `core` services; no business formulas in templates
+- Share/status/settlement display values come from API (or shared typed helpers that mirror Domain)
+- Currency: `Intl.NumberFormat('tr-TR')` + `₺`
+- UI copy: Turkish; code identifiers: English
+
+## UX rules from prototype
+- Payment click → modal (status, date, paidBy, note) — not silent toggle alone
+- Delivery countdown from `deliveryInstId`
+- Filters: all / pending / partial / paid; search by name/date
+- Print signatures must use current partners (never hardcode names)
+
+## Anti-patterns
+- `innerHTML` with user data (XSS)
+- Recalculating shares differently from backend
+- Cards/modals that invent fields not in the domain model without a product decision

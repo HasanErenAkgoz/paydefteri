@@ -1,0 +1,42 @@
+---
+description: Taksitle system architecture, bounded contexts, and monorepo layout
+alwaysApply: true
+---
+
+# Architecture
+
+## Product
+- **Taksitle** — multi-partner installment tracker for Turkish savings-finance plans (and similar shared payment plans).
+- Audience: co-buyer / household SaaS — not financing-company back-office.
+- Functional spec: `fuzul-taksit-takip.html` (localStorage prototype). Preserve behavior; harden for multi-plan + auth.
+- “Fuzul” appears only as an optional seed template, not the product brand.
+
+## Stack
+- Frontend: Angular standalone + signals → `src/web`
+- Backend: ASP.NET Core Web API, Clean Architecture → `src/api`
+- DB: PostgreSQL + EF Core
+- Auth: JWT; plan-level authorization
+
+## Bounded context (Installment Tracking)
+| Entity | Role |
+|--------|------|
+| Plan | `title`, `desc`, `deliveryInstId` |
+| Partner | `name`, `color`, `defaultPct` |
+| Installment | `name`, `dueDate`, `totalAmount`, `shareType` |
+| Payment | per partner: paid, paidAt, paidByPartnerId, note |
+| Settlement | derived from pay-on-behalf (`paidBy ≠ owner`) |
+
+Share types: `default` | `equal` | `custom`. Status: `pending` | `partial` | `full`.
+
+## Layout
+```
+src/api/{Domain,Application,Infrastructure,Api}
+src/web/src/app/{core,shared,features/{dashboard,setup,data}}
+tests/
+```
+
+## Rules
+- Domain logic lives in .NET Domain/Application — not Angular templates.
+- One plan owns many partners and installments; users may own many plans.
+- Prefer small PRs; ADR for cross-cutting decisions.
+- Do not invent CRM/Customer/Contract entities unless product scope expands.

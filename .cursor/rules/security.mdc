@@ -1,0 +1,25 @@
+---
+description: AuthZ, XSS, import trust, and secrets hardening for Taksitle
+alwaysApply: true
+---
+
+# Security
+
+## Auth & tenancy
+- JWT required for mutating APIs
+- Every plan query/command must enforce **owner (or member) authorization**
+- Never trust client-supplied `userId` / `planId` without server checks
+
+## Input & XSS
+- Validate all DTOs (FluentValidation)
+- Angular: bind text safely — no `innerHTML` for names/notes
+- JSON import: schema validation + size limits; reject unknown shapes
+
+## Data
+- Soft-delete / audit for payment and settlement changes
+- Do not log PII (full notes, bank refs) at Information in production
+- Secrets only in env / user-secrets — never commit `.env` with keys
+
+## Exports
+- ICS/CSV/JSON downloads scoped to authorized plan only
+- Print/PDF must not leak other users’ plans

@@ -1,0 +1,51 @@
+<div class="app-shell">
+  <header class="navbar">
+    <div class="nav-container">
+      <a class="brand" routerLink="/plans">
+        <span class="brand-icon">₺</span>
+        <span class="brand-text">
+          <strong>Taksitle</strong>
+          @if (planContext.planTitle(); as title) {
+            <small>{{ title }}</small>
+          } @else {
+            <small>Çok ortaklı taksit yönetimi</small>
+          }
+        </span>
+      </a>
+
+      <div class="nav-actions">
+        @if (showPlanTabs()) {
+          <nav class="nav-tabs">
+            <a
+              class="nav-tab"
+              [routerLink]="['/plans', planId(), 'dashboard']"
+              routerLinkActive="active"
+              >Dashboard</a
+            >
+            <a
+              class="nav-tab"
+              [routerLink]="['/plans', planId(), 'setup']"
+              routerLinkActive="active"
+              >Kurulum</a
+            >
+            <a
+              class="nav-tab"
+              [routerLink]="['/plans', planId(), 'data']"
+              routerLinkActive="active"
+              >Veri</a
+            >
+          </nav>
+        }
+
+        @if (auth.isAuthenticated()) {
+          <a class="btn btn-ghost btn-sm" routerLink="/plans">Planlar</a>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="logout()">Çıkış</button>
+        }
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <router-outlet />
+  </main>
+</div>

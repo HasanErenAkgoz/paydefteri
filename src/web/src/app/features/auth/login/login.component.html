@@ -1,0 +1,29 @@
+<section class="auth-page">
+  <form class="auth-card" (ngSubmit)="submit()">
+    <h1>Giriş Yap</h1>
+    <p class="muted">Taksitle hesabınıza giriş yapın.</p>
+
+    @if (error()) {
+      <div class="alert alert-danger">{{ error() }}</div>
+    }
+
+    <label>
+      E-posta
+      <input type="email" name="email" [(ngModel)]="email" required autocomplete="email" />
+    </label>
+
+    <label>
+      Şifre
+      <input type="password" name="password" [(ngModel)]="password" required autocomplete="current-password" />
+    </label>
+
+    <button class="btn btn-primary" type="submit" [disabled]="loading()">
+      {{ loading() ? 'Giriş yapılıyor…' : 'Giriş Yap' }}
+    </button>
+
+    <p class="auth-footer">
+      Hesabınız yok mu?
+      <a routerLink="/register">Kayıt olun</a>
+    </p>
+  </form>
+</section>

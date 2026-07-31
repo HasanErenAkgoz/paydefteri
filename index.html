@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devre Simülatörü - 3 Anahtar 3 Ampul</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e1a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #e0e6f0;
+            overflow: hidden;
+        }
+
+        /* Background grid animation */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 24px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .circuit-container {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.7));
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-radius: 24px;
+            padding: 40px 50px;
+            backdrop-filter: blur(20px);
+            box-shadow: 
+                0 0 60px rgba(99, 102, 241, 0.08),
+                0 25px 50px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        svg.circuit-svg {
+            display: block;
+        }
+
+        /* Switch styles */
+        .switch-group {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .switch-group:hover .switch-body {
+            filter: brightness(1.2);
+        }
+
+        .switch-body {
+            transition: fill 0.3s ease;
+        }
+
+        .switch-handle {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: center;
+        }
+
+        .switch-label {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            fill: #94a3b8;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .switch-status {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 10px;
+            text-anchor: middle;
+            pointer-events: none;
+            transition: fill 0.3s ease;
+        }
+
+        /* Bulb glow animation */
+        @keyframes bulbGlow {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .bulb-glow {
+            animation: bulbGlow 2s ease-in-out infinite;
+        }
+
+        /* Wire pulse animation */
+        @keyframes wirePulse {
+            0% { stroke-dashoffset: 20; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        .wire-active {
+            stroke-dasharray: 10 10;
+            animation: wirePulse 0.8s linear infinite;
+        }
+
+        /* Info panel */
+        .info-panel {
+            position: relative;
+            z-index: 1;
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .info-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(99, 102, 241, 0.12);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .info-card span {
+            font-weight: 700;
+            color: #c4b5fd;
+        }
+
+        .info-card.highlight {
+            border-color: rgba(251, 191, 36, 0.3);
+            background: rgba(251, 191, 36, 0.05);
+        }
+
+        .info-card.highlight span {
+            color: #fbbf24;
+        }
+
+        /* Legend */
+        .legend {
+            position: relative;
+            z-index: 1;
+            margin-top: 16px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            color: #64748b;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.blue { background: #3b82f6; }
+        .legend-dot.purple { background: #8b5cf6; }
+        .legend-dot.amber { background: #f59e0b; box-shadow: 0 0 6px rgba(245, 158, 11, 0.5); }
+        .legend-dot.gray { background: #475569; }
+    </style>
+</head>
+<body>
+    <h1>⚡ Devre Simülatörü</h1>
+    <p class="subtitle">Anahtarlara tıklayarak devreyi kontrol edin</p>
+
+    <div class="circuit-container">
+        <svg class="circuit-svg" width="700" height="480" viewBox="0 0 700 480">
+            <defs>
+                <!-- Bulb glow filter -->
+                <filter id="glowYellow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="12" result="blur"/>
+                    <feFlood flood-color="#fbbf24" flood-opacity="0.6" result="color"/>
+                    <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+                    <feMerge>
+                        <feMergeNode in="shadow"/>
+                        <feMergeNode in="shadow"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+
+                <filter id="glowBlue" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="6" result="blur"/>
+                    <feFlood flood-color="#3b82f6" flood-opacity="0.4" result="color"/>
+                    <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+                    <feMerge>
+                        <feMergeNode in="shadow"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+
+                <filter id="glowPurple" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="6" result="blur"/>
+                    <feFlood flood-color="#8b5cf6" flood-opacity="0.4" result="color"/>
+                    <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+                    <feMerge>
+                        <feMergeNode in="shadow"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+
+                <filter id="glowAmber" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="6" result="blur"/>
+                    <feFlood flood-color="#f59e0b" flood-opacity="0.4" result="color"/>
+                    <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+                    <feMerge>
+                        <feMergeNode in="shadow"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+
+                <!-- Battery symbol -->
+                <symbol id="battery" viewBox="0 0 60 30">
+                    <line x1="10" y1="5" x2="10" y2="25" stroke="#ef4444" stroke-width="3"/>
+                    <line x1="20" y1="10" x2="20" y2="20" stroke="#3b82f6" stroke-width="2"/>
+                    <line x1="30" y1="5" x2="30" y2="25" stroke="#ef4444" stroke-width="3"/>
+                    <line x1="40" y1="10" x2="40" y2="20" stroke="#3b82f6" stroke-width="2"/>
+                    <text x="50" y="12" font-size="8" fill="#ef4444" font-weight="bold">+</text>
+                    <text x="0" y="12" font-size="8" fill="#3b82f6" font-weight="bold">−</text>
+                </symbol>
+            </defs>
+
+            <!-- ===== POWER SOURCE ===== -->
+            <!-- Battery -->
+            <rect x="15" y="205" width="60" height="70" rx="8" fill="rgba(30,41,59,0.8)" stroke="#475569" stroke-width="1.5"/>
+            <text x="45" y="225" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Inter" font-weight="600">GÜÇ</text>
+            <text x="45" y="238" text-anchor="middle" font-size="8" fill="#64748b" font-family="Inter">KAYNAĞI</text>
+            <!-- Battery icon -->
+            <line x1="30" y1="250" x2="30" y2="268" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+            <line x1="40" y1="254" x2="40" y2="264" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+            <line x1="50" y1="250" x2="50" y2="268" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+            <line x1="60" y1="254" x2="60" y2="264" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+            <text x="25" y="248" font-size="10" fill="#ef4444" font-weight="bold" font-family="Inter">+</text>
+            <text x="61" y="248" font-size="10" fill="#60a5fa" font-weight="bold" font-family="Inter">−</text>
+
+            <!-- ===== MAIN POWER LINES ===== -->
+            <!-- Top rail (positive) -->
+            <line id="wire-top-main" x1="45" y1="205" x2="45" y2="60" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
+            <line id="wire-top-horiz" x1="45" y1="60" x2="650" y2="60" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
+
+            <!-- Bottom rail (negative/return) -->
+            <line id="wire-bot-main" x1="45" y1="275" x2="45" y2="420" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+            <line id="wire-bot-horiz" x1="45" y1="420" x2="650" y2="420" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+
+            <!-- Rail labels -->
+            <text x="85" y="52" font-size="9" fill="#ef4444" font-family="Inter" font-weight="600" opacity="0.7">+ HAT (FAZ)</text>
+            <text x="85" y="435" font-size="9" fill="#3b82f6" font-family="Inter" font-weight="600" opacity="0.7">− HAT (NÖTR)</text>
+
+
+            <!-- ===== BRANCH 1: Switch A → Bulb 1 ===== -->
+            <!-- Vertical down from top rail to switch A -->
+            <line id="wireA-top" x1="200" y1="60" x2="200" y2="120" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+            <!-- Junction dot on top rail -->
+            <circle cx="200" cy="60" r="4" fill="#ef4444"/>
+
+            <!-- Switch A -->
+            <g class="switch-group" id="switchA" onclick="toggleSwitch('A')">
+                <rect class="switch-body" x="172" y="120" width="56" height="32" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+                <rect id="switchA-indicator" x="176" y="124" width="24" height="24" rx="4" fill="#334155" stroke="#475569" stroke-width="1"/>
+                <text class="switch-label" x="200" y="112" fill="#3b82f6">A</text>
+                <text class="switch-status" id="switchA-status" x="200" y="168" fill="#475569">KAPALI</text>
+            </g>
+
+            <!-- Wire from switch A down to junction point -->
+            <line id="wireA-mid" x1="200" y1="152" x2="200" y2="220" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+
+            <!-- Junction point where A and C-branch-1 meet -->
+            <circle id="juncA" cx="200" cy="220" r="4" fill="#475569"/>
+
+            <!-- Wire from junction to Bulb 1 -->
+            <line id="wireA-toBulb" x1="200" y1="220" x2="200" y2="280" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+
+            <!-- Bulb 1 -->
+            <g id="bulb1-group">
+                <circle id="bulb1-glow" cx="200" cy="310" r="28" fill="none" opacity="0"/>
+                <circle id="bulb1" cx="200" cy="310" r="22" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                <path d="M189 304 L200 296 L211 304" stroke="#475569" stroke-width="1.5" fill="none" id="bulb1-filament"/>
+                <path d="M189 316 L200 308 L211 316" stroke="#475569" stroke-width="1.5" fill="none" id="bulb1-filament2"/>
+                <text x="200" y="348" text-anchor="middle" font-size="11" fill="#64748b" font-family="Inter" font-weight="600">AMPUL 1</text>
+            </g>
+
+            <!-- Wire from Bulb 1 to bottom rail -->
+            <line id="wireA-bot" x1="200" y1="332" x2="200" y2="420" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="200" cy="420" r="4" fill="#3b82f6"/>
+
+
+            <!-- ===== BRANCH 2: Switch B → Bulb 2 ===== -->
+            <line id="wireB-top" x1="400" y1="60" x2="400" y2="120" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="400" cy="60" r="4" fill="#ef4444"/>
+
+            <!-- Switch B -->
+            <g class="switch-group" id="switchB" onclick="toggleSwitch('B')">
+                <rect class="switch-body" x="372" y="120" width="56" height="32" rx="6" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/>
+                <rect id="switchB-indicator" x="376" y="124" width="24" height="24" rx="4" fill="#334155" stroke="#475569" stroke-width="1"/>
+                <text class="switch-label" x="400" y="112" fill="#8b5cf6">B</text>
+                <text class="switch-status" id="switchB-status" x="400" y="168" fill="#475569">KAPALI</text>
+            </g>
+
+            <line id="wireB-mid" x1="400" y1="152" x2="400" y2="220" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+            <circle id="juncB" cx="400" cy="220" r="4" fill="#475569"/>
+            <line id="wireB-toBulb" x1="400" y1="220" x2="400" y2="280" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+
+            <!-- Bulb 2 -->
+            <g id="bulb2-group">
+                <circle id="bulb2-glow" cx="400" cy="310" r="28" fill="none" opacity="0"/>
+                <circle id="bulb2" cx="400" cy="310" r="22" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                <path d="M389 304 L400 296 L411 304" stroke="#475569" stroke-width="1.5" fill="none" id="bulb2-filament"/>
+                <path d="M389 316 L400 308 L411 316" stroke="#475569" stroke-width="1.5" fill="none" id="bulb2-filament2"/>
+                <text x="400" y="348" text-anchor="middle" font-size="11" fill="#64748b" font-family="Inter" font-weight="600">AMPUL 2</text>
+            </g>
+
+            <line id="wireB-bot" x1="400" y1="332" x2="400" y2="420" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="400" cy="420" r="4" fill="#3b82f6"/>
+
+
+            <!-- ===== BRANCH 3: Bulb 3 (only C controls it) ===== -->
+            <line id="wireC3-top" x1="600" y1="60" x2="600" y2="220" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="600" cy="60" r="4" fill="#ef4444"/>
+            <circle id="juncC3" cx="600" cy="220" r="4" fill="#475569"/>
+            <line id="wireC3-toBulb" x1="600" y1="220" x2="600" y2="280" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+
+            <!-- Bulb 3 -->
+            <g id="bulb3-group">
+                <circle id="bulb3-glow" cx="600" cy="310" r="28" fill="none" opacity="0"/>
+                <circle id="bulb3" cx="600" cy="310" r="22" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                <path d="M589 304 L600 296 L611 304" stroke="#475569" stroke-width="1.5" fill="none" id="bulb3-filament"/>
+                <path d="M589 316 L600 308 L611 316" stroke="#475569" stroke-width="1.5" fill="none" id="bulb3-filament2"/>
+                <text x="600" y="348" text-anchor="middle" font-size="11" fill="#64748b" font-family="Inter" font-weight="600">AMPUL 3</text>
+            </g>
+
+            <line id="wireC3-bot" x1="600" y1="332" x2="600" y2="420" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="600" cy="420" r="4" fill="#3b82f6"/>
+
+
+            <!-- ===== SWITCH C: Master switch that feeds all 3 bulbs via parallel paths ===== -->
+            <!-- C comes down from top rail at x=120 -->
+            <line id="wireC-top" x1="120" y1="60" x2="120" y2="120" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="120" cy="60" r="4" fill="#ef4444"/>
+
+            <!-- Switch C -->
+            <g class="switch-group" id="switchC" onclick="toggleSwitch('C')">
+                <rect class="switch-body" x="92" y="120" width="56" height="32" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+                <rect id="switchC-indicator" x="96" y="124" width="24" height="24" rx="4" fill="#334155" stroke="#475569" stroke-width="1"/>
+                <text class="switch-label" x="120" y="112" fill="#f59e0b">C</text>
+                <text class="switch-status" id="switchC-status" x="120" y="168" fill="#475569">KAPALI</text>
+            </g>
+
+            <!-- Wire from switch C down to horizontal bus -->
+            <line id="wireC-mid" x1="120" y1="152" x2="120" y2="220" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+
+            <!-- C horizontal bus connecting to all 3 bulb junctions -->
+            <line id="wireC-bus" x1="120" y1="220" x2="600" y2="220" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 4" opacity="0.5"/>
+
+            <!-- C bus junction dots -->
+            <circle id="juncC-main" cx="120" cy="220" r="4" fill="#475569"/>
+
+            <!-- C-bus label -->
+            <text x="350" y="212" text-anchor="middle" font-size="8" fill="#f59e0b" font-family="Inter" font-weight="600" opacity="0" id="c-bus-label">C ANAHTARI HATTI</text>
+
+        </svg>
+    </div>
+
+    <div class="info-panel">
+        <div class="info-card">
+            <span>A Anahtarı:</span> Ampul 1'i açar/kapatır
+        </div>
+        <div class="info-card">
+            <span>B Anahtarı:</span> Ampul 2'yi açar/kapatır
+        </div>
+        <div class="info-card highlight">
+            <span>C Anahtarı:</span> 3 ampulü birden açar/kapatır
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-dot blue"></div>
+            A Anahtarı Hattı
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot purple"></div>
+            B Anahtarı Hattı
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot amber"></div>
+            C Anahtarı Hattı (Master)
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot gray"></div>
+            Kapalı Hat
+        </div>
+    </div>
+
+    <script>
+        // State
+        const state = {
+            A: false,
+            B: false,
+            C: false
+        };
+
+        const colors = {
+            A: { active: '#3b82f6', glow: 'glowBlue' },
+            B: { active: '#8b5cf6', glow: 'glowPurple' },
+            C: { active: '#f59e0b', glow: 'glowAmber' }
+        };
+
+        const inactiveColor = '#475569';
+        const bulbOffFill = '#1e293b';
+        const bulbOnFill = '#fef3c7';
+        const bulbOnStroke = '#fbbf24';
+        const filamentOn = '#f59e0b';
+        const filamentOff = '#475569';
+
+        function toggleSwitch(id) {
+            state[id] = !state[id];
+            updateCircuit();
+        }
+
+        function updateCircuit() {
+            // Update switches visually
+            ['A', 'B', 'C'].forEach(sw => {
+                const indicator = document.getElementById(`switch${sw}-indicator`);
+                const status = document.getElementById(`switch${sw}-status`);
+                const body = document.querySelector(`#switch${sw} .switch-body`);
+
+                if (state[sw]) {
+                    // ON position - slide indicator to right
+                    indicator.setAttribute('x', parseInt(indicator.getAttribute('x')) < 200 ? 
+                        (sw === 'A' ? '200' : sw === 'B' ? '400' : '120') : indicator.getAttribute('x'));
+                    
+                    // Calculate right position
+                    const baseX = sw === 'A' ? 172 : sw === 'B' ? 372 : 92;
+                    indicator.setAttribute('x', baseX + 28);
+                    indicator.setAttribute('fill', colors[sw].active);
+                    indicator.setAttribute('stroke', colors[sw].active);
+                    status.textContent = 'AÇIK';
+                    status.setAttribute('fill', colors[sw].active);
+                    body.setAttribute('fill', '#1a2332');
+                } else {
+                    const baseX = sw === 'A' ? 176 : sw === 'B' ? 376 : 96;
+                    indicator.setAttribute('x', baseX);
+                    indicator.setAttribute('fill', '#334155');
+                    indicator.setAttribute('stroke', '#475569');
+                    status.textContent = 'KAPALI';
+                    status.setAttribute('fill', inactiveColor);
+                    body.setAttribute('fill', '#1e293b');
+                }
+            });
+
+            // Determine bulb states (OR logic for C)
+            const bulb1On = state.A || state.C;
+            const bulb2On = state.B || state.C;
+            const bulb3On = state.C;
+
+            // Update Bulb 1
+            updateBulb(1, bulb1On);
+            // Update Bulb 2
+            updateBulb(2, bulb2On);
+            // Update Bulb 3
+            updateBulb(3, bulb3On);
+
+            // Update wires for Branch A
+            const wireAColor = state.A ? colors.A.active : inactiveColor;
+            setWireColor('wireA-top', wireAColor, state.A);
+            setWireColor('wireA-mid', wireAColor, state.A);
+
+            // Branch A to bulb: active if A or C
+            const branchAActive = state.A || state.C;
+            const branchAColor = state.A ? colors.A.active : (state.C ? colors.C.active : inactiveColor);
+            setWireColor('wireA-toBulb', branchAColor, branchAActive);
+            setWireColor('wireA-bot', branchAColor, branchAActive);
+
+            // Update wires for Branch B
+            const wireBColor = state.B ? colors.B.active : inactiveColor;
+            setWireColor('wireB-top', wireBColor, state.B);
+            setWireColor('wireB-mid', wireBColor, state.B);
+
+            const branchBActive = state.B || state.C;
+            const branchBColor = state.B ? colors.B.active : (state.C ? colors.C.active : inactiveColor);
+            setWireColor('wireB-toBulb', branchBColor, branchBActive);
+            setWireColor('wireB-bot', branchBColor, branchBActive);
+
+            // Update wires for Branch 3 (C only)
+            const branchC3Color = state.C ? colors.C.active : inactiveColor;
+            setWireColor('wireC3-top', branchC3Color, state.C);
+            setWireColor('wireC3-toBulb', branchC3Color, state.C);
+            setWireColor('wireC3-bot', branchC3Color, state.C);
+
+            // Update C main wires
+            const wireCColor = state.C ? colors.C.active : inactiveColor;
+            setWireColor('wireC-top', wireCColor, state.C);
+            setWireColor('wireC-mid', wireCColor, state.C);
+
+            // C bus line
+            const cBus = document.getElementById('wireC-bus');
+            cBus.setAttribute('stroke', state.C ? colors.C.active : inactiveColor);
+            cBus.setAttribute('opacity', state.C ? '0.8' : '0.3');
+            if (state.C) {
+                cBus.classList.add('wire-active');
+            } else {
+                cBus.classList.remove('wire-active');
+            }
+
+            // C bus label
+            document.getElementById('c-bus-label').setAttribute('opacity', state.C ? '0.8' : '0');
+
+            // Junction dots
+            updateJunction('juncA', branchAActive, branchAColor);
+            updateJunction('juncB', branchBActive, branchBColor);
+            updateJunction('juncC3', state.C, branchC3Color);
+            updateJunction('juncC-main', state.C, wireCColor);
+        }
+
+        function setWireColor(wireId, color, active) {
+            const wire = document.getElementById(wireId);
+            if (!wire) return;
+            wire.setAttribute('stroke', color);
+            wire.setAttribute('stroke-width', active ? '2.5' : '2');
+            if (active) {
+                wire.setAttribute('filter', color === colors.A.active ? 'url(#glowBlue)' : 
+                                            color === colors.B.active ? 'url(#glowPurple)' :
+                                            color === colors.C.active ? 'url(#glowAmber)' : '');
+            } else {
+                wire.removeAttribute('filter');
+            }
+        }
+
+        function updateJunction(id, active, color) {
+            const junc = document.getElementById(id);
+            if (!junc) return;
+            junc.setAttribute('fill', active ? color : inactiveColor);
+            if (active) {
+                junc.setAttribute('r', '5');
+            } else {
+                junc.setAttribute('r', '4');
+            }
+        }
+
+        function updateBulb(num, isOn) {
+            const bulb = document.getElementById(`bulb${num}`);
+            const glow = document.getElementById(`bulb${num}-glow`);
+            const fil1 = document.getElementById(`bulb${num}-filament`);
+            const fil2 = document.getElementById(`bulb${num}-filament2`);
+
+            if (isOn) {
+                bulb.setAttribute('fill', bulbOnFill);
+                bulb.setAttribute('stroke', bulbOnStroke);
+                bulb.setAttribute('filter', 'url(#glowYellow)');
+                glow.setAttribute('fill', 'rgba(251,191,36,0.15)');
+                glow.setAttribute('opacity', '1');
+                glow.classList.add('bulb-glow');
+                fil1.setAttribute('stroke', filamentOn);
+                fil2.setAttribute('stroke', filamentOn);
+                fil1.setAttribute('stroke-width', '2.5');
+                fil2.setAttribute('stroke-width', '2.5');
+            } else {
+                bulb.setAttribute('fill', bulbOffFill);
+                bulb.setAttribute('stroke', inactiveColor);
+                bulb.removeAttribute('filter');
+                glow.setAttribute('fill', 'none');
+                glow.setAttribute('opacity', '0');
+                glow.classList.remove('bulb-glow');
+                fil1.setAttribute('stroke', filamentOff);
+                fil2.setAttribute('stroke', filamentOff);
+                fil1.setAttribute('stroke-width', '1.5');
+                fil2.setAttribute('stroke-width', '1.5');
+            }
+        }
+
+        // Initialize
+        updateCircuit();
+    </script>
+</body>
+</html>

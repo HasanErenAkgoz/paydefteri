@@ -1,0 +1,50 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Planlarım</h1>
+      <p class="muted">Taksit planlarınızı yönetin.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="alert alert-danger">{{ error() }}</div>
+  }
+
+  <div class="card create-card">
+    <h2>Yeni plan</h2>
+    <form class="form-row" (ngSubmit)="create()">
+      <label>
+        Başlık
+        <input type="text" name="title" [(ngModel)]="newTitle" required placeholder="Örn. Ortak konut ödeme planı" />
+      </label>
+      <label>
+        Açıklama
+        <input type="text" name="description" [(ngModel)]="newDescription" placeholder="İsteğe bağlı" />
+      </label>
+      <button class="btn btn-primary" type="submit" [disabled]="creating()">
+        {{ creating() ? 'Oluşturuluyor…' : 'Oluştur' }}
+      </button>
+    </form>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Yükleniyor…</p>
+  } @else if (plans().length === 0) {
+    <p class="muted">Henüz plan yok. Yukarıdan bir plan oluşturun.</p>
+  } @else {
+    <div class="plan-grid">
+      @for (plan of plans(); track plan.id) {
+        <a class="card plan-card" [routerLink]="['/plans', plan.id, 'dashboard']">
+          <div class="plan-card-top">
+            <h3>{{ plan.title }}</h3>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="remove(plan, $event)">Sil</button>
+          </div>
+          @if (plan.description) {
+            <p class="muted">{{ plan.description }}</p>
+          }
+          <p class="meta">Oluşturulma: {{ formatDateTr(plan.createdAtUtc) }}</p>
+        </a>
+      }
+    </div>
+  }
+</section>

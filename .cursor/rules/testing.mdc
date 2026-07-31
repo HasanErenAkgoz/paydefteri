@@ -1,0 +1,26 @@
+---
+description: Testing strategy — domain golden cases, API integration, Angular specs
+globs: "**/*Test*/**,**/*.spec.ts,**/tests/**"
+alwaysApply: false
+---
+
+# Testing
+
+## Pyramid
+1. **Domain unit** (xUnit + FluentAssertions): share math, status, settlement netting
+2. **Application / API integration**: auth + plan isolation, import validation
+3. **Angular unit**: pipes/helpers, component smoke for dashboard table
+4. **E2E** (Playwright, selective): pay installment, export JSON
+
+## Golden cases (must not regress)
+- Fuzul seed grand total = **1_070_000**
+- `default` 50/50 on 25_000 → 12_500 each
+- `equal` with 3 partners on 30_000 → 10_000 each
+- `custom` shares sum must equal `totalAmount` (reject otherwise)
+- Settlement: A pays B’s share → A credit, B debit by that share
+- Status: 0 paid → pending; some → partial; all → full
+
+## Rules
+- Cover known HTML bugs when fixed: missing bulk-value input, orphan keys on partner delete, pairwise-only settlement
+- Prefer deterministic dates; no network in unit tests
+- Name tests after business behavior, not implementation

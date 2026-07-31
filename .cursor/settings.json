@@ -1,0 +1,51 @@
+{
+  "project": {
+    "name": "taksitle",
+    "displayName": "Taksitle",
+    "description": "Çok ortaklı borç & taksit takip — Taksitle",
+    "referenceSpec": "fuzul-taksit-takip.html"
+  },
+  "language": {
+    "ui": "tr",
+    "code": "en",
+    "comments": "en"
+  },
+  "stack": {
+    "frontend": "Angular 19 (standalone, signals)",
+    "backend": "ASP.NET Core 8 Web API",
+    "orm": "EF Core 8",
+    "database": "PostgreSQL 16",
+    "architecture": "Clean Architecture",
+    "auth": "JWT"
+  },
+  "paths": {
+    "api": "src/api",
+    "web": "src/web",
+    "tests": "tests",
+    "solution": "FuzulTaksitTakip.sln"
+  },
+  "urls": {
+    "api": "http://localhost:5096",
+    "swagger": "http://localhost:5096/swagger",
+    "web": "http://localhost:4200"
+  },
+  "workflow": {
+    "phases": [
+      "plan-phase",
+      "implement-phase",
+      "verify-phase",
+      "quality-gate"
+    ],
+    "note": "Large features must follow plan → implement → verify → quality-gate. Use bug-hunt for defects and code-review for PR diffs."
+  },
+  "commands": {
+    "dbUp": "docker compose up -d",
+    "apiRun": "dotnet run --project src/api/FuzulTaksitTakip.Api",
+    "apiBuild": "dotnet build FuzulTaksitTakip.sln",
+    "apiTest": "dotnet test",
+    "webServe": "npm start --prefix src/web",
+    "webBuild": "npm run build --prefix src/web",
+    "webTest": "npm test --prefix src/web",
+    "efMigrate": "dotnet ef migrations add NAME -p src/api/FuzulTaksitTakip.Infrastructure -s src/api/FuzulTaksitTakip.Api -o Persistence/Migrations"
+  }
+}

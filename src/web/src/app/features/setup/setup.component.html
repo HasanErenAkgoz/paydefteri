@@ -1,0 +1,187 @@
+<section class="page">
+  @if (loading()) {
+    <p class="muted">Yükleniyor…</p>
+  } @else {
+    <header class="page-header">
+      <div>
+        <h1>Kurulum</h1>
+        <p class="muted">Plan, ortaklar ve taksitleri düzenleyin.</p>
+      </div>
+      <button type="button" class="btn btn-success" [disabled]="busy()" (click)="seedFuzul()">
+        Fuzul şablonunu yükle
+      </button>
+    </header>
+
+    @if (error()) {
+      <div class="alert alert-danger">{{ error() }}</div>
+    }
+    @if (message()) {
+      <div class="alert alert-success">{{ message() }}</div>
+    }
+
+    <div class="card">
+      <h2>Plan bilgileri</h2>
+      <div class="form-grid">
+        <label>
+          Başlık
+          <input type="text" [(ngModel)]="title" />
+        </label>
+        <label>
+          Açıklama
+          <input type="text" [(ngModel)]="description" />
+        </label>
+        <label>
+          Teslimat taksiti
+          <select [(ngModel)]="deliveryInstallmentId">
+            <option value="">Seçilmedi</option>
+            @for (i of installments(); track i.id) {
+              <option [value]="i.id">{{ i.name }} ({{ formatDateTr(i.dueDate) }})</option>
+            }
+          </select>
+        </label>
+      </div>
+      <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="savePlan()">Kaydet</button>
+    </div>
+
+    <div class="card">
+      <h2>Ortaklar</h2>
+      <div class="form-grid partner-form">
+        <label>
+          Ad
+          <input type="text" [(ngModel)]="partnerName" />
+        </label>
+        <label>
+          Renk
+          <input type="color" [(ngModel)]="partnerColor" />
+        </label>
+        <label>
+          Varsayılan %
+          <input type="number" [(ngModel)]="partnerPct" min="0" max="100" step="0.01" />
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="savePartner()">
+            {{ editingPartnerId ? 'Güncelle' : 'Ekle' }}
+          </button>
+          @if (editingPartnerId) {
+            <button type="button" class="btn btn-secondary" (click)="resetPartnerForm()">İptal</button>
+          }
+        </div>
+      </div>
+
+      <ul class="entity-list">
+        @for (p of partners(); track p.id) {
+          <li>
+            <span class="dot" [style.background]="p.color"></span>
+            <div class="entity-main">
+              <strong>{{ p.name }}</strong>
+              <span class="muted">%{{ p.defaultPct }}</span>
+            </div>
+            <div class="entity-actions">
+              <button type="button" class="btn btn-ghost btn-sm" (click)="startEditPartner(p)">Düzenle</button>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="deletePartner(p)">Sil</button>
+            </div>
+          </li>
+        } @empty {
+          <li class="muted">Henüz ortak yok.</li>
+        }
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Taksitler</h2>
+      <div class="form-grid inst-form">
+        <label>
+          Ad
+          <input type="text" [(ngModel)]="instName" />
+        </label>
+        <label>
+          Vade
+          <input type="date" [(ngModel)]="instDueDate" />
+        </label>
+        <label>
+          Tutar
+          <input type="number" [(ngModel)]="instAmount" min="0" step="0.01" />
+        </label>
+        <label>
+          Pay tipi
+          <select [(ngModel)]="instShareType">
+            <option [ngValue]="0">Varsayılan %</option>
+            <option [ngValue]="1">Eşit</option>
+            <option [ngValue]="2">Özel</option>
+          </select>
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="saveInstallment()">
+            {{ editingInstallmentId ? 'Güncelle' : 'Ekle' }}
+          </button>
+          @if (editingInstallmentId) {
+            <button type="button" class="btn btn-secondary" (click)="resetInstallmentForm()">İptal</button>
+          }
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ad</th>
+              <th>Vade</th>
+              <th>Tutar</th>
+              <th>Pay</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (i of installments(); track i.id) {
+              <tr>
+                <td>{{ i.name }}</td>
+                <td>{{ formatDateTr(i.dueDate) }}</td>
+                <td>{{ i.totalAmount | tryCurrency }}</td>
+                <td>{{ shareTypeLabel(i.shareType) }}</td>
+                <td class="entity-actions">
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="startEditInstallment(i)">Düzenle</button>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="deleteInstallment(i)">Sil</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="muted">Henüz taksit yok.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Toplu artış</h2>
+      <p class="muted">Seçilen taksitten itibaren tutarları artırır. Değer zorunludur.</p>
+      <div class="form-grid bulk-form">
+        <label>
+          Başlangıç taksiti
+          <select [(ngModel)]="bulkFromId">
+            @for (i of installments(); track i.id) {
+              <option [value]="i.id">{{ i.name }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Tip
+          <select [(ngModel)]="bulkType">
+            <option [ngValue]="0">Yüzde (%)</option>
+            <option [ngValue]="1">Sabit tutar</option>
+          </select>
+        </label>
+        <label>
+          Değer
+          <input type="number" [(ngModel)]="bulkValue" required step="0.01" placeholder="Örn. 10" />
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="runBulkIncrease()">
+            Uygula
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

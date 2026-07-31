@@ -1,0 +1,34 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Veri</h1>
+      <p class="muted">Plan verisini JSON olarak dışa / içe aktarın.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="alert alert-danger">{{ error() }}</div>
+  }
+  @if (message()) {
+    <div class="alert alert-success">{{ message() }}</div>
+  }
+
+  <div class="card-grid">
+    <div class="card">
+      <h2>JSON dışa aktar</h2>
+      <p class="muted">Mevcut planın yedeğini indirin.</p>
+      <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="exportJson()">
+        {{ busy() ? 'İşleniyor…' : 'JSON indir' }}
+      </button>
+    </div>
+
+    <div class="card">
+      <h2>JSON içe aktar</h2>
+      <p class="muted">Dışa aktarılmış bir plan dosyasını yükleyin. Mevcut veri değişebilir.</p>
+      <label class="file-label btn btn-secondary">
+        Dosya seç
+        <input type="file" accept="application/json,.json" hidden (change)="onImportFile($event)" [disabled]="busy()" />
+      </label>
+    </div>
+  </div>
+</section>

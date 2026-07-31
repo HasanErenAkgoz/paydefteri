@@ -1,0 +1,54 @@
+:host {
+  display: block;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.plan-card {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.plan-card:hover {
+  border-color: rgba(99, 102, 241, 0.45);
+  background: #26334d;
+}
+
+.plan-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.plan-card-top h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.create-card .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+@media (max-width: 720px) {
+  .create-card .form-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,35 @@
+---
+description: EF Core and PostgreSQL schema conventions for plans, partners, installments
+globs: "**/Migrations/**,**/*DbContext*,**/Infrastructure/**/*.cs"
+alwaysApply: false
+---
+
+# Database
+
+## Engine
+- PostgreSQL + EF Core
+- Schema changes **only** via migrations — never silent `EnsureCreated` in prod
+
+## Core model
+```
+Plan 1—* Partner
+Plan 1—* Installment
+Installment 1—* Payment (per partner share)
+Partner ← Payment.OwnerPartnerId, Payment.PaidByPartnerId
+```
+
+Suggested columns:
+- Plan: Id, OwnerUserId, Title, Description, DeliveryInstallmentId, audit
+- Partner: Id, PlanId, Name, Color, DefaultPct, SortOrder
+- Installment: Id, PlanId, Name, DueDate, TotalAmount, ShareType, SortOrder
+- InstallmentShare (optional store): PartnerId, Amount (for custom / snapshot)
+- Payment: InstallmentId, PartnerId, IsPaid, PaidAt, PaidByPartnerId, Note
+
+## Constraints
+- FK cascade: deleting Plan removes children; deleting Partner blocked if payments exist (or reassign)
+- Indexes: `(PlanId)`, `(InstallmentId, PartnerId)` unique on Payment
+- Money: `numeric(18,2)`
+- Soft delete flags where required for audit
+
+## Seed
+- Fuzul template (1,070,000 ₺ / 20 installments) as reference seed — not the only plan
