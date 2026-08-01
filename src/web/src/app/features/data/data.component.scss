@@ -593,6 +593,20 @@
   }
 }
 
+@media (max-width: 560px) {
+  .data-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .data-hero {
+    padding: 16px;
+  }
+
+  .data-panel {
+    padding: 14px;
+  }
+}
+
 /* ——— Print report document (A4) ——— */
 .print-doc {
   --ink: #0f2744;

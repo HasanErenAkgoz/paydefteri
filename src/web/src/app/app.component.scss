@@ -17,3 +17,17 @@
 .brand-text h1 {
   margin: 0;
 }
+
+.nav-label-short {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .nav-label-full {
+    display: none;
+  }
+
+  .nav-label-short {
+    display: inline;
+  }
+}

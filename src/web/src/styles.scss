@@ -853,12 +853,152 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            .navbar { padding: 12px 16px; }
-            .container { padding: 0 12px; margin-top: 16px; }
-            .nav-tabs { width: 100%; justify-content: space-between; }
-            .nav-tab { padding: 6px 12px; font-size: 0.78rem; }
-            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .card { padding: 16px; }
+            .navbar {
+                padding: 10px 12px;
+                padding-top: max(10px, env(safe-area-inset-top));
+            }
+
+            .nav-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .brand {
+                min-width: 0;
+            }
+
+            .brand-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+                border-radius: 10px;
+            }
+
+            .brand-text {
+                min-width: 0;
+            }
+
+            .brand-text h1 {
+                font-size: 1rem;
+                max-width: min(70vw, 280px);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .brand-text p {
+                display: none;
+            }
+
+            .nav-actions {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .nav-tabs {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                gap: 4px;
+                padding: 4px;
+            }
+
+            .nav-tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            .nav-tab {
+                flex: 0 0 auto;
+                padding: 8px 12px;
+                font-size: 0.78rem;
+                min-height: 40px;
+                white-space: nowrap;
+            }
+
+            .container {
+                padding: 0 12px;
+                padding-bottom: max(24px, env(safe-area-inset-bottom));
+                margin-top: 14px;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .card {
+                padding: 16px;
+                border-radius: 14px;
+            }
+
+            .card-title {
+                flex-wrap: wrap;
+                gap: 10px;
+                font-size: 1rem;
+            }
+
+            .partner-item {
+                flex-wrap: wrap;
+                align-items: stretch;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .search-box,
+            .search-box input {
+                width: 100%;
+            }
+
+            .filter-buttons {
+                flex-wrap: wrap;
+                width: 100%;
+            }
+
+            .modal-overlay,
+            .modal-backdrop {
+                padding: 12px;
+                align-items: flex-end;
+            }
+
+            .modal-content,
+            .modal-backdrop .modal {
+                max-height: min(92vh, 100%);
+                padding: 18px 16px;
+                border-radius: 16px 16px 12px 12px;
+                width: 100%;
+            }
+
+            .table-wrap,
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -4px;
+                padding-bottom: 4px;
+            }
+
+            .btn {
+                min-height: 40px;
+            }
+
+            .btn-sm {
+                min-height: 36px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
 /* ---- Angular shell / component bridges (prototype class names preferred) ---- */
