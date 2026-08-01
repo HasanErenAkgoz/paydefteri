@@ -54,4 +54,63 @@ public sealed class IdentityService : IIdentityService
 
         return (true, user.Id, user.Email, user.DisplayName);
     }
+
+    public async Task<(string? UserId, string? Email, string? DisplayName)> FindByEmailAsync(
+        string email,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        return user is null ? (null, null, null) : (user.Id, user.Email, user.DisplayName);
+    }
+
+    public async Task<(string? UserId, string? Email, string? DisplayName)> FindByIdAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        return user is null ? (null, null, null) : (user.Id, user.Email, user.DisplayName);
+    }
+
+    public async Task<(bool Succeeded, IEnumerable<string> Errors)> UpdateDisplayNameAsync(
+        string userId,
+        string displayName,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return (false, new[] { "Kullanıcı bulunamadı." });
+        }
+
+        user.DisplayName = displayName;
+        var result = await _userManager.UpdateAsync(user);
+        return result.Succeeded
+            ? (true, Array.Empty<string>())
+            : (false, result.Errors.Select(e => e.Description));
+    }
+
+    public async Task<(bool Succeeded, IEnumerable<string> Errors)> ChangePasswordAsync(
+        string userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return (false, new[] { "Kullanıcı bulunamadı." });
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        if (result.Succeeded)
+        {
+            return (true, Array.Empty<string>());
+        }
+
+        var errors = result.Errors.Select(e =>
+            e.Code is "PasswordMismatch"
+                ? "Mevcut şifre hatalı."
+                : e.Description);
+        return (false, errors);
+    }
 }

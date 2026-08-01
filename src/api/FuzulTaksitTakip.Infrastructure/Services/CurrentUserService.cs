@@ -17,6 +17,15 @@ public sealed class CurrentUserService : ICurrentUser
         _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier)
         ?? _httpContextAccessor.HttpContext?.User?.FindFirstValue("sub");
 
+    public string? Email =>
+        _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Email)
+        ?? _httpContextAccessor.HttpContext?.User?.FindFirstValue("email");
+
+    public string? DisplayName =>
+        _httpContextAccessor.HttpContext?.User?.FindFirstValue("display_name")
+        ?? _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name)
+        ?? _httpContextAccessor.HttpContext?.User?.FindFirstValue("name");
+
     public bool IsAuthenticated =>
         _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated == true;
 }

@@ -1,9 +1,13 @@
 using System.Text;
 using FuzulTaksitTakip.Application.Common.Interfaces;
 using FuzulTaksitTakip.Infrastructure.Auth;
+using FuzulTaksitTakip.Infrastructure.Background;
+using FuzulTaksitTakip.Infrastructure.Documents;
+using FuzulTaksitTakip.Infrastructure.Email;
 using FuzulTaksitTakip.Infrastructure.Identity;
 using FuzulTaksitTakip.Infrastructure.Persistence;
 using FuzulTaksitTakip.Infrastructure.Services;
+using FuzulTaksitTakip.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -75,6 +79,30 @@ public static class DependencyInjection
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<ICurrentUser, CurrentUserService>();
         services.AddScoped<IPlanAuthorization, PlanAuthorizationService>();
+        services.Configure<ReceiptStorageOptions>(configuration.GetSection(ReceiptStorageOptions.SectionName));
+        services.AddSingleton<IReceiptStorage, LocalReceiptStorage>();
+        services.AddSingleton<IPlanDocumentParser, PlanDocumentParser>();
+
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.Configure<AppOptions>(configuration.GetSection(AppOptions.SectionName));
+
+        var emailOptions = configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>() ?? new EmailOptions();
+        if (emailOptions.Enabled
+            && !string.IsNullOrWhiteSpace(emailOptions.Smtp.Host)
+            && !string.IsNullOrWhiteSpace(emailOptions.FromAddress))
+        {
+            services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        }
+        else
+        {
+            services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        }
+
+        services.AddSingleton<IInviteEmailService, InviteEmailService>();
+        services.AddSingleton<IReminderEmailService, ReminderEmailService>();
+
+        services.Configure<ReminderOptions>(configuration.GetSection(ReminderOptions.SectionName));
+        services.AddHostedService<DailyReminderHostedService>();
 
         return services;
     }

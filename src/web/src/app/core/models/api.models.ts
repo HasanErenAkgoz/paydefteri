@@ -3,6 +3,8 @@
 export type ShareType = 'Default' | 'Equal' | 'Custom' | 0 | 1 | 2;
 export type InstallmentStatus = 'Pending' | 'Partial' | 'Full' | 0 | 1 | 2;
 export type BulkIncreaseType = 'Percent' | 'Fixed' | 0 | 1;
+export type IbanMode = 'None' | 'Plan' | 'Partner' | 0 | 1 | 2;
+export type PaymentReviewStatus = 'None' | 'Pending' | 'Approved' | 'Rejected' | 0 | 1 | 2 | 3;
 
 export interface LoginResult {
   accessToken: string;
@@ -15,12 +17,25 @@ export interface RegisterResult {
   displayName: string;
 }
 
+export interface UserProfileDto {
+  userId: string;
+  email: string;
+  displayName: string;
+}
+
 export interface PlanDto {
   id: string;
   title: string;
   description: string;
   deliveryInstallmentId: string | null;
   createdAtUtc: string;
+  requireReceipt: boolean;
+  ibanMode: IbanMode;
+  settlementIban: string | null;
+  remindersEnabled?: boolean;
+  reminderDaysBefore?: number[];
+  reminderDaysAfter?: number[];
+  isArchived?: boolean;
 }
 
 export interface PartnerDto {
@@ -30,6 +45,8 @@ export interface PartnerDto {
   color: string;
   defaultPct: number;
   sortOrder: number;
+  linkedUserId: string | null;
+  iban: string | null;
 }
 
 export interface CustomShareDto {
@@ -43,6 +60,8 @@ export interface PaymentDto {
   paidAt: string | null;
   paidByPartnerId: string | null;
   note: string;
+  hasReceipt: boolean;
+  reviewStatus?: PaymentReviewStatus;
 }
 
 export interface InstallmentDto {
@@ -65,6 +84,8 @@ export interface PartnerPaymentStatusDto {
   paidAt: string | null;
   paidByPartnerId: string | null;
   note: string;
+  hasReceipt: boolean;
+  reviewStatus?: PaymentReviewStatus;
 }
 
 export interface DashboardInstallmentDto {
@@ -85,6 +106,7 @@ export interface PartnerSummaryDto {
   totalShare: number;
   paidAmount: number;
   remainingAmount: number;
+  iban: string | null;
 }
 
 export interface SettlementBalanceDto {
@@ -100,16 +122,65 @@ export interface DashboardMetricsDto {
   paidPercent: number;
 }
 
+export interface MyShareMetricsDto {
+  remainingAmount: number;
+  paidAmount: number;
+  totalShare: number;
+  unpaidInstallmentCount: number;
+  nextDueDate: string | null;
+  nextInstallmentName: string | null;
+}
+
 export interface DashboardDto {
   planId: string;
   title: string;
   description: string;
   deliveryInstallmentId: string | null;
   daysUntilDelivery: number | null;
+  myPartnerId: string | null;
+  isOwner: boolean;
+  requireReceipt: boolean;
+  ibanMode: IbanMode;
+  settlementIban: string | null;
+  paymentTargetIban: string | null;
   metrics: DashboardMetricsDto;
   partners: PartnerSummaryDto[];
   settlements: SettlementBalanceDto[];
   installments: DashboardInstallmentDto[];
+  myMetrics?: MyShareMetricsDto | null;
+  pendingApprovalCount?: number;
+}
+
+export interface PlanMemberDto {
+  id: string;
+  userId: string;
+  email: string | null;
+  displayName: string | null;
+  role: string;
+  partnerId: string | null;
+  partnerName: string | null;
+}
+
+export interface PlanInviteDto {
+  id: string;
+  email: string;
+  partnerId: string;
+  partnerName: string;
+  status: string;
+  token: string;
+  expiresAtUtc: string;
+  createdAtUtc: string;
+  emailSent?: boolean;
+}
+
+export interface InvitePreviewDto {
+  token: string;
+  email: string;
+  partnerName: string;
+  planTitle: string;
+  status: string;
+  expiresAtUtc: string;
+  isAcceptable: boolean;
 }
 
 export interface PlanExportDto {
@@ -148,6 +219,12 @@ export interface UpdatePlanRequest {
   title: string;
   description: string;
   deliveryInstallmentId: string | null;
+  requireReceipt: boolean;
+  ibanMode: IbanMode;
+  settlementIban: string | null;
+  remindersEnabled: boolean;
+  reminderDaysBefore: number[];
+  reminderDaysAfter: number[];
 }
 
 export interface PartnerRequest {
@@ -155,6 +232,7 @@ export interface PartnerRequest {
   color: string;
   defaultPct: number;
   sortOrder: number;
+  iban: string | null;
 }
 
 export interface InstallmentRequest {
@@ -177,4 +255,94 @@ export interface BulkIncreaseRequest {
   fromInstallmentId: string;
   type: number;
   value: number;
+}
+
+export interface TemplateListItemDto {
+  key: string;
+  title: string;
+  description: string;
+}
+
+export interface TemplateInstallmentPreviewDto {
+  index: number;
+  name: string;
+  dueDate: string;
+  totalAmount: number;
+  perPartnerAmount: number;
+}
+
+export interface TemplatePartnerPreviewDto {
+  name: string;
+  color: string;
+  defaultPct: number;
+}
+
+export interface PlanTemplatePreviewDto {
+  key: string;
+  title: string;
+  description: string;
+  grandTotal: number;
+  installmentCount: number;
+  deliveryName: string | null;
+  deliveryIndex: number;
+  partnerCount: number;
+  partners: TemplatePartnerPreviewDto[];
+  installments: TemplateInstallmentPreviewDto[];
+}
+
+export interface PlanDocumentPreviewDto {
+  sourceFileName: string;
+  sourceKind: string;
+  title: string;
+  description: string;
+  grandTotal: number;
+  installmentCount: number;
+  deliveryName: string | null;
+  deliveryIndex: number;
+  warnings: string[];
+  partners: TemplatePartnerPreviewDto[];
+  installments: TemplateInstallmentPreviewDto[];
+}
+
+export interface ReminderHistoryItemDto {
+  id: string;
+  installmentId: string;
+  installmentName: string;
+  partnerId: string | null;
+  partnerName: string | null;
+  kind: string;
+  offsetDays: number;
+  sentOn: string;
+  createdAtUtc: string;
+}
+
+export interface ReportPartnerBarDto {
+  partnerId: string;
+  name: string;
+  color: string;
+  paidAmount: number;
+  remainingAmount: number;
+  totalShare: number;
+}
+
+export interface ReportMonthDto {
+  yearMonth: string;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  installmentCount: number;
+}
+
+export interface ReportSummaryDto {
+  partners: ReportPartnerBarDto[];
+  months: ReportMonthDto[];
+  metrics: DashboardMetricsDto;
+}
+
+export interface PlanActivityItemDto {
+  id: string;
+  type: string;
+  message: string;
+  actorDisplayName: string;
+  createdAtUtc: string;
 }

@@ -1,4 +1,4 @@
-# Taksitle
+# PayDefteri
 
 Çok ortaklı borç & taksit takip. Ortaklar arasında paylaşımlı ödeme planlarını, mahsuplaşmayı ve tahsisat takibini yönetir.
 
@@ -35,13 +35,13 @@ Development migrations apply automatically on API startup.
 ```
 FuzulTaksitTakip.sln          # technical solution id (legacy path)
 src/api/...                   # Clean Architecture API
-src/web/                      # Angular — Taksitle UI
+src/web/                      # Angular — PayDefteri UI
 tests/
 .cursor/                      # Agent harness
 docker-compose.yml
 ```
 
-> Product brand: **Taksitle**. Code namespaces may still say `FuzulTaksitTakip` until a dedicated rename pass.
+> Product brand: **PayDefteri**. Code namespaces may still say `FuzulTaksitTakip` until a dedicated rename pass.
 
 ## Commands
 

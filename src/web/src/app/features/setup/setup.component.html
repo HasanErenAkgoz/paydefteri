@@ -1,187 +1,668 @@
-<section class="page">
+<section class="page view-section active">
   @if (loading()) {
     <p class="muted">Yükleniyor…</p>
   } @else {
     <header class="page-header">
       <div>
         <h1>Kurulum</h1>
-        <p class="muted">Plan, ortaklar ve taksitleri düzenleyin.</p>
+        <p class="muted">Bu planın ayarları, ortakları ve taksitleri.</p>
       </div>
-      <button type="button" class="btn btn-success" [disabled]="busy()" (click)="seedFuzul()">
-        Fuzul şablonunu yükle
-      </button>
     </header>
 
-    @if (error()) {
-      <div class="alert alert-danger">{{ error() }}</div>
-    }
-    @if (message()) {
-      <div class="alert alert-success">{{ message() }}</div>
-    }
-
-    <div class="card">
-      <h2>Plan bilgileri</h2>
-      <div class="form-grid">
-        <label>
-          Başlık
-          <input type="text" [(ngModel)]="title" />
-        </label>
-        <label>
-          Açıklama
-          <input type="text" [(ngModel)]="description" />
-        </label>
-        <label>
-          Teslimat taksiti
-          <select [(ngModel)]="deliveryInstallmentId">
-            <option value="">Seçilmedi</option>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📌 Plan Ayarları</div>
+        <div class="form-group">
+          <label class="form-label">Plan Adı</label>
+          <input class="form-input" type="text" [(ngModel)]="title" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Açıklama / Notlar</label>
+          <input class="form-input" type="text" [(ngModel)]="description" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">🏠 Tahsisat / Teslimat Ayı <span class="muted">(opsiyonel)</span></label>
+          <select class="form-select" [(ngModel)]="deliveryInstallmentId">
+            <option value="">Yok — genel borç / taksit takibi</option>
             @for (i of installments(); track i.id) {
               <option [value]="i.id">{{ i.name }} ({{ formatDateTr(i.dueDate) }})</option>
             }
           </select>
-        </label>
-      </div>
-      <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="savePlan()">Kaydet</button>
-    </div>
-
-    <div class="card">
-      <h2>Ortaklar</h2>
-      <div class="form-grid partner-form">
-        <label>
-          Ad
-          <input type="text" [(ngModel)]="partnerName" />
-        </label>
-        <label>
-          Renk
-          <input type="color" [(ngModel)]="partnerColor" />
-        </label>
-        <label>
-          Varsayılan %
-          <input type="number" [(ngModel)]="partnerPct" min="0" max="100" step="0.01" />
-        </label>
-        <div class="form-actions">
-          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="savePartner()">
-            {{ editingPartnerId ? 'Güncelle' : 'Ekle' }}
-          </button>
-          @if (editingPartnerId) {
-            <button type="button" class="btn btn-secondary" (click)="resetPartnerForm()">İptal</button>
-          }
+          <p class="muted" style="margin-top: 6px; font-size: 0.8rem">
+            Ev/araba tahsisatı olmayan planlarda boş bırakabilirsiniz.
+          </p>
         </div>
-      </div>
 
-      <ul class="entity-list">
-        @for (p of partners(); track p.id) {
-          <li>
-            <span class="dot" [style.background]="p.color"></span>
-            <div class="entity-main">
-              <strong>{{ p.name }}</strong>
-              <span class="muted">%{{ p.defaultPct }}</span>
-            </div>
-            <div class="entity-actions">
-              <button type="button" class="btn btn-ghost btn-sm" (click)="startEditPartner(p)">Düzenle</button>
-              <button type="button" class="btn btn-ghost btn-sm" (click)="deletePartner(p)">Sil</button>
-            </div>
-          </li>
-        } @empty {
-          <li class="muted">Henüz ortak yok.</li>
-        }
-      </ul>
-    </div>
-
-    <div class="card">
-      <h2>Taksitler</h2>
-      <div class="form-grid inst-form">
-        <label>
-          Ad
-          <input type="text" [(ngModel)]="instName" />
-        </label>
-        <label>
-          Vade
-          <input type="date" [(ngModel)]="instDueDate" />
-        </label>
-        <label>
-          Tutar
-          <input type="number" [(ngModel)]="instAmount" min="0" step="0.01" />
-        </label>
-        <label>
-          Pay tipi
-          <select [(ngModel)]="instShareType">
-            <option [ngValue]="0">Varsayılan %</option>
-            <option [ngValue]="1">Eşit</option>
-            <option [ngValue]="2">Özel</option>
+        <h3 class="card-subtitle">Ödeme ayarları</h3>
+        <div class="form-group">
+          <label class="checkbox-row form-label">
+            <input type="checkbox" [(ngModel)]="requireReceipt" />
+            Dekont zorunlu
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">IBAN modu</label>
+          <select class="form-select" [(ngModel)]="ibanMode">
+            <option value="None">Kapalı</option>
+            <option value="Plan">Plan — tek IBAN</option>
+            <option value="Partner">Ortak başına IBAN</option>
           </select>
-        </label>
-        <div class="form-actions">
-          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="saveInstallment()">
-            {{ editingInstallmentId ? 'Güncelle' : 'Ekle' }}
+        </div>
+        @if (ibanMode === 'Plan') {
+          <div class="form-group">
+            <label class="form-label">Plan IBAN</label>
+            <input
+              class="form-input"
+              type="text"
+              [(ngModel)]="settlementIban"
+              placeholder="TRxx xxxx xxxx xxxx xxxx xxxx xx"
+            />
+          </div>
+        }
+        <p class="muted" style="margin-bottom: 12px">
+          Dekont zorunlu açıkken ödendi işaretlemek için dosya yüklenir.
+        </p>
+
+        <h3 class="card-subtitle">E-posta hatırlatıcıları</h3>
+        <div class="form-group">
+          <label class="checkbox-row form-label">
+            <input type="checkbox" [(ngModel)]="remindersEnabled" name="remindersEnabled" />
+            Ödeme hatırlatma mailleri
+          </label>
+        </div>
+        @if (remindersEnabled) {
+          <div class="form-group">
+            <label class="form-label">Vadeden önce (gün)</label>
+            <div class="reminder-chips">
+              @for (d of beforeDayOptions; track d) {
+                <button
+                  type="button"
+                  class="reminder-chip"
+                  [class.active]="hasReminderDay('before', d)"
+                  (click)="toggleReminderDay('before', d)"
+                >
+                  {{ d }} gün
+                </button>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Vade geçtikten sonra (gün)</label>
+            <div class="reminder-chips">
+              @for (d of afterDayOptions; track d) {
+                <button
+                  type="button"
+                  class="reminder-chip"
+                  [class.active]="hasReminderDay('after', d)"
+                  (click)="toggleReminderDay('after', d)"
+                >
+                  {{ d }} gün
+                </button>
+              }
+            </div>
+          </div>
+          <p class="muted" style="margin-bottom: 12px; font-size: 0.8rem">
+            Bağlı ortaklara kendi payları için, size ise ödenmemiş özet mail gider. Aynı hatırlatma günde bir kez gönderilir.
+          </p>
+        }
+
+        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="savePlan()">
+          💾 Plan Bilgilerini Kaydet
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚡ Planı doldur</div>
+        <p class="muted" style="margin-bottom: 16px; font-size: 0.8rem">
+          Hazır şirket şablonlarından birini seçin veya elinizdeki PDF / Excel ödeme planını yükleyin. Önizleyip onayladıktan
+          sonra plana yazılır.
+        </p>
+        <div class="template-cards">
+          <div class="template-card document-upload-card">
+            <h4>PDF / Excel’den aktar</h4>
+            <p style="margin-bottom: 12px">
+              Fuzul vb. ödeme planı PDF’ini veya Excel/CSV tabloyu yükleyin. Otomatik önizleme açılır; onaylarsanız plana
+              yazılır.
+            </p>
+            <label class="btn btn-primary btn-sm document-upload-btn" [class.disabled]="busy()">
+              Dosya seç
+              <input
+                type="file"
+                accept=".pdf,.xlsx,.xls,.csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                hidden
+                [disabled]="busy()"
+                (change)="onPlanDocumentSelected($event)"
+              />
+            </label>
+          </div>
+          @for (t of templates(); track t.key) {
+            <div class="template-card">
+              <h4>{{ templateIcon(t.key) }} {{ t.title }}</h4>
+              <p style="margin-bottom: 12px">{{ t.description }}</p>
+              <div style="display: flex; gap: 8px">
+                @if (t.key === 'empty') {
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    style="width: 100%; justify-content: center"
+                    [disabled]="busy()"
+                    (click)="seedTemplate('empty')"
+                  >
+                    ✨ Boş Plan Yap
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    style="flex: 1; justify-content: center"
+                    [disabled]="busy()"
+                    (click)="openPreview(t.key)"
+                  >
+                    👁️ Ön İzle
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    style="flex: 1; justify-content: center"
+                    [disabled]="busy()"
+                    (click)="seedTemplate(t.key)"
+                  >
+                    📥 Yükle
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+        <span>👥 Ortaklar ve Varsayılan Pay Oranları</span>
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="addPartnerRow()">
+          ➕ Ortak Ekle
+        </button>
+      </div>
+      <p class="muted" style="font-size: 0.8rem; margin-bottom: 16px">
+        Borca ortak olan kişileri ekleyin. Varsayılan pay yüzdeleri yeni taksitlerde kullanılır.
+      </p>
+
+      <div class="partners-list">
+        @for (p of partnerRows(); track p.id) {
+          <div class="partner-item">
+            <input
+              type="color"
+              class="color-picker"
+              [ngModel]="p.color"
+              (ngModelChange)="onPartnerColor(p, $event)"
+              [name]="'color-' + p.id"
+              title="Renk"
+            />
+            <input
+              type="text"
+              class="form-input partner-name-input"
+              [ngModel]="p.name"
+              (ngModelChange)="p.name = $event"
+              (blur)="persistPartner(p)"
+              [name]="'name-' + p.id"
+              placeholder="Ortak Adı"
+            />
+            <div class="partner-pct-wrap">
+              <span class="partner-pct-label">Varsayılan Pay %:</span>
+              <input
+                type="number"
+                class="form-input partner-pct-input"
+                [ngModel]="p.defaultPct"
+                (ngModelChange)="p.defaultPct = $event"
+                (blur)="persistPartner(p)"
+                [name]="'pct-' + p.id"
+                min="0"
+                max="100"
+                step="0.01"
+                placeholder="50"
+              />
+            </div>
+            @if (ibanMode === 'Partner') {
+              <input
+                type="text"
+                class="form-input partner-iban-input"
+                [ngModel]="p.iban"
+                (ngModelChange)="p.iban = $event"
+                (blur)="persistPartner(p)"
+                [name]="'iban-' + p.id"
+                placeholder="IBAN"
+              />
+            }
+            <div class="partner-item-actions">
+              @if (p.linkedUserId) {
+                <span class="muted" style="font-size: 0.75rem; white-space: nowrap">bağlı</span>
+              } @else if (!selfAlreadyLinked()) {
+                <button type="button" class="btn btn-secondary btn-sm" (click)="linkSelfById(p.id)">Bu benim</button>
+              }
+              <button
+                type="button"
+                class="btn-icon-danger btn-sm"
+                title="Sil"
+                (click)="deletePartnerById(p.id)"
+              >
+                <app-icon-trash />
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <p class="muted" style="margin: 0">Henüz ortak yok. “Ortak Ekle” ile başlayın.</p>
+        }
+      </div>
+
+      <button type="button" class="btn btn-primary" [disabled]="busy() || !partnerRows().length" (click)="saveAllPartners()">
+        💾 Ortakları Güncelle & Kaydet
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📨 Davet & Paydaşlar</div>
+      <p class="muted" style="font-size: 0.8rem; margin-bottom: 16px">
+        E-posta kime yazıldıysa davet ona gider. “Plandaki pay” ise kabul eden kişinin bağlanacağı ortak satırıdır.
+      </p>
+
+      <div class="invite-compose partner-item">
+        <div class="invite-field invite-field-grow">
+          <label class="form-label" for="inviteEmail">Davet edilecek e-posta</label>
+          <input
+            id="inviteEmail"
+            class="form-input"
+            type="email"
+            [(ngModel)]="inviteEmail"
+            name="inviteEmail"
+            placeholder="ortak@ornek.com"
+            autocomplete="email"
+          />
+        </div>
+        <div class="invite-field invite-field-partner">
+          <label class="form-label" for="invitePartner">Plandaki pay</label>
+          <select id="invitePartner" class="form-select" [(ngModel)]="invitePartnerId" name="invitePartnerId">
+            @if (!partners().length) {
+              <option value="">Önce ortak ekleyin</option>
+            }
+            @for (p of partners(); track p.id) {
+              <option [value]="p.id" [disabled]="!!p.linkedUserId">
+                {{ p.name }}{{ p.linkedUserId ? ' (dolu)' : '' }}
+              </option>
+            }
+          </select>
+        </div>
+        <div class="invite-compose-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="busy() || !partners().length"
+            (click)="sendInvite()"
+          >
+            📨 Davet Oluştur
           </button>
-          @if (editingInstallmentId) {
-            <button type="button" class="btn btn-secondary" (click)="resetInstallmentForm()">İptal</button>
+        </div>
+      </div>
+
+      <div class="invite-section">
+        <div class="invite-section-title">👥 Üyeler</div>
+        <div class="partners-list">
+          @for (m of members(); track m.id) {
+            <div class="partner-item member-row">
+              <span class="member-avatar" [attr.data-role]="m.role">{{ memberInitial(m) }}</span>
+              <div class="member-main">
+                <strong>{{ memberLabel(m) }}</strong>
+                <span class="muted">{{ roleLabel(m.role) }} · {{ memberPartnerLabel(m) }}</span>
+              </div>
+              @if (memberEmail(m); as email) {
+                <span class="member-email muted">{{ email }}</span>
+              }
+            </div>
+          } @empty {
+            <p class="muted" style="margin: 0">Üye yok.</p>
           }
         </div>
       </div>
 
-      <div class="table-wrap">
+      <div class="invite-section">
+        <div class="invite-section-title">⏳ Bekleyen Davetler</div>
+        <div class="partners-list">
+          @for (i of invites(); track i.id) {
+            <div class="partner-item invite-pending-row">
+              <div class="member-main">
+                <strong>{{ i.email }}</strong>
+                <span class="muted">{{ i.partnerName }} · {{ formatDateTr(i.expiresAtUtc) }} son</span>
+              </div>
+              <div class="partner-item-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  title="Davet linkini kopyala"
+                  (click)="copyInviteLink(i)"
+                >
+                  🔗 Link
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  title="Davet e-postasını tekrar gönder"
+                  [disabled]="busy()"
+                  (click)="resendInvite(i)"
+                >
+                  ✉️ Tekrar gönder
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" (click)="revokeInvite(i)">İptal</button>
+              </div>
+            </div>
+          } @empty {
+            <p class="muted" style="margin: 0">Bekleyen davet yok.</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center">
+        <span>📋 Taksit / Borç Kalemleri Listesi</span>
+        <button type="button" class="btn btn-primary btn-sm" (click)="openAddInstallment()">
+          ➕ Yeni Taksit Ekle
+        </button>
+      </div>
+      <div class="table-wrap table-responsive">
         <table>
           <thead>
             <tr>
-              <th>Ad</th>
-              <th>Vade</th>
+              <th>#</th>
+              <th>Taksit Adı</th>
+              <th>Tarih</th>
               <th>Tutar</th>
-              <th>Pay</th>
-              <th></th>
+              <th>Paylaşım Tipi</th>
+              <th style="text-align: right">İşlemler</th>
             </tr>
           </thead>
           <tbody>
-            @for (i of installments(); track i.id) {
+            @for (i of installments(); track i.id; let idx = $index) {
               <tr>
+                <td>{{ idx + 1 }}</td>
                 <td>{{ i.name }}</td>
                 <td>{{ formatDateTr(i.dueDate) }}</td>
                 <td>{{ i.totalAmount | tryCurrency }}</td>
                 <td>{{ shareTypeLabel(i.shareType) }}</td>
-                <td class="entity-actions">
-                  <button type="button" class="btn btn-ghost btn-sm" (click)="startEditInstallment(i)">Düzenle</button>
-                  <button type="button" class="btn btn-ghost btn-sm" (click)="deleteInstallment(i)">Sil</button>
+                <td class="entity-actions" style="text-align: right">
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="startEditInstallment(i)">
+                    Düzenle
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-icon-danger btn-sm"
+                    title="Sil"
+                    (click)="deleteInstallment(i)"
+                  >
+                    <app-icon-trash />
+                  </button>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="5" class="muted">Henüz taksit yok.</td>
+                <td colspan="6" class="muted">Henüz taksit yok.</td>
               </tr>
             }
           </tbody>
         </table>
       </div>
     </div>
-
-    <div class="card">
-      <h2>Toplu artış</h2>
-      <p class="muted">Seçilen taksitten itibaren tutarları artırır. Değer zorunludur.</p>
-      <div class="form-grid bulk-form">
-        <label>
-          Başlangıç taksiti
-          <select [(ngModel)]="bulkFromId">
-            @for (i of installments(); track i.id) {
-              <option [value]="i.id">{{ i.name }}</option>
-            }
-          </select>
-        </label>
-        <label>
-          Tip
-          <select [(ngModel)]="bulkType">
-            <option [ngValue]="0">Yüzde (%)</option>
-            <option [ngValue]="1">Sabit tutar</option>
-          </select>
-        </label>
-        <label>
-          Değer
-          <input type="number" [(ngModel)]="bulkValue" required step="0.01" placeholder="Örn. 10" />
-        </label>
-        <div class="form-actions">
-          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="runBulkIncrease()">
-            Uygula
-          </button>
-        </div>
-      </div>
-    </div>
   }
 </section>
+
+@if (previewDraft(); as draft) {
+  <div class="modal-overlay active" (click)="closePreview()">
+    <div
+      class="modal-content preview-modal"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">
+            {{ draft.key === 'document' ? 'Dosya önizleme & aktar' : 'Şablon düzenle & içe aktar' }}
+          </h3>
+          <p class="muted" style="font-size: 0.8rem; margin-top: 4px">
+            @if (draft.sourceLabel) {
+              Kaynak: {{ draft.sourceLabel }} —
+            }
+            Tutar / vade / adları düzenleyin; ardından plana aktarın.
+          </p>
+          @if (draft.warnings; as warnings) {
+            @if (warnings.length) {
+              <p class="preview-warning">{{ warnings[0] }}</p>
+            }
+          }
+        </div>
+        <button type="button" class="close-btn" (click)="closePreview()">✕</button>
+      </div>
+
+      <div class="preview-edit-meta">
+        <div class="form-group">
+          <label class="form-label">Plan Adı</label>
+          <input class="form-input" type="text" [(ngModel)]="draft.title" name="prevTitle" (ngModelChange)="touchPreview()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Açıklama</label>
+          <input
+            class="form-input"
+            type="text"
+            [(ngModel)]="draft.description"
+            name="prevDesc"
+            (ngModelChange)="touchPreview()"
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teslimat taksiti <span class="muted">(opsiyonel)</span></label>
+          <select class="form-select" [(ngModel)]="draft.deliveryIndex" name="prevDelivery" (ngModelChange)="touchPreview()">
+            <option [ngValue]="-1">Yok</option>
+            @for (row of draft.rows; track row.index; let i = $index) {
+              <option [ngValue]="i">{{ i + 1 }}. {{ row.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="preview-meta-grid">
+        <div class="preview-meta">
+          <div class="preview-meta-label">TOPLAM MALİYET</div>
+          <div class="preview-meta-value">{{ previewGrandTotal() | tryCurrency }}</div>
+        </div>
+        <div class="preview-meta">
+          <div class="preview-meta-label">TAKSİT SAYISI</div>
+          <div class="preview-meta-value accent-sky">{{ draft.rows.length }} Taksit</div>
+        </div>
+        <div class="preview-meta">
+          <div class="preview-meta-label">TESLİMAT</div>
+          <div class="preview-meta-value accent-emerald">{{ previewDeliveryName() }}</div>
+        </div>
+      </div>
+
+      <div class="invite-section-title preview-partners-title">Ortaklar</div>
+      <div class="partners-list preview-partners">
+        @for (p of draft.partners; track $index; let i = $index) {
+          <div class="partner-item">
+            <input type="color" class="color-picker" [(ngModel)]="p.color" [name]="'pc-' + i" (ngModelChange)="touchPreview()" />
+            <input
+              class="form-input partner-name-input"
+              type="text"
+              [(ngModel)]="p.name"
+              [name]="'pn-' + i"
+              (ngModelChange)="touchPreview()"
+            />
+            <div class="partner-pct-wrap">
+              <span class="partner-pct-label">Pay %</span>
+              <input
+                class="form-input partner-pct-input"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                [(ngModel)]="p.defaultPct"
+                [name]="'pp-' + i"
+                (ngModelChange)="touchPreview()"
+              />
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="preview-table-toolbar">
+        <div class="invite-section-title" style="margin: 0">Taksitler</div>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addPreviewRow()">➕ Satır Ekle</button>
+      </div>
+
+      <div class="preview-table-wrap">
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Taksit Adı</th>
+              <th>Vade</th>
+              <th>Tutar (₺)</th>
+              <th>Kişi Başı</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of draft.rows; track row.index; let i = $index) {
+              <tr>
+                <td class="preview-idx">{{ i + 1 }}</td>
+                <td>
+                  <input
+                    class="form-input"
+                    type="text"
+                    [(ngModel)]="row.name"
+                    [name]="'rn-' + i"
+                    (ngModelChange)="touchPreview()"
+                  />
+                </td>
+                <td>
+                  <input
+                    class="form-input"
+                    type="date"
+                    [(ngModel)]="row.dueDate"
+                    [name]="'rd-' + i"
+                    (ngModelChange)="touchPreview()"
+                  />
+                </td>
+                <td>
+                  <input
+                    class="form-input preview-amount-input"
+                    appMoneyInput
+                    [(ngModel)]="row.totalAmount"
+                    [name]="'ra-' + i"
+                    (ngModelChange)="touchPreview()"
+                    placeholder="örn. 150.000"
+                  />
+                </td>
+                <td class="preview-per">{{ previewPerPartner(row.totalAmount) | tryCurrency }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn-icon-danger btn-sm"
+                    title="Satırı sil"
+                    [disabled]="draft.rows.length <= 1"
+                    (click)="removePreviewRow(i)"
+                  >
+                    <app-icon-trash />
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closePreview()">İptal</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="importPreviewDraft()">
+          📥 Düzenleneni Plana Aktar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showInstModal()) {
+  <div class="modal-overlay active" (click)="closeInstallmentModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ editingInstallmentId ? 'Taksit Düzenle' : 'Taksit Ekle' }}</h3>
+        <button type="button" class="close-btn" (click)="closeInstallmentModal()">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Taksit / Kalem Adı</label>
+        <input class="form-input" type="text" [(ngModel)]="instName" placeholder="Örn: 1. Tasarruf Taksiti" />
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Vade / Son Ödeme Tarihi</label>
+          <input class="form-input" type="date" [(ngModel)]="instDueDate" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Aylık Toplam Tutar (₺)</label>
+          <input
+            class="form-input"
+            appMoneyInput
+            [(ngModel)]="instAmount"
+            (ngModelChange)="onShareTypeOrAmountChange()"
+            placeholder="örn. 150.000"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ortaklar Arası Paylaşım Şekli</label>
+        <select class="form-select" [(ngModel)]="instShareType" (ngModelChange)="onShareTypeOrAmountChange()">
+          <option [ngValue]="0">Varsayılan Ortak Yüzdeleri İle Böl</option>
+          <option [ngValue]="1">Ortaklar Arasında Eşit Böl</option>
+          <option [ngValue]="2">Her Ortak İçin Özel Tutar Belirle</option>
+        </select>
+      </div>
+
+      @if (instShareType === 2) {
+        <div class="custom-shares-box">
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary-light); margin-bottom: 8px">
+            Kişi Başı Özel Ödeme Tutarları:
+          </div>
+          <p class="muted" style="font-size: 0.8rem; margin: 0 0 10px">
+            Ortak paylarının toplamı taksit tutarına eşit olmalı
+            ({{ instAmount | tryCurrency }}).
+          </p>
+          @for (p of partners(); track p.id) {
+            <div class="form-group">
+              <label class="form-label">{{ p.name }}</label>
+              <input
+                class="form-input"
+                appMoneyInput
+                [(ngModel)]="customShareAmounts[p.id]"
+                name="share-{{ p.id }}"
+                placeholder="örn. 75.000"
+              />
+            </div>
+          }
+          <p
+            style="font-size: 0.85rem; margin: 4px 0 0; font-weight: 600"
+            [style.color]="customSharesMatch() ? 'var(--success)' : '#f87171'"
+          >
+            Toplam pay: {{ customShareSum() | tryCurrency }}
+            @if (!customSharesMatch()) {
+              · fark {{ customShareRemainder() | tryCurrency }}
+            }
+          </p>
+        </div>
+      }
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeInstallmentModal()">İptal</button>
+        <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="saveInstallment()">Kaydet</button>
+      </div>
+    </div>
+  </div>
+}

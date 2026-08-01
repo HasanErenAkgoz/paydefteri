@@ -1,0 +1,14 @@
+<div class="toast-host" aria-live="polite" aria-relevant="additions">
+  @for (t of toasts.items(); track t.id) {
+    <div class="toast" [class]="'toast toast--' + t.kind" role="status">
+      <div class="toast__accent" aria-hidden="true"></div>
+      <div class="toast__body">
+        <p class="toast__title">{{ t.title }}</p>
+        <p class="toast__message">{{ t.message }}</p>
+      </div>
+      <button type="button" class="toast__close" (click)="dismiss(t.id)" aria-label="Kapat">
+        ×
+      </button>
+    </div>
+  }
+</div>

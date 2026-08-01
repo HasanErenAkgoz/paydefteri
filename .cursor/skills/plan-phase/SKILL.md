@@ -1,6 +1,6 @@
 ---
 name: plan-phase
-description: Plans a Taksitle feature or epic before coding — scope, layers, API/UI checklist, risks, and implementation order. Use when starting a new feature, migration from HTML, or any non-trivial change.
+description: Plans a PayDefteri feature or epic before coding — scope, layers, API/UI checklist, risks, and implementation order. Use when starting a new feature, migration from HTML, or any non-trivial change.
 disable-model-invocation: true
 ---
 

@@ -4,16 +4,21 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { DataComponent } from './features/data/data.component';
+import { HomeComponent } from './features/home/home.component';
 import { PlanListComponent } from './features/plans/plan-list.component';
+import { InviteComponent } from './features/invite/invite.component';
 import { SetupComponent } from './features/setup/setup.component';
+import { ProfileComponent } from './features/profile/profile.component';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'plans' },
+  { path: '', pathMatch: 'full', component: HomeComponent, canActivate: [authGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'invite/:token', component: InviteComponent },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'plans', component: PlanListComponent, canActivate: [authGuard] },
   { path: 'plans/:id/dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'plans/:id/setup', component: SetupComponent, canActivate: [authGuard] },
   { path: 'plans/:id/data', component: DataComponent, canActivate: [authGuard] },
-  { path: '**', redirectTo: 'plans' },
+  { path: '**', redirectTo: '' },
 ];

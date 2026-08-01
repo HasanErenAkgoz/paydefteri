@@ -18,6 +18,10 @@ public class AppDbContext : IdentityDbContext<AppUser>, IAppDbContext
     public DbSet<Installment> Installments => Set<Installment>();
     public DbSet<InstallmentShare> InstallmentShares => Set<InstallmentShare>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PlanMember> PlanMembers => Set<PlanMember>();
+    public DbSet<PlanInvite> PlanInvites => Set<PlanInvite>();
+    public DbSet<PaymentReminderLog> PaymentReminderLogs => Set<PaymentReminderLog>();
+    public DbSet<PlanActivityLog> PlanActivityLogs => Set<PlanActivityLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -18,7 +18,7 @@ public sealed class PartnersController : ControllerBase
         _sender = sender;
     }
 
-    public sealed record PartnerRequest(string Name, string Color, decimal DefaultPct, int SortOrder);
+    public sealed record PartnerRequest(string Name, string Color, decimal DefaultPct, int SortOrder, string? Iban);
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<PartnerDto>>> List(Guid planId, CancellationToken ct)
@@ -28,7 +28,7 @@ public sealed class PartnersController : ControllerBase
     public async Task<ActionResult<PartnerDto>> Create(Guid planId, [FromBody] PartnerRequest request, CancellationToken ct)
     {
         var result = await _sender.Send(new CreatePartnerCommand(
-            planId, request.Name, request.Color, request.DefaultPct, request.SortOrder), ct);
+            planId, request.Name, request.Color, request.DefaultPct, request.SortOrder, request.Iban), ct);
         return CreatedAtAction(nameof(List), new { planId }, result);
     }
 
@@ -36,7 +36,7 @@ public sealed class PartnersController : ControllerBase
     public async Task<ActionResult<PartnerDto>> Update(
         Guid planId, Guid partnerId, [FromBody] PartnerRequest request, CancellationToken ct)
         => Ok(await _sender.Send(new UpdatePartnerCommand(
-            planId, partnerId, request.Name, request.Color, request.DefaultPct, request.SortOrder), ct));
+            planId, partnerId, request.Name, request.Color, request.DefaultPct, request.SortOrder, request.Iban), ct));
 
     [HttpDelete("{partnerId:guid}")]
     public async Task<IActionResult> Delete(Guid planId, Guid partnerId, CancellationToken ct)

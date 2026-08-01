@@ -1,0 +1,131 @@
+:host {
+  display: block;
+}
+
+.toast-host {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 4000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(380px, calc(100vw - 28px));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: 4px 1fr auto;
+  gap: 0;
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.45);
+  backdrop-filter: blur(12px);
+  animation: toast-in 0.28s ease both;
+}
+
+.toast__accent {
+  background: #64748b;
+}
+
+.toast--success .toast__accent {
+  background: linear-gradient(180deg, #34d399, #059669);
+}
+
+.toast--error .toast__accent {
+  background: linear-gradient(180deg, #f87171, #dc2626);
+}
+
+.toast--info .toast__accent {
+  background: linear-gradient(180deg, #38bdf8, #0284c7);
+}
+
+.toast__body {
+  padding: 12px 8px 12px 14px;
+  min-width: 0;
+}
+
+.toast__title {
+  margin: 0 0 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.toast--success .toast__title {
+  color: #6ee7b7;
+}
+
+.toast--error .toast__title {
+  color: #fca5a5;
+}
+
+.toast--info .toast__title {
+  color: #7dd3fc;
+}
+
+.toast__message {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #f1f5f9;
+  word-break: break-word;
+}
+
+.toast__close {
+  align-self: start;
+  margin: 8px 8px 0 0;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toast__close:hover {
+  background: rgba(148, 163, 184, 0.12);
+  color: #f8fafc;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .toast-host {
+    top: auto;
+    bottom: 18px;
+    right: 14px;
+    left: 14px;
+    width: auto;
+  }
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

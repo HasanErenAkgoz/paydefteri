@@ -1,7 +1,9 @@
 using System.Text.Json;
 using FluentValidation;
+using FuzulTaksitTakip.Application.Common;
 using FuzulTaksitTakip.Application.Common.Exceptions;
 using FuzulTaksitTakip.Application.Common.Interfaces;
+using FuzulTaksitTakip.Application.Common.Mapping;
 using FuzulTaksitTakip.Application.Common.Models;
 using FuzulTaksitTakip.Domain.Entities;
 using FuzulTaksitTakip.Domain.Enums;
@@ -26,7 +28,7 @@ public sealed class ExportPlanQueryHandler : IRequestHandler<ExportPlanQuery, Pl
 
     public async Task<PlanExportDto> Handle(ExportPlanQuery request, CancellationToken cancellationToken)
     {
-        await _auth.EnsureOwnerAsync(request.PlanId, cancellationToken);
+        await _auth.EnsureMemberAsync(request.PlanId, cancellationToken);
 
         var plan = await _db.Plans.AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == request.PlanId, cancellationToken)
@@ -57,7 +59,9 @@ public sealed class ExportPlanQueryHandler : IRequestHandler<ExportPlanQuery, Pl
                 i.ShareType.ToString(),
                 i.SortOrder,
                 i.CustomShares.Select(s => new CustomShareDto(s.PartnerId, s.Amount)).ToList(),
-                i.Payments.Select(p => new PaymentDto(p.PartnerId, p.IsPaid, p.PaidAt, p.PaidByPartnerId, p.Note)).ToList()
+                i.Payments.Select(p => new PaymentDto(
+                    p.PartnerId, p.IsPaid, p.PaidAt, p.PaidByPartnerId, p.Note,
+                    !string.IsNullOrEmpty(p.ReceiptStorageKey), p.ReviewStatus)).ToList()
             )).ToList());
     }
 }
@@ -102,11 +106,13 @@ public sealed class ImportPlanCommandHandler : IRequestHandler<ImportPlanCommand
 {
     private readonly IAppDbContext _db;
     private readonly IPlanAuthorization _auth;
+    private readonly ICurrentUser _currentUser;
 
-    public ImportPlanCommandHandler(IAppDbContext db, IPlanAuthorization auth)
+    public ImportPlanCommandHandler(IAppDbContext db, IPlanAuthorization auth, ICurrentUser currentUser)
     {
         _db = db;
         _auth = auth;
+        _currentUser = currentUser;
     }
 
     public async Task<PlanDto> Handle(ImportPlanCommand request, CancellationToken cancellationToken)
@@ -274,8 +280,9 @@ public sealed class ImportPlanCommandHandler : IRequestHandler<ImportPlanCommand
         await _db.SaveChangesAsync(cancellationToken);
 
         plan.DeliveryInstallmentId = deliveryId;
+        PlanActivity.Write(_db, _currentUser, plan.Id, PlanActivityType.PlanImported, $"Plan içe aktarıldı: {plan.Title}");
         await _db.SaveChangesAsync(cancellationToken);
 
-        return new PlanDto(plan.Id, plan.Title, plan.Description, plan.DeliveryInstallmentId, plan.CreatedAtUtc);
+        return plan.ToDto();
     }
 }

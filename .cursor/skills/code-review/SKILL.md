@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Reviews Taksitle diffs against harness rules with severity-tagged findings. Use for PRs, post-implement review, or before quality-gate.
+description: Reviews PayDefteri diffs against harness rules with severity-tagged findings. Use for PRs, post-implement review, or before quality-gate.
 disable-model-invocation: true
 ---
 

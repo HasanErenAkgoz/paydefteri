@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AE1E85A7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuzulTaksitTakip.Domain.Tests", "tests\FuzulTaksitTakip.Domain.Tests\FuzulTaksitTakip.Domain.Tests.csproj", "{926F61D5-ED21-4F7D-9A01-7F69FC3943DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FuzulTaksitTakip.Api.Tests", "tests\FuzulTaksitTakip.Api.Tests\FuzulTaksitTakip.Api.Tests.csproj", "{3539B4D8-C588-4C6D-8889-679950DEE1B6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +50,10 @@ Global
 		{926F61D5-ED21-4F7D-9A01-7F69FC3943DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{926F61D5-ED21-4F7D-9A01-7F69FC3943DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{926F61D5-ED21-4F7D-9A01-7F69FC3943DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3539B4D8-C588-4C6D-8889-679950DEE1B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3539B4D8-C588-4C6D-8889-679950DEE1B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3539B4D8-C588-4C6D-8889-679950DEE1B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3539B4D8-C588-4C6D-8889-679950DEE1B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{FFF5A395-9ED3-4A74-BF1A-0F9194DD4734} = {6241CFB4-FA14-49EE-AEB6-53E498A70E80}
@@ -56,5 +62,6 @@ Global
 		{7F4BDCD4-102B-47FB-A9D7-C94A99D8B2B5} = {FFF5A395-9ED3-4A74-BF1A-0F9194DD4734}
 		{AC078152-568A-40A7-A062-8A8BF0112AFF} = {FFF5A395-9ED3-4A74-BF1A-0F9194DD4734}
 		{926F61D5-ED21-4F7D-9A01-7F69FC3943DE} = {AE1E85A7-4529-46D5-AD1C-7A718C3B73A5}
+		{3539B4D8-C588-4C6D-8889-679950DEE1B6} = {AE1E85A7-4529-46D5-AD1C-7A718C3B73A5}
 	EndGlobalSection
 EndGlobal

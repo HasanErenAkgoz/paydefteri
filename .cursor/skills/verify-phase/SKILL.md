@@ -1,6 +1,6 @@
 ---
 name: verify-phase
-description: Verifies Taksitle changes via builds, automated tests, and Turkish manual scenarios including Fuzul seed totals. Use after implement-phase.
+description: Verifies PayDefteri changes via builds, automated tests, and Turkish manual scenarios including Fuzul seed totals. Use after implement-phase.
 disable-model-invocation: true
 ---
 

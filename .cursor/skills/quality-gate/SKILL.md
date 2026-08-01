@@ -1,6 +1,6 @@
 ---
 name: quality-gate
-description: Merge gate for Taksitle — architecture, security, tests, and HTML product parity with an explicit GO/NO-GO. Use before merging a feature branch.
+description: Merge gate for PayDefteri — architecture, security, tests, and HTML product parity with an explicit GO/NO-GO. Use before merging a feature branch.
 disable-model-invocation: true
 ---
 

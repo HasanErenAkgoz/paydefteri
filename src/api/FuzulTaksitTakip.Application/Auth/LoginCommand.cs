@@ -38,7 +38,7 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRes
 
         if (!succeeded || userId is null || email is null)
         {
-            throw new ForbiddenException("Invalid email or password.");
+            throw new ForbiddenException("E-posta veya şifre hatalı.");
         }
 
         var (token, expires) = _jwt.CreateToken(userId, email, displayName ?? string.Empty);

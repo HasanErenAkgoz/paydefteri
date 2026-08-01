@@ -1,51 +1,71 @@
-<div class="app-shell">
-  <header class="navbar">
-    <div class="nav-container">
-      <a class="brand" routerLink="/plans">
-        <span class="brand-icon">₺</span>
-        <span class="brand-text">
-          <strong>Taksitle</strong>
-          @if (planContext.planTitle(); as title) {
-            <small>{{ title }}</small>
-          } @else {
-            <small>Çok ortaklı taksit yönetimi</small>
+<div class="app-shell" [class.auth-shell]="isAuthRoute()">
+  @if (!isAuthRoute()) {
+    <nav class="navbar">
+      <div class="nav-container">
+        <a
+          class="brand"
+          [routerLink]="planId() ? ['/plans', planId(), 'dashboard'] : ['/plans']"
+          [queryParams]="planId() ? {} : { manage: '1' }"
+        >
+          <div class="brand-icon">🤝</div>
+          <div class="brand-text">
+            <h1>{{ planContext.planTitle() || 'Borç & Taksit Takip' }}</h1>
+            <p>{{ planContext.planDescription() || 'Çok Ortaklı Dinamik Finans Takibi' }}</p>
+          </div>
+        </a>
+
+        <div class="nav-actions">
+          @if (showPlanTabs()) {
+            <div class="nav-tabs">
+              <a
+                class="nav-tab"
+                [routerLink]="['/plans', planId(), 'dashboard']"
+                routerLinkActive="active"
+                >📊 Takip Tablosu</a
+              >
+              <a
+                class="nav-tab"
+                [routerLink]="['/plans', planId(), 'setup']"
+                routerLinkActive="active"
+                >⚙️ Kurulum</a
+              >
+              <a
+                class="nav-tab"
+                [routerLink]="['/plans', planId(), 'data']"
+                routerLinkActive="active"
+                >💾 Yedek & Rapor</a
+              >
+              <a
+                class="nav-tab"
+                routerLink="/plans"
+                [queryParams]="{ manage: '1' }"
+                [class.active]="isPlansManage()"
+                >📁 Tüm Planlar</a
+              >
+              <a class="nav-tab" routerLink="/profile" [class.active]="isProfile()">👤 Profil</a>
+              <button type="button" class="nav-tab nav-tab-logout" (click)="logout()">🚪 Çıkış</button>
+            </div>
+          } @else if (auth.isAuthenticated()) {
+            <div class="nav-tabs">
+              <a
+                class="nav-tab"
+                routerLink="/plans"
+                [queryParams]="{ manage: '1' }"
+                [class.active]="isPlansManage()"
+                >📁 Tüm Planlar</a
+              >
+              <a class="nav-tab" routerLink="/profile" [class.active]="isProfile()">👤 Profil</a>
+              <button type="button" class="nav-tab nav-tab-logout" (click)="logout()">🚪 Çıkış</button>
+            </div>
           }
-        </span>
-      </a>
-
-      <div class="nav-actions">
-        @if (showPlanTabs()) {
-          <nav class="nav-tabs">
-            <a
-              class="nav-tab"
-              [routerLink]="['/plans', planId(), 'dashboard']"
-              routerLinkActive="active"
-              >Dashboard</a
-            >
-            <a
-              class="nav-tab"
-              [routerLink]="['/plans', planId(), 'setup']"
-              routerLinkActive="active"
-              >Kurulum</a
-            >
-            <a
-              class="nav-tab"
-              [routerLink]="['/plans', planId(), 'data']"
-              routerLinkActive="active"
-              >Veri</a
-            >
-          </nav>
-        }
-
-        @if (auth.isAuthenticated()) {
-          <a class="btn btn-ghost btn-sm" routerLink="/plans">Planlar</a>
-          <button type="button" class="btn btn-secondary btn-sm" (click)="logout()">Çıkış</button>
-        }
+        </div>
       </div>
-    </div>
-  </header>
+    </nav>
+  }
 
-  <main class="container">
+  <main class="container" [class.auth-container]="isAuthRoute()">
     <router-outlet />
   </main>
+  <app-toast-host />
+  <app-confirm-host />
 </div>

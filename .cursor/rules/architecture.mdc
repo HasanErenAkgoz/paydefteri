@@ -1,15 +1,16 @@
 ---
-description: Taksitle system architecture, bounded contexts, and monorepo layout
+description: PayDefteri system architecture, bounded contexts, and monorepo layout
 alwaysApply: true
 ---
 
 # Architecture
 
 ## Product
-- **Taksitle** — multi-partner installment tracker for Turkish savings-finance plans (and similar shared payment plans).
+- **PayDefteri** — multi-partner installment tracker for Turkish savings-finance plans (and similar shared payment plans).
 - Audience: co-buyer / household SaaS — not financing-company back-office.
 - Functional spec: `fuzul-taksit-takip.html` (localStorage prototype). Preserve behavior; harden for multi-plan + auth.
 - “Fuzul” appears only as an optional seed template, not the product brand.
+- **Sharing:** Plan owner invites paydaş by email → member linked to a Partner; each user may mark **only their own** partner payments.
 
 ## Stack
 - Frontend: Angular standalone + signals → `src/web`

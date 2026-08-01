@@ -1,5 +1,6 @@
 using FuzulTaksitTakip.Application.Common.Models;
 using FuzulTaksitTakip.Application.Installments;
+using FuzulTaksitTakip.Application.Payments;
 using FuzulTaksitTakip.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -34,6 +35,7 @@ public sealed class InstallmentsController : ControllerBase
         string? Note);
 
     public sealed record BulkIncreaseRequest(Guid FromInstallmentId, BulkIncreaseType Type, decimal Value);
+    public sealed record RejectPaymentRequest(string? Note);
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<InstallmentDto>>> List(Guid planId, CancellationToken ct)
@@ -88,6 +90,45 @@ public sealed class InstallmentsController : ControllerBase
             request.PaidAt,
             request.PaidByPartnerId,
             request.Note), ct));
+
+    [HttpPost("{installmentId:guid}/payments/{partnerId:guid}/receipt")]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    public async Task<ActionResult<PaymentDto>> UploadReceipt(
+        Guid planId,
+        Guid installmentId,
+        Guid partnerId,
+        IFormFile file,
+        CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new { detail = "Dekont dosyası gerekli." });
+        }
+
+        await using var stream = file.OpenReadStream();
+        var result = await _sender.Send(new UploadReceiptCommand(
+            planId,
+            installmentId,
+            partnerId,
+            stream,
+            file.ContentType,
+            file.FileName), ct);
+        return Ok(result);
+    }
+
+    [HttpPost("{installmentId:guid}/payments/{partnerId:guid}/approve")]
+    public async Task<ActionResult<PaymentDto>> ApprovePayment(
+        Guid planId, Guid installmentId, Guid partnerId, CancellationToken ct)
+        => Ok(await _sender.Send(new ApprovePaymentCommand(planId, installmentId, partnerId), ct));
+
+    [HttpPost("{installmentId:guid}/payments/{partnerId:guid}/reject")]
+    public async Task<ActionResult<PaymentDto>> RejectPayment(
+        Guid planId,
+        Guid installmentId,
+        Guid partnerId,
+        [FromBody] RejectPaymentRequest? body,
+        CancellationToken ct)
+        => Ok(await _sender.Send(new RejectPaymentCommand(planId, installmentId, partnerId, body?.Note), ct));
 
     [HttpPost("bulk-increase")]
     public async Task<ActionResult<IReadOnlyList<InstallmentDto>>> BulkIncrease(

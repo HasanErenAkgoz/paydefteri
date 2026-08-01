@@ -1,6 +1,8 @@
 using FluentValidation;
+using FuzulTaksitTakip.Application.Common;
 using FuzulTaksitTakip.Application.Common.Exceptions;
 using FuzulTaksitTakip.Application.Common.Interfaces;
+using FuzulTaksitTakip.Application.Common.Mapping;
 using FuzulTaksitTakip.Application.Common.Models;
 using FuzulTaksitTakip.Domain.Entities;
 using FuzulTaksitTakip.Domain.Enums;
@@ -25,7 +27,7 @@ public sealed class ListInstallmentsQueryHandler : IRequestHandler<ListInstallme
 
     public async Task<IReadOnlyList<InstallmentDto>> Handle(ListInstallmentsQuery request, CancellationToken cancellationToken)
     {
-        await _auth.EnsureOwnerAsync(request.PlanId, cancellationToken);
+        await _auth.EnsureMemberAsync(request.PlanId, cancellationToken);
 
         var list = await _db.Installments.AsNoTracking()
             .Include(i => i.CustomShares)
@@ -46,7 +48,9 @@ public sealed class ListInstallmentsQueryHandler : IRequestHandler<ListInstallme
         i.ShareType,
         i.SortOrder,
         i.CustomShares.Select(s => new CustomShareDto(s.PartnerId, s.Amount)).ToList(),
-        i.Payments.Select(p => new PaymentDto(p.PartnerId, p.IsPaid, p.PaidAt, p.PaidByPartnerId, p.Note)).ToList());
+        i.Payments.Select(p => new PaymentDto(
+            p.PartnerId, p.IsPaid, p.PaidAt, p.PaidByPartnerId, p.Note,
+            !string.IsNullOrEmpty(p.ReceiptStorageKey), p.ReviewStatus)).ToList());
 }
 
 public sealed record CreateInstallmentCommand(
@@ -72,11 +76,13 @@ public sealed class CreateInstallmentCommandHandler : IRequestHandler<CreateInst
 {
     private readonly IAppDbContext _db;
     private readonly IPlanAuthorization _auth;
+    private readonly ICurrentUser _currentUser;
 
-    public CreateInstallmentCommandHandler(IAppDbContext db, IPlanAuthorization auth)
+    public CreateInstallmentCommandHandler(IAppDbContext db, IPlanAuthorization auth, ICurrentUser currentUser)
     {
         _db = db;
         _auth = auth;
+        _currentUser = currentUser;
     }
 
     public async Task<InstallmentDto> Handle(CreateInstallmentCommand request, CancellationToken cancellationToken)
@@ -97,6 +103,7 @@ public sealed class CreateInstallmentCommandHandler : IRequestHandler<CreateInst
         ValidateCustom(installment);
 
         _db.Installments.Add(installment);
+        PlanActivity.Write(_db, _currentUser, request.PlanId, PlanActivityType.InstallmentCreated, $"Taksit eklendi: {installment.Name}");
         await _db.SaveChangesAsync(cancellationToken);
 
         return ListInstallmentsQueryHandler.Map(installment);
@@ -123,9 +130,16 @@ public sealed class CreateInstallmentCommandHandler : IRequestHandler<CreateInst
 
     internal static void ValidateCustom(Installment installment)
     {
-        if (installment.ShareType == ShareType.Custom && !ShareCalculator.CustomSharesMatchTotal(installment))
+        if (installment.ShareType != ShareType.Custom)
         {
-            throw new ValidationException("Custom shares must sum to totalAmount.");
+            return;
+        }
+
+        if (!ShareCalculator.CustomSharesMatchTotal(installment))
+        {
+            var sum = installment.CustomShares.Sum(s => s.Amount);
+            throw new ValidationException(
+                $"Özel payların toplamı taksit tutarına eşit olmalı. Paylar: {sum:N2} ₺, taksit: {installment.TotalAmount:N2} ₺.");
         }
     }
 }
@@ -178,9 +192,19 @@ public sealed class UpdateInstallmentCommandHandler : IRequestHandler<UpdateInst
         installment.SortOrder = request.SortOrder;
         installment.UpdatedAtUtc = DateTime.UtcNow;
 
-        _db.InstallmentShares.RemoveRange(installment.CustomShares.ToList());
-        installment.CustomShares.Clear();
-        CreateInstallmentCommandHandler.ApplyCustomShares(installment, request.CustomShares);
+        // Flush share deletes first. Same-save Clear()+re-add can make EF issue UPDATEs
+        // against already-removed share rows → DbUpdateConcurrencyException.
+        var existingShares = installment.CustomShares.ToList();
+        if (existingShares.Count > 0)
+        {
+            _db.InstallmentShares.RemoveRange(existingShares);
+            installment.CustomShares.Clear();
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        CreateInstallmentCommandHandler.ApplyCustomShares(
+            installment,
+            request.ShareType == ShareType.Custom ? request.CustomShares : null);
         CreateInstallmentCommandHandler.ValidateCustom(installment);
 
         await _db.SaveChangesAsync(cancellationToken);
@@ -246,31 +270,38 @@ public sealed class UpsertPaymentCommandHandler : IRequestHandler<UpsertPaymentC
 {
     private readonly IAppDbContext _db;
     private readonly IPlanAuthorization _auth;
+    private readonly IReceiptStorage _storage;
+    private readonly ICurrentUser _currentUser;
 
-    public UpsertPaymentCommandHandler(IAppDbContext db, IPlanAuthorization auth)
+    public UpsertPaymentCommandHandler(
+        IAppDbContext db,
+        IPlanAuthorization auth,
+        IReceiptStorage storage,
+        ICurrentUser currentUser)
     {
         _db = db;
         _auth = auth;
+        _storage = storage;
+        _currentUser = currentUser;
     }
 
     public async Task<PaymentDto> Handle(UpsertPaymentCommand request, CancellationToken cancellationToken)
     {
-        await _auth.EnsureOwnerAsync(request.PlanId, cancellationToken);
+        await _auth.EnsureCanMarkPaymentAsync(request.PlanId, request.PartnerId, cancellationToken);
+        var isOwner = await _auth.IsOwnerAsync(request.PlanId, cancellationToken);
 
-        var installmentExists = await _db.Installments.AnyAsync(
-            i => i.Id == request.InstallmentId && i.PlanId == request.PlanId,
-            cancellationToken);
-        if (!installmentExists)
-        {
-            throw new NotFoundException(nameof(Installment), request.InstallmentId);
-        }
+        var installment = await _db.Installments.AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == request.InstallmentId && i.PlanId == request.PlanId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Installment), request.InstallmentId);
 
-        var partnerExists = await _db.Partners.AnyAsync(
-            p => p.Id == request.PartnerId && p.PlanId == request.PlanId,
-            cancellationToken);
-        if (!partnerExists)
+        var partner = await _db.Partners.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == request.PartnerId && p.PlanId == request.PlanId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Partner), request.PartnerId);
+
+        if (request.IsPaid && InstallmentPaymentRules.IsFutureDueMonth(installment.DueDate))
         {
-            throw new NotFoundException(nameof(Partner), request.PartnerId);
+            throw new ValidationException(
+                "İleri aylara ait taksitler için ödeme işaretlenemez. Sadece içinde bulunulan ay ve öncesi.");
         }
 
         if (request.PaidByPartnerId is Guid paidBy)
@@ -283,6 +314,10 @@ public sealed class UpsertPaymentCommandHandler : IRequestHandler<UpsertPaymentC
                 throw new ValidationException("PaidByPartnerId must belong to this plan.");
             }
         }
+
+        var plan = await _db.Plans.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == request.PlanId && !p.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException(nameof(Plan), request.PlanId);
 
         var payment = await _db.Payments.FirstOrDefaultAsync(
             p => p.InstallmentId == request.InstallmentId && p.PartnerId == request.PartnerId,
@@ -298,22 +333,202 @@ public sealed class UpsertPaymentCommandHandler : IRequestHandler<UpsertPaymentC
             _db.Payments.Add(payment);
         }
 
-        payment.IsPaid = request.IsPaid;
-        payment.PaidAt = request.IsPaid ? (request.PaidAt ?? DateOnly.FromDateTime(DateTime.UtcNow)) : null;
-        payment.PaidByPartnerId = request.IsPaid
-            ? (request.PaidByPartnerId ?? request.PartnerId)
-            : null;
-        payment.Note = request.Note?.Trim() ?? string.Empty;
-        payment.UpdatedAtUtc = DateTime.UtcNow;
+        if (request.IsPaid && plan.RequireReceipt && string.IsNullOrEmpty(payment.ReceiptStorageKey))
+        {
+            throw new ValidationException("Dekont zorunlu. Önce dekont yükleyin.");
+        }
+
+        if (!request.IsPaid)
+        {
+            if (!string.IsNullOrEmpty(payment.ReceiptStorageKey))
+            {
+                await _storage.DeleteAsync(payment.ReceiptStorageKey, cancellationToken);
+                payment.ReceiptStorageKey = null;
+                payment.ReceiptContentType = null;
+                payment.ReceiptFileName = null;
+                payment.ReceiptUploadedAtUtc = null;
+            }
+
+            payment.IsPaid = false;
+            payment.PaidAt = null;
+            payment.PaidByPartnerId = null;
+            payment.ReviewStatus = PaymentReviewStatus.None;
+            payment.ReviewedAtUtc = null;
+            payment.ReviewedByUserId = null;
+            payment.Note = request.Note?.Trim() ?? string.Empty;
+            payment.UpdatedAtUtc = DateTime.UtcNow;
+            PlanActivity.Write(
+                _db,
+                _currentUser,
+                request.PlanId,
+                PlanActivityType.PaymentUpserted,
+                $"{partner.Name} — {installment.Name}: ödeme geri alındı");
+            await _db.SaveChangesAsync(cancellationToken);
+            return payment.ToDto();
+        }
+
+        // Marking as paid
+        if (!isOwner)
+        {
+            payment.IsPaid = false;
+            payment.PaidAt = request.PaidAt ?? DateOnly.FromDateTime(DateTime.UtcNow);
+            payment.PaidByPartnerId = request.PaidByPartnerId ?? request.PartnerId;
+            payment.ReviewStatus = PaymentReviewStatus.Pending;
+            payment.ReviewedAtUtc = null;
+            payment.ReviewedByUserId = null;
+            payment.Note = request.Note?.Trim() ?? string.Empty;
+            payment.UpdatedAtUtc = DateTime.UtcNow;
+            PlanActivity.Write(
+                _db,
+                _currentUser,
+                request.PlanId,
+                PlanActivityType.PaymentUpserted,
+                $"{partner.Name} — {installment.Name}: onay için gönderildi");
+        }
+        else
+        {
+            payment.IsPaid = true;
+            payment.PaidAt = request.PaidAt ?? DateOnly.FromDateTime(DateTime.UtcNow);
+            payment.PaidByPartnerId = request.PaidByPartnerId ?? request.PartnerId;
+            payment.ReviewStatus = PaymentReviewStatus.Approved;
+            payment.ReviewedAtUtc = DateTime.UtcNow;
+            payment.ReviewedByUserId = _currentUser.UserId;
+            payment.Note = request.Note?.Trim() ?? string.Empty;
+            payment.UpdatedAtUtc = DateTime.UtcNow;
+            PlanActivity.Write(
+                _db,
+                _currentUser,
+                request.PlanId,
+                PlanActivityType.PaymentUpserted,
+                $"{partner.Name} — {installment.Name}: ödendi işaretlendi");
+        }
 
         await _db.SaveChangesAsync(cancellationToken);
+        return payment.ToDto();
+    }
+}
 
-        return new PaymentDto(
-            payment.PartnerId,
-            payment.IsPaid,
-            payment.PaidAt,
-            payment.PaidByPartnerId,
-            payment.Note);
+public sealed record ApprovePaymentCommand(
+    Guid PlanId,
+    Guid InstallmentId,
+    Guid PartnerId) : IRequest<PaymentDto>;
+
+public sealed class ApprovePaymentCommandHandler : IRequestHandler<ApprovePaymentCommand, PaymentDto>
+{
+    private readonly IAppDbContext _db;
+    private readonly IPlanAuthorization _auth;
+    private readonly ICurrentUser _currentUser;
+
+    public ApprovePaymentCommandHandler(IAppDbContext db, IPlanAuthorization auth, ICurrentUser currentUser)
+    {
+        _db = db;
+        _auth = auth;
+        _currentUser = currentUser;
+    }
+
+    public async Task<PaymentDto> Handle(ApprovePaymentCommand request, CancellationToken cancellationToken)
+    {
+        await _auth.EnsureOwnerAsync(request.PlanId, cancellationToken);
+
+        var payment = await _db.Payments
+            .Include(p => p.Installment)
+            .Include(p => p.Partner)
+            .FirstOrDefaultAsync(
+                p => p.InstallmentId == request.InstallmentId
+                     && p.PartnerId == request.PartnerId
+                     && p.Installment.PlanId == request.PlanId,
+                cancellationToken)
+            ?? throw new NotFoundException(nameof(Payment), request.PartnerId);
+
+        if (payment.ReviewStatus != PaymentReviewStatus.Pending)
+        {
+            throw new ValidationException("Bu ödeme onay bekleyen durumda değil.");
+        }
+
+        if (InstallmentPaymentRules.IsFutureDueMonth(payment.Installment.DueDate))
+        {
+            throw new ValidationException(
+                "İleri aylara ait taksitler için ödeme onaylanamaz. Sadece içinde bulunulan ay ve öncesi.");
+        }
+
+        payment.IsPaid = true;
+        payment.PaidAt ??= DateOnly.FromDateTime(DateTime.UtcNow);
+        payment.PaidByPartnerId ??= payment.PartnerId;
+        payment.ReviewStatus = PaymentReviewStatus.Approved;
+        payment.ReviewedAtUtc = DateTime.UtcNow;
+        payment.ReviewedByUserId = _currentUser.UserId;
+        payment.UpdatedAtUtc = DateTime.UtcNow;
+
+        PlanActivity.Write(
+            _db,
+            _currentUser,
+            request.PlanId,
+            PlanActivityType.PaymentApproved,
+            $"{payment.Partner.Name} — {payment.Installment.Name}: ödeme onaylandı");
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return payment.ToDto();
+    }
+}
+
+public sealed record RejectPaymentCommand(
+    Guid PlanId,
+    Guid InstallmentId,
+    Guid PartnerId,
+    string? Note) : IRequest<PaymentDto>;
+
+public sealed class RejectPaymentCommandHandler : IRequestHandler<RejectPaymentCommand, PaymentDto>
+{
+    private readonly IAppDbContext _db;
+    private readonly IPlanAuthorization _auth;
+    private readonly ICurrentUser _currentUser;
+
+    public RejectPaymentCommandHandler(IAppDbContext db, IPlanAuthorization auth, ICurrentUser currentUser)
+    {
+        _db = db;
+        _auth = auth;
+        _currentUser = currentUser;
+    }
+
+    public async Task<PaymentDto> Handle(RejectPaymentCommand request, CancellationToken cancellationToken)
+    {
+        await _auth.EnsureOwnerAsync(request.PlanId, cancellationToken);
+
+        var payment = await _db.Payments
+            .Include(p => p.Installment)
+            .Include(p => p.Partner)
+            .FirstOrDefaultAsync(
+                p => p.InstallmentId == request.InstallmentId
+                     && p.PartnerId == request.PartnerId
+                     && p.Installment.PlanId == request.PlanId,
+                cancellationToken)
+            ?? throw new NotFoundException(nameof(Payment), request.PartnerId);
+
+        if (payment.ReviewStatus != PaymentReviewStatus.Pending)
+        {
+            throw new ValidationException("Bu ödeme onay bekleyen durumda değil.");
+        }
+
+        payment.IsPaid = false;
+        payment.ReviewStatus = PaymentReviewStatus.Rejected;
+        payment.ReviewedAtUtc = DateTime.UtcNow;
+        payment.ReviewedByUserId = _currentUser.UserId;
+        if (!string.IsNullOrWhiteSpace(request.Note))
+        {
+            payment.Note = request.Note.Trim();
+        }
+
+        payment.UpdatedAtUtc = DateTime.UtcNow;
+
+        PlanActivity.Write(
+            _db,
+            _currentUser,
+            request.PlanId,
+            PlanActivityType.PaymentRejected,
+            $"{payment.Partner.Name} — {payment.Installment.Name}: ödeme reddedildi");
+
+        await _db.SaveChangesAsync(cancellationToken);
+        return payment.ToDto();
     }
 }
 

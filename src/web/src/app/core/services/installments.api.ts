@@ -46,7 +46,40 @@ export class InstallmentsApi {
     );
   }
 
+  uploadReceipt(
+    planId: string,
+    installmentId: string,
+    partnerId: string,
+    file: File
+  ): Observable<PaymentDto> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return this.http.post<PaymentDto>(
+      `${this.base(planId)}/${installmentId}/payments/${partnerId}/receipt`,
+      form
+    );
+  }
+
   bulkIncrease(planId: string, body: BulkIncreaseRequest): Observable<InstallmentDto[]> {
     return this.http.post<InstallmentDto[]>(`${this.base(planId)}/bulk-increase`, body);
+  }
+
+  approvePayment(planId: string, installmentId: string, partnerId: string): Observable<PaymentDto> {
+    return this.http.post<PaymentDto>(
+      `${this.base(planId)}/${installmentId}/payments/${partnerId}/approve`,
+      {}
+    );
+  }
+
+  rejectPayment(
+    planId: string,
+    installmentId: string,
+    partnerId: string,
+    note?: string | null
+  ): Observable<PaymentDto> {
+    return this.http.post<PaymentDto>(
+      `${this.base(planId)}/${installmentId}/payments/${partnerId}/reject`,
+      { note: note ?? null }
+    );
   }
 }

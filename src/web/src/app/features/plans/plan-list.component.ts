@@ -1,51 +1,190 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { PlanDto } from '../../core/models/api.models';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { switchMap } from 'rxjs';
+import { PlanDto, PlanInviteDto, TemplateListItemDto } from '../../core/models/api.models';
+import { MembershipApi } from '../../core/services/membership.api';
 import { PlanContextService } from '../../core/services/plan-context.service';
 import { PlansApi } from '../../core/services/plans.api';
+import { TemplatesApi } from '../../core/services/templates.api';
+import { ToastService } from '../../shared/toast/toast.service';
+import { ConfirmService } from '../../shared/confirm/confirm.service';
 import { formatDateTr } from '../../shared/utils/format';
+import { IconTrashComponent } from '../../shared/icons/icon-trash.component';
 
 @Component({
   selector: 'app-plan-list',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, IconTrashComponent],
   templateUrl: './plan-list.component.html',
   styleUrl: './plan-list.component.scss',
 })
 export class PlanListComponent implements OnInit {
   private readonly plansApi = inject(PlansApi);
-  private readonly planContext = inject(PlanContextService);
+  private readonly membershipApi = inject(MembershipApi);
+  private readonly templatesApi = inject(TemplatesApi);
+  readonly planContext = inject(PlanContextService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly toast = inject(ToastService);
+  private readonly confirm = inject(ConfirmService);
 
   readonly plans = signal<PlanDto[]>([]);
+  readonly archivedPlans = signal<PlanDto[]>([]);
+  readonly pendingInvites = signal<PlanInviteDto[]>([]);
+  readonly templates = signal<TemplateListItemDto[]>([]);
   readonly loading = signal(true);
-  readonly error = signal<string | null>(null);
   readonly creating = signal(false);
+  readonly accepting = signal(false);
+  readonly showCustomForm = signal(false);
+  readonly manageMode = signal(false);
+  readonly showArchived = signal(false);
 
   newTitle = '';
   newDescription = '';
 
   formatDateTr = formatDateTr;
 
+  readonly sortedPlans = computed(() =>
+    [...this.plans()].sort((a, b) => String(b.createdAtUtc).localeCompare(String(a.createdAtUtc)))
+  );
+
   ngOnInit(): void {
-    this.planContext.clear();
-    this.reload();
+    // Keep last planId so navbar tabs stay available while managing plans.
+    const manage = this.route.snapshot.queryParamMap.get('manage') === '1';
+    this.manageMode.set(manage);
+    this.templatesApi.list().subscribe({
+      next: (list) => this.templates.set(list.filter((t) => t.key !== 'empty')),
+      error: () => this.templates.set([]),
+    });
+    this.reload(manage);
   }
 
-  reload(): void {
+  backToDashboard(): void {
+    const id = this.planContext.planId() ?? this.sortedPlans()[0]?.id;
+    if (id) {
+      void this.router.navigate(['/plans', id, 'dashboard']);
+      return;
+    }
+    void this.router.navigate(['/plans'], { queryParams: { manage: '1' } });
+  }
+
+  templateIcon(key: string): string {
+    switch (key) {
+      case 'fuzul':
+        return '🏠';
+      case 'eminevim':
+        return '🏡';
+      case 'birevim':
+        return '🚗';
+      case 'katilimevim':
+        return '🏢';
+      case 'sinpas':
+        return '🏬';
+      default:
+        return '📋';
+    }
+  }
+
+  reload(manage = this.manageMode()): void {
     this.loading.set(true);
-    this.error.set(null);
     this.plansApi.list().subscribe({
       next: (plans) => {
         this.plans.set(plans);
-        this.loading.set(false);
+        if (!manage && plans.length > 0) {
+          const plan = [...plans].sort((a, b) =>
+            String(b.createdAtUtc).localeCompare(String(a.createdAtUtc))
+          )[0];
+          void this.router.navigate(['/plans', plan.id, 'dashboard']);
+          return;
+        }
+        if (!manage && plans.length === 0) {
+          void this.router.navigate(['/plans'], { queryParams: { manage: '1' } });
+          return;
+        }
+        this.membershipApi.myInvites().subscribe({
+          next: (invites) => {
+            this.pendingInvites.set(invites);
+            this.ensurePlanContext(plans);
+            this.loading.set(false);
+            this.loadArchived();
+          },
+          error: () => {
+            this.pendingInvites.set([]);
+            this.ensurePlanContext(plans);
+            this.loading.set(false);
+            this.loadArchived();
+          },
+        });
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.error?.detail ?? 'Planlar yüklenemedi.');
+        this.toast.error(err?.error?.detail ?? 'Planlar yüklenemedi.');
       },
     });
+  }
+
+  private loadArchived(): void {
+    this.plansApi.list(true).subscribe({
+      next: (list) => this.archivedPlans.set(list),
+      error: () => this.archivedPlans.set([]),
+    });
+  }
+
+  private ensurePlanContext(plans: PlanDto[]): void {
+    this.planContext.syncWithPlans(plans);
+  }
+
+  acceptInvite(invite: PlanInviteDto): void {
+    this.accepting.set(true);
+    this.membershipApi.accept(invite.token).subscribe({
+      next: (plan) => {
+        this.accepting.set(false);
+        void this.router.navigate(['/plans', plan.id, 'dashboard']);
+      },
+      error: (err) => {
+        this.accepting.set(false);
+        this.toast.error(err?.error?.detail ?? 'Davet kabul edilemedi.');
+      },
+    });
+  }
+
+  createFromTemplate(key: string): void {
+    const t = this.templates().find((x) => x.key === key);
+    this.creating.set(true);
+    this.plansApi
+      .create({
+        title: t?.title ?? 'Yeni Plan',
+        description: t?.description ?? '',
+      })
+      .pipe(switchMap((plan) => this.plansApi.seed(plan.id, key)))
+      .subscribe({
+        next: (plan) => {
+          this.creating.set(false);
+          void this.router.navigate(['/plans', plan.id, 'dashboard']);
+        },
+        error: (err) => {
+          this.creating.set(false);
+          this.toast.error(err?.error?.detail ?? 'Şablon plan oluşturulamadı.');
+        },
+      });
+  }
+
+  createEmpty(): void {
+    this.creating.set(true);
+    this.plansApi
+      .create({ title: 'Yeni Özel Plan', description: 'Özel takip planı' })
+      .pipe(switchMap((plan) => this.plansApi.seed(plan.id, 'empty')))
+      .subscribe({
+        next: (plan) => {
+          this.creating.set(false);
+          void this.router.navigate(['/plans', plan.id, 'setup']);
+        },
+        error: (err) => {
+          this.creating.set(false);
+          this.toast.error(err?.error?.detail ?? 'Boş plan oluşturulamadı.');
+        },
+      });
   }
 
   create(): void {
@@ -59,24 +198,117 @@ export class PlanListComponent implements OnInit {
         this.creating.set(false);
         this.newTitle = '';
         this.newDescription = '';
+        this.showCustomForm.set(false);
         void this.router.navigate(['/plans', plan.id, 'dashboard']);
       },
       error: (err) => {
         this.creating.set(false);
-        this.error.set(err?.error?.detail ?? 'Plan oluşturulamadı.');
+        this.toast.error(err?.error?.detail ?? 'Plan oluşturulamadı.');
       },
     });
   }
 
-  remove(plan: PlanDto, event: Event): void {
+  async remove(plan: PlanDto, event: Event): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
-    if (!confirm(`“${plan.title}” planını silmek istediğinize emin misiniz?`)) {
+    if (
+      !(await this.confirm.ask({
+        title: 'Planı sil',
+        message: `“${plan.title}” planını kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+        confirmLabel: 'Sil',
+        danger: true,
+      }))
+    ) {
       return;
     }
     this.plansApi.delete(plan.id).subscribe({
-      next: () => this.reload(),
-      error: (err) => this.error.set(err?.error?.detail ?? 'Plan silinemedi.'),
+      next: () => {
+        const remaining = this.plans().filter((p) => p.id !== plan.id);
+        this.plans.set(remaining);
+        this.archivedPlans.set(this.archivedPlans().filter((p) => p.id !== plan.id));
+
+        if (remaining.length === 0) {
+          this.plansApi
+            .create({ title: 'Yeni Özel Plan', description: 'Özel takip planı' })
+            .pipe(switchMap((created) => this.plansApi.seed(created.id, 'empty')))
+            .subscribe({
+              next: (created) => {
+                this.planContext.setPlan(created.id, created.title, created.description);
+                this.toast.success('Yeni plan açıldı — kuruluma yönlendiriliyorsunuz.');
+                void this.router.navigate(['/plans', created.id, 'setup']);
+              },
+              error: (err) => {
+                this.planContext.clear();
+                this.toast.error(err?.error?.detail ?? 'Yeni plan oluşturulamadı.');
+                this.reload(true);
+              },
+            });
+          return;
+        }
+
+        if (this.planContext.planId() === plan.id) {
+          const next = [...remaining].sort((a, b) =>
+            String(b.createdAtUtc).localeCompare(String(a.createdAtUtc))
+          )[0];
+          this.planContext.setPlan(next.id, next.title, next.description);
+        }
+        this.toast.success('Plan silindi.');
+        this.reload(true);
+      },
+      error: (err) => this.toast.error(err?.error?.detail ?? 'Plan silinemedi.'),
+    });
+  }
+
+  async archivePlan(plan: PlanDto, event: Event): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    if (
+      !(await this.confirm.ask({
+        title: 'Planı arşivle',
+        message: `“${plan.title}” planını arşivlemek istediğinize emin misiniz? Sonra geri yükleyebilirsiniz.`,
+        confirmLabel: 'Arşivle',
+        success: true,
+      }))
+    ) {
+      return;
+    }
+    this.plansApi.archive(plan.id).subscribe({
+      next: () => {
+        this.toast.success('Plan arşivlendi.');
+        if (this.planContext.planId() === plan.id) {
+          this.planContext.clear();
+        }
+        this.reload(true);
+      },
+      error: (err) => this.toast.error(err?.error?.detail ?? 'Plan arşivlenemedi.'),
+    });
+  }
+  copyPlan(plan: PlanDto, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.creating.set(true);
+    this.plansApi.copy(plan.id).subscribe({
+      next: (copied) => {
+        this.creating.set(false);
+        this.toast.success('Plan kopyalandı.');
+        void this.router.navigate(['/plans', copied.id, 'setup']);
+      },
+      error: (err) => {
+        this.creating.set(false);
+        this.toast.error(err?.error?.detail ?? 'Kopyalama başarısız.');
+      },
+    });
+  }
+
+  restorePlan(plan: PlanDto, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.plansApi.restore(plan.id).subscribe({
+      next: () => {
+        this.toast.success('Plan geri yüklendi.');
+        this.reload(true);
+      },
+      error: (err) => this.toast.error(err?.error?.detail ?? 'Geri yükleme başarısız.'),
     });
   }
 }

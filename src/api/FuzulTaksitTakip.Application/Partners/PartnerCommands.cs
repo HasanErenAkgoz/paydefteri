@@ -1,8 +1,12 @@
 using FluentValidation;
+using FuzulTaksitTakip.Application.Common;
 using FuzulTaksitTakip.Application.Common.Exceptions;
 using FuzulTaksitTakip.Application.Common.Interfaces;
+using FuzulTaksitTakip.Application.Common.Mapping;
 using FuzulTaksitTakip.Application.Common.Models;
 using FuzulTaksitTakip.Domain.Entities;
+using FuzulTaksitTakip.Domain.Enums;
+using FuzulTaksitTakip.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,13 +27,14 @@ public sealed class ListPartnersQueryHandler : IRequestHandler<ListPartnersQuery
 
     public async Task<IReadOnlyList<PartnerDto>> Handle(ListPartnersQuery request, CancellationToken cancellationToken)
     {
-        await _auth.EnsureOwnerAsync(request.PlanId, cancellationToken);
+        await _auth.EnsureMemberAsync(request.PlanId, cancellationToken);
 
-        return await _db.Partners.AsNoTracking()
+        var list = await _db.Partners.AsNoTracking()
             .Where(p => p.PlanId == request.PlanId)
             .OrderBy(p => p.SortOrder)
-            .Select(p => new PartnerDto(p.Id, p.PlanId, p.Name, p.Color, p.DefaultPct, p.SortOrder))
             .ToListAsync(cancellationToken);
+
+        return list.Select(p => p.ToDto()).ToList();
     }
 }
 
@@ -38,7 +43,8 @@ public sealed record CreatePartnerCommand(
     string Name,
     string Color,
     decimal DefaultPct,
-    int SortOrder) : IRequest<PartnerDto>;
+    int SortOrder,
+    string? Iban) : IRequest<PartnerDto>;
 
 public sealed class CreatePartnerCommandValidator : AbstractValidator<CreatePartnerCommand>
 {
@@ -47,6 +53,9 @@ public sealed class CreatePartnerCommandValidator : AbstractValidator<CreatePart
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Color).NotEmpty().MaximumLength(32);
         RuleFor(x => x.DefaultPct).InclusiveBetween(0m, 100m);
+        RuleFor(x => x.Iban)
+            .Must(iban => iban is null || string.IsNullOrWhiteSpace(iban) || IbanNormalizer.IsValidTurkishIban(iban))
+            .WithMessage("Geçerli bir TR IBAN girin.");
     }
 }
 
@@ -54,11 +63,13 @@ public sealed class CreatePartnerCommandHandler : IRequestHandler<CreatePartnerC
 {
     private readonly IAppDbContext _db;
     private readonly IPlanAuthorization _auth;
+    private readonly ICurrentUser _currentUser;
 
-    public CreatePartnerCommandHandler(IAppDbContext db, IPlanAuthorization auth)
+    public CreatePartnerCommandHandler(IAppDbContext db, IPlanAuthorization auth, ICurrentUser currentUser)
     {
         _db = db;
         _auth = auth;
+        _currentUser = currentUser;
     }
 
     public async Task<PartnerDto> Handle(CreatePartnerCommand request, CancellationToken cancellationToken)
@@ -71,13 +82,15 @@ public sealed class CreatePartnerCommandHandler : IRequestHandler<CreatePartnerC
             Name = request.Name.Trim(),
             Color = request.Color,
             DefaultPct = request.DefaultPct,
-            SortOrder = request.SortOrder
+            SortOrder = request.SortOrder,
+            Iban = IbanNormalizer.Normalize(request.Iban)
         };
 
         _db.Partners.Add(partner);
+        PlanActivity.Write(_db, _currentUser, request.PlanId, PlanActivityType.PartnerCreated, $"Ortak eklendi: {partner.Name}");
         await _db.SaveChangesAsync(cancellationToken);
 
-        return new PartnerDto(partner.Id, partner.PlanId, partner.Name, partner.Color, partner.DefaultPct, partner.SortOrder);
+        return partner.ToDto();
     }
 }
 
@@ -87,7 +100,8 @@ public sealed record UpdatePartnerCommand(
     string Name,
     string Color,
     decimal DefaultPct,
-    int SortOrder) : IRequest<PartnerDto>;
+    int SortOrder,
+    string? Iban) : IRequest<PartnerDto>;
 
 public sealed class UpdatePartnerCommandValidator : AbstractValidator<UpdatePartnerCommand>
 {
@@ -96,6 +110,9 @@ public sealed class UpdatePartnerCommandValidator : AbstractValidator<UpdatePart
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Color).NotEmpty().MaximumLength(32);
         RuleFor(x => x.DefaultPct).InclusiveBetween(0m, 100m);
+        RuleFor(x => x.Iban)
+            .Must(iban => iban is null || string.IsNullOrWhiteSpace(iban) || IbanNormalizer.IsValidTurkishIban(iban))
+            .WithMessage("Geçerli bir TR IBAN girin.");
     }
 }
 
@@ -122,11 +139,12 @@ public sealed class UpdatePartnerCommandHandler : IRequestHandler<UpdatePartnerC
         partner.Color = request.Color;
         partner.DefaultPct = request.DefaultPct;
         partner.SortOrder = request.SortOrder;
+        partner.Iban = IbanNormalizer.Normalize(request.Iban);
         partner.UpdatedAtUtc = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(cancellationToken);
 
-        return new PartnerDto(partner.Id, partner.PlanId, partner.Name, partner.Color, partner.DefaultPct, partner.SortOrder);
+        return partner.ToDto();
     }
 }
 

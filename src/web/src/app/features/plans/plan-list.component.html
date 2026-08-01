@@ -1,49 +1,230 @@
-<section class="page">
-  <header class="page-header">
-    <div>
-      <h1>Planlarım</h1>
-      <p class="muted">Taksit planlarınızı yönetin.</p>
+<section class="plans-page view-section active">
+  <header class="plans-hero">
+    <div class="plans-hero-copy">
+      <p class="plans-eyebrow">PayDefteri</p>
+      <h1>Tüm Planlar</h1>
+      <p class="muted">
+        Planlar arasında geçiş yapın, yenisini oluşturun veya davetleri kabul edin.
+      </p>
+      @if (sortedPlans().length) {
+        <button type="button" class="btn btn-secondary btn-sm back-btn" (click)="backToDashboard()">
+          ← Takibe dön
+        </button>
+      }
+    </div>
+    <div class="plans-hero-stats">
+      <div class="plans-stat">
+        <span class="plans-stat-value">{{ plans().length }}</span>
+        <span class="plans-stat-label">Aktif plan</span>
+      </div>
+      <div class="plans-stat">
+        <span class="plans-stat-value">{{ pendingInvites().length }}</span>
+        <span class="plans-stat-label">Bekleyen davet</span>
+      </div>
     </div>
   </header>
 
-  @if (error()) {
-    <div class="alert alert-danger">{{ error() }}</div>
+
+  @if (pendingInvites().length) {
+    <div class="card invites-card">
+      <div class="card-title">📨 Bekleyen Davetler</div>
+      <div class="invites-list">
+        @for (inv of pendingInvites(); track inv.id) {
+          <div class="invite-row">
+            <div class="invite-main">
+              <strong>{{ inv.partnerName }}</strong>
+              <span class="muted">ortak satırı olarak katıl · {{ inv.email }}</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              [disabled]="accepting()"
+              (click)="acceptInvite(inv)"
+            >
+              Kabul et
+            </button>
+          </div>
+        }
+      </div>
+    </div>
   }
 
-  <div class="card create-card">
-    <h2>Yeni plan</h2>
-    <form class="form-row" (ngSubmit)="create()">
-      <label>
-        Başlık
-        <input type="text" name="title" [(ngModel)]="newTitle" required placeholder="Örn. Ortak konut ödeme planı" />
-      </label>
-      <label>
-        Açıklama
-        <input type="text" name="description" [(ngModel)]="newDescription" placeholder="İsteğe bağlı" />
-      </label>
-      <button class="btn btn-primary" type="submit" [disabled]="creating()">
-        {{ creating() ? 'Oluşturuluyor…' : 'Oluştur' }}
-      </button>
-    </form>
+  <div class="card">
+    <div class="card-title">⚡ Şablondan Yeni Plan</div>
+    <p class="muted" style="font-size: 0.85rem; margin-bottom: 16px">
+      HTML prototipteki gibi hazır tasarruf / finansman planlarından birini seçerek hemen başlayın.
+    </p>
+    <div class="template-cards">
+      @for (t of templates(); track t.key) {
+        <div class="template-card">
+          <h4>{{ templateIcon(t.key) }} {{ t.title }}</h4>
+          <p>{{ t.description }}</p>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            style="width: 100%; justify-content: center; margin-top: 12px"
+            [disabled]="creating()"
+            (click)="createFromTemplate(t.key)"
+          >
+            📥 Bu Şablonla Aç
+          </button>
+        </div>
+      }
+      <div class="template-card">
+        <h4>📄 Sıfır Özel Plan</h4>
+        <p>Boş plan oluşturup ortak ve taksitleri kendiniz ekleyin.</p>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          style="width: 100%; justify-content: center; margin-top: 12px"
+          [disabled]="creating()"
+          (click)="createEmpty()"
+        >
+          ✨ Boş Plan Yap
+        </button>
+      </div>
+    </div>
+
+    <div class="custom-create">
+      @if (!showCustomForm()) {
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showCustomForm.set(true)">
+          ✏️ Özel başlıkla oluştur
+        </button>
+      } @else {
+        <div class="card-title" style="margin-top: 8px; font-size: 0.95rem">Özel Plan Oluştur</div>
+        <form class="custom-form" (ngSubmit)="create()">
+          <div class="form-group">
+            <label class="form-label">Plan Adı</label>
+            <input
+              class="form-input"
+              type="text"
+              name="title"
+              [(ngModel)]="newTitle"
+              required
+              placeholder="Örn: Fuzul Ev Konut Projesi"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Açıklama</label>
+            <input
+              class="form-input"
+              type="text"
+              name="description"
+              [(ngModel)]="newDescription"
+              placeholder="İsteğe bağlı not"
+            />
+          </div>
+          <div class="custom-form-actions">
+            <button type="button" class="btn btn-secondary" (click)="showCustomForm.set(false)">İptal</button>
+            <button class="btn btn-primary" type="submit" [disabled]="creating()">
+              {{ creating() ? 'Oluşturuluyor…' : 'Oluştur' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
   </div>
 
-  @if (loading()) {
-    <p class="muted">Yükleniyor…</p>
-  } @else if (plans().length === 0) {
-    <p class="muted">Henüz plan yok. Yukarıdan bir plan oluşturun.</p>
-  } @else {
-    <div class="plan-grid">
-      @for (plan of plans(); track plan.id) {
-        <a class="card plan-card" [routerLink]="['/plans', plan.id, 'dashboard']">
-          <div class="plan-card-top">
-            <h3>{{ plan.title }}</h3>
-            <button type="button" class="btn btn-ghost btn-sm" (click)="remove(plan, $event)">Sil</button>
-          </div>
-          @if (plan.description) {
-            <p class="muted">{{ plan.description }}</p>
+  <div class="card">
+    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center">
+      <span>📁 Mevcut Planlar</span>
+      @if (!loading()) {
+        <span class="muted" style="font-size: 0.8rem; font-weight: 500">{{ plans().length }} kayıt</span>
+      }
+    </div>
+
+    @if (loading()) {
+      <p class="muted">Yükleniyor…</p>
+    } @else if (sortedPlans().length === 0) {
+      <div class="empty-plans">
+        <div class="empty-icon">🤝</div>
+        <h3>Henüz plan yok</h3>
+        <p class="muted">Yukarıdaki şablonlardan birini yükleyerek takip tablosunu açın.</p>
+      </div>
+    } @else {
+      <div class="plan-grid">
+        @for (plan of sortedPlans(); track plan.id) {
+          <a class="plan-card" [routerLink]="['/plans', plan.id, 'dashboard']">
+            <div class="plan-card-accent"></div>
+            <div class="plan-card-body">
+              <div class="plan-card-top">
+                <h3>{{ plan.title }}</h3>
+                <div class="plan-card-actions">
+                  <button
+                    type="button"
+                    class="plan-action-btn"
+                    title="Kopyala"
+                    (click)="copyPlan(plan, $event)"
+                  >
+                    📋
+                  </button>
+                  <button
+                    type="button"
+                    class="plan-action-btn"
+                    title="Arşivle"
+                    (click)="archivePlan(plan, $event)"
+                  >
+                    📦
+                  </button>
+                  <button
+                    type="button"
+                    class="plan-action-btn plan-action-btn--danger"
+                    title="Sil"
+                    (click)="remove(plan, $event)"
+                  >
+                    <app-icon-trash />
+                  </button>
+                </div>
+              </div>
+              <p class="plan-desc">
+                {{ plan.description || 'Açıklama yok' }}
+              </p>
+              <div class="plan-card-footer">
+                <span class="meta">📅 {{ formatDateTr(plan.createdAtUtc) }}</span>
+                <span class="open-hint">Takibe git →</span>
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+    }
+  </div>
+
+  @if (archivedPlans().length) {
+    <div class="card" style="margin-top: 16px">
+      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center">
+        <span>🗄️ Arşivlenen planlar</span>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showArchived.set(!showArchived())">
+          {{ showArchived() ? 'Gizle' : 'Göster' }}
+        </button>
+      </div>
+      @if (showArchived()) {
+        <div class="plan-grid">
+          @for (plan of archivedPlans(); track plan.id) {
+            <div class="plan-card" style="opacity: 0.85">
+              <div class="plan-card-accent"></div>
+              <div class="plan-card-body">
+                <div class="plan-card-top">
+                  <h3>{{ plan.title }}</h3>
+                  <div class="plan-card-actions">
+                    <button type="button" class="btn btn-primary btn-sm" (click)="restorePlan(plan, $event)">
+                      Geri yükle
+                    </button>
+                    <button
+                      type="button"
+                      class="plan-action-btn plan-action-btn--danger"
+                      title="Kalıcı sil"
+                      (click)="remove(plan, $event)"
+                    >
+                      <app-icon-trash />
+                    </button>
+                  </div>
+                </div>
+                <p class="plan-desc">{{ plan.description || 'Açıklama yok' }}</p>
+              </div>
+            </div>
           }
-          <p class="meta">Oluşturulma: {{ formatDateTr(plan.createdAtUtc) }}</p>
-        </a>
+        </div>
       }
     </div>
   }

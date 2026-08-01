@@ -1,5 +1,5 @@
 ---
-description: AuthZ, XSS, import trust, and secrets hardening for Taksitle
+description: AuthZ, XSS, import trust, and secrets hardening for PayDefteri
 alwaysApply: true
 ---
 

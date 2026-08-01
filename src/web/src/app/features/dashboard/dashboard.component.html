@@ -1,192 +1,521 @@
-<section class="page">
-  @if (loading()) {
-    <p class="muted">Yükleniyor…</p>
-  } @else if (error() && !dashboard()) {
-    <div class="alert alert-danger">{{ error() }}</div>
-  } @else {
-    @if (dashboard(); as d) {
-      <header class="page-header">
-        <div>
-          <h1>{{ d.title }}</h1>
-          @if (d.description) {
-            <p class="muted">{{ d.description }}</p>
-          }
-        </div>
-        <div class="countdown-badge">{{ countdownText(d.daysUntilDelivery) }}</div>
-      </header>
+@if (loading()) {
+  <p class="muted">Yükleniyor…</p>
+} @else if (!dashboard()) {
+  <p class="muted">Dashboard yüklenemedi.</p>
+} @else {
+  @if (dashboard(); as d) {
+  <div class="view-section active">
 
-      @if (error()) {
-        <div class="alert alert-danger">{{ error() }}</div>
-      }
+    @if (d.isOwner) {
+      <p class="muted" style="margin-bottom: 12px">
+        Plan sahibi olarak tüm ortakların ödemesini işaretleyebilirsiniz.
+        @if (d.requireReceipt && d.paymentTargetIban) {
+          · Dekont zorunlu · IBAN: <code>{{ d.paymentTargetIban }}</code>
+        }
+      </p>
+    } @else if (d.myPartnerId) {
+      <p class="muted" style="margin-bottom: 12px">
+        Sadece kendi ortağınızın ödemesini işaretleyebilirsiniz.
+        @if (d.requireReceipt && d.paymentTargetIban) {
+          · Dekont zorunlu · IBAN: <code>{{ d.paymentTargetIban }}</code>
+        }
+      </p>
+    } @else {
+      <p class="muted" style="margin-bottom: 12px">
+        Henüz bir ortağa bağlı değilsiniz — davet kabul edin veya Setup’ta “Bu benim” deyin.
+      </p>
+    }
 
-      <div class="metrics-grid">
-        <div class="card metric metric-total">
-          <span class="metric-label">Toplam</span>
-          <strong>{{ d.metrics.grandTotal | tryCurrency }}</strong>
-        </div>
-        <div class="card metric metric-paid">
-          <span class="metric-label">Ödenen</span>
-          <strong>{{ d.metrics.grandPaid | tryCurrency }}</strong>
-        </div>
-        <div class="card metric metric-remain">
-          <span class="metric-label">Kalan</span>
-          <strong>{{ d.metrics.grandRemaining | tryCurrency }}</strong>
-        </div>
-        <div class="card metric metric-progress">
-          <span class="metric-label">İlerleme</span>
-          <strong>%{{ d.metrics.paidPercent | number: '1.0-1' }}</strong>
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width.%]="d.metrics.paidPercent"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="two-col">
-        <div class="card">
-          <h2>Ortaklar</h2>
-          <div class="partner-list">
-            @for (p of d.partners; track p.partnerId) {
-              <div class="partner-row">
-                <span class="dot" [style.background]="p.color"></span>
-                <div class="partner-info">
-                  <strong>{{ p.name }}</strong>
-                  <span class="muted">
-                    Ödenen {{ p.paidAmount | tryCurrency }} · Kalan {{ p.remainingAmount | tryCurrency }}
-                  </span>
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Mahsuplaşma</h2>
-          @if (d.settlements.length === 0) {
-            <p class="muted">Mahsuplaşma kaydı yok.</p>
-          } @else {
-            <ul class="settlement-list">
-              @for (s of d.settlements; track s.partnerId) {
-                <li>
-                  <strong>{{ s.partnerName }}</strong>
-                  <span [class.positive]="s.balance > 0" [class.negative]="s.balance < 0">
-                    {{ s.balance | tryCurrency }} ({{ settlementText(s.balance) }})
-                  </span>
-                </li>
+    <div class="highlights-grid">
+      @if (d.myMetrics; as mine) {
+        <div class="highlight-card">
+          <div>
+            <div class="card-header-sm">
+              <span class="card-title-sm">👤 Benim Payım</span>
+              <span class="status-pill pending">{{ mine.unpaidInstallmentCount }} açık</span>
+            </div>
+            <div class="countdown-timer" style="font-size: 1.4rem">{{ mine.remainingAmount | tryCurrency }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted)">
+              Ödenen {{ mine.paidAmount | tryCurrency }} / {{ mine.totalShare | tryCurrency }}
+              @if (mine.nextDueDate) {
+                · Sonraki: {{ mine.nextInstallmentName }} ({{ formatDateTr(mine.nextDueDate) }})
               }
-            </ul>
-          }
-        </div>
-      </div>
-
-      <div class="card table-card">
-        <div class="table-toolbar">
-          <h2>Taksitler</h2>
-          <div class="toolbar-actions">
-            <input
-              type="search"
-              class="search"
-              placeholder="Ara…"
-              [ngModel]="search()"
-              (ngModelChange)="search.set($event)"
-            />
-            <div class="filter-group">
-              <button type="button" class="chip" [class.active]="filter() === 'all'" (click)="setFilter('all')">Tümü</button>
-              <button type="button" class="chip" [class.active]="filter() === 'pending'" (click)="setFilter('pending')">Bekleyen</button>
-              <button type="button" class="chip" [class.active]="filter() === 'partial'" (click)="setFilter('partial')">Kısmi</button>
-              <button type="button" class="chip" [class.active]="filter() === 'full'" (click)="setFilter('full')">Ödenen</button>
             </div>
           </div>
+          <div style="margin-top: 12px">
+            <button type="button" class="btn btn-secondary btn-sm" style="width: 100%" (click)="setPartnerView('mine')">
+              Sadece benim payımı göster
+            </button>
+          </div>
         </div>
+      }
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Taksit</th>
-                <th>Vade</th>
-                <th>Tutar</th>
-                <th>Durum</th>
-                @for (p of d.partners; track p.partnerId) {
-                  <th>
-                    <span class="dot inline" [style.background]="p.color"></span>
-                    {{ p.name }}
-                  </th>
-                }
-              </tr>
-            </thead>
-            <tbody>
-              @for (inst of filteredInstallments(); track inst.id) {
-                <tr>
-                  <td>{{ inst.name }}</td>
-                  <td>{{ formatDateTr(inst.dueDate) }}</td>
-                  <td>{{ inst.totalAmount | tryCurrency }}</td>
-                  <td>
-                    <span class="status" [attr.data-status]="inst.status">{{ statusLabel(inst.status) }}</span>
-                  </td>
-                  @for (pay of inst.partnerPayments; track pay.partnerId) {
-                    <td>
-                      <button
-                        type="button"
-                        class="pay-check"
-                        [class.paid]="pay.isPaid"
-                        (click)="openPayment(inst, pay)"
-                        [title]="pay.partnerName + ' — ' + (pay.shareAmount | tryCurrency)"
-                      >
-                        {{ pay.isPaid ? '✓' : '○' }}
-                        <small>{{ pay.shareAmount | tryCurrency }}</small>
-                      </button>
-                    </td>
-                  }
-                </tr>
-              } @empty {
-                <tr>
-                  <td [attr.colspan]="4 + d.partners.length" class="muted">Kayıt bulunamadı.</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+      <div class="highlight-card delivery-card">
+        <div>
+          <div class="card-header-sm">
+            <span class="card-title-sm">🏠 Tahsisat / Teslimat</span>
+            <span class="status-pill" [class.full]="!!deliveryInstallment()" [class.pending]="!deliveryInstallment()">
+              {{ deliveryBadge() }}
+            </span>
+          </div>
+          <div class="countdown-timer">{{ countdownText() }}</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted)">
+            @if (deliveryInstallment(); as del) {
+              Hedef Vade: <strong>{{ formatDateTr(del.dueDate) }}</strong>
+            } @else {
+              Genel borç takibinde zorunlu değil. İsterseniz Setup’tan seçin.
+            }
+          </div>
+        </div>
+        <div style="margin-top: 12px">
+          <a
+            class="btn btn-secondary btn-sm"
+            [routerLink]="['/plans', d.planId, 'setup']"
+            style="width: 100%; justify-content: center"
+          >
+            {{ deliveryInstallment() ? '🎯 Teslimat Ayını Değiştir' : '➕ Teslimat Ayı Seç (opsiyonel)' }}
+          </a>
         </div>
       </div>
-    }
-  }
 
-  @if (dialog(); as dlg) {
-    <div class="modal-backdrop" (click)="closeDialog()">
-      <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-        <h2>Ödeme — {{ dlg.payment.partnerName }}</h2>
-        <p class="muted">{{ dlg.installment.name }} · {{ dlg.payment.shareAmount | tryCurrency }}</p>
-
-        <label class="checkbox-row">
-          <input type="checkbox" [(ngModel)]="dlg.isPaid" />
-          Ödendi
-        </label>
-
-        <label>
-          Ödeme tarihi
-          <input type="date" [(ngModel)]="dlg.paidAt" [disabled]="!dlg.isPaid" />
-        </label>
-
-        <label>
-          Ödeyen ortak
-          <select [(ngModel)]="dlg.paidByPartnerId" [disabled]="!dlg.isPaid">
-            @for (p of dashboard()!.partners; track p.partnerId) {
-              <option [value]="p.partnerId">{{ p.name }}</option>
+      <div class="highlight-card settlement-card">
+        <div>
+          <div class="card-header-sm">
+            <span class="card-title-sm">🔄 Ortaklar Arası Mahsuplaşma</span>
+            <span style="font-size: 0.75rem; color: var(--primary-light)">İç Borç Bakiyesi</span>
+          </div>
+          <div class="settlement-balance">{{ settlementHeadline() }}</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted)">
+            @if (settlementHasDebt()) {
+              Borç Tutarı:
+              <strong style="color: var(--warning)">{{ settlementPairAmount() | tryCurrency }}</strong>
+            } @else {
+              Ortaklar birbirine borçlu değil.
             }
-          </select>
-        </label>
+          </div>
+        </div>
+        <div style="margin-top: 12px; display: flex; gap: 8px">
+          @if (d.isOwner) {
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              style="flex: 1; justify-content: center"
+              [disabled]="saving() || !settlementHasDebt()"
+              [title]="settlementHasDebt() ? 'İç mahsup bakiyesini sıfırla' : 'Sıfırlanacak iç borç yok'"
+              (click)="settleUp()"
+            >
+              ✅ Hesabı Kapat / Sıfırla
+            </button>
+          }
+        </div>
+      </div>
 
-        <label>
-          Not
-          <textarea rows="2" [(ngModel)]="dlg.note" [disabled]="!dlg.isPaid"></textarea>
-        </label>
-
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" (click)="closeDialog()">İptal</button>
-          <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="savePayment()">
-            {{ saving() ? 'Kaydediliyor…' : 'Kaydet' }}
+      <div class="highlight-card alert-card">
+        <div>
+          <div class="card-header-sm">
+            <span class="card-title-sm">🔔 Yaklaşan Vade Uyarısı</span>
+            <span class="status-pill partial">{{ upcomingCount() }} Vade Yaklaştı</span>
+          </div>
+          <div style="font-size: 1.1rem; font-weight: 800; color: #fbbf24">
+            {{ upcomingTitle() }}
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px">
+            {{ upcomingSub() }}
+          </div>
+        </div>
+        <div style="margin-top: 12px">
+          <button
+            type="button"
+            class="btn btn-success btn-sm"
+            style="width: 100%; justify-content: center"
+            (click)="exportIcs()"
+          >
+            📅 Takvime Ekle (.ics İndir)
           </button>
         </div>
       </div>
     </div>
+
+    @if (d.isOwner && pendingApprovals().length) {
+      <div class="card" style="margin-bottom: 16px; border-color: rgba(251, 191, 36, 0.35)">
+        <div class="card-title">⏳ Onay bekleyen ödemeler ({{ pendingApprovals().length }})</div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          @for (row of pendingApprovals(); track row.installment.id + row.payment.partnerId) {
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between">
+              <div>
+                <strong>{{ row.payment.partnerName }}</strong>
+                · {{ row.installment.name }}
+                · {{ row.payment.shareAmount | tryCurrency }}
+              </div>
+              <div style="display: flex; gap: 8px">
+                <button
+                  type="button"
+                  class="btn btn-success btn-sm"
+                  [disabled]="saving()"
+                  (click)="approvePayment(row.installment, row.payment)"
+                >
+                  Onayla
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  [disabled]="saving()"
+                  (click)="rejectPayment(row.installment, row.payment)"
+                >
+                  Reddet
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="title">Toplam Maliyet / Borç</div>
+        <div class="value">{{ d.metrics.grandTotal | tryCurrency }}</div>
+        <div class="subtitle">{{ d.installments.length }} Kalem Taksit</div>
+      </div>
+      <div class="metric-card">
+        <div class="title">Toplam Ödenen</div>
+        <div class="value" style="color: var(--success)">{{ d.metrics.grandPaid | tryCurrency }}</div>
+        <div class="subtitle">%{{ d.metrics.paidPercent | number: '1.0-1' }} Tamamlandı</div>
+      </div>
+      <div class="metric-card">
+        <div class="title">Kalan Toplam Borç</div>
+        <div class="value" style="color: var(--warning)">{{ d.metrics.grandRemaining | tryCurrency }}</div>
+        <div class="subtitle">Ödenmesi Gereken</div>
+      </div>
+      <div class="metric-card">
+        <div class="title">Tamamlanan Ay / Taksit</div>
+        <div class="value" style="color: var(--primary-light)">
+          {{ completedCount() }} / {{ d.installments.length }}
+        </div>
+        <div class="subtitle">Taksit Durumu</div>
+      </div>
+    </div>
+
+    <div class="partner-summary-grid">
+      @for (p of d.partners; track p.partnerId) {
+        <div class="partner-card" [style.--partner-color]="p.color">
+          <div class="partner-card-header">
+            <div class="partner-name">
+              <span class="partner-badge"></span>
+              {{ p.name }}
+            </div>
+            <span class="partner-pct">%{{ partnerPct(p) }} Ödedi</span>
+          </div>
+          <div class="partner-stats">
+            <span>Ödenen Pay:</span>
+            <strong style="color: var(--success)">{{ p.paidAmount | tryCurrency }}</strong>
+          </div>
+          <div class="partner-stats">
+            <span>Kalan Pay:</span>
+            <strong style="color: var(--warning)">{{ p.remainingAmount | tryCurrency }}</strong>
+          </div>
+          <div class="partner-stats" style="margin-bottom: 0">
+            <span>Toplam Sorumluluk:</span>
+            <strong>{{ p.totalShare | tryCurrency }}</strong>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="progress-wrapper">
+      <div class="progress-meta">
+        <span>Genel Ödeme İlerlemesi</span>
+        <span
+          >%{{ d.metrics.paidPercent | number: '1.0-1' }} Ödendi ({{ d.metrics.grandPaid | tryCurrency }})</span
+        >
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" [style.width.%]="d.metrics.paidPercent"></div>
+      </div>
+    </div>
+
+    <div class="controls-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Taksit adı veya tarih ara..."
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+      <div class="filter-buttons">
+        <button type="button" class="filter-btn" [class.active]="filter() === 'all'" (click)="setFilter('all')">
+          Tümü
+        </button>
+        <button
+          type="button"
+          class="filter-btn"
+          [class.active]="filter() === 'pending'"
+          (click)="setFilter('pending')"
+        >
+          ⏳ Bekleyenler
+        </button>
+        <button
+          type="button"
+          class="filter-btn"
+          [class.active]="filter() === 'partial'"
+          (click)="setFilter('partial')"
+        >
+          ⚡ Kısmi Ödenenler
+        </button>
+        <button type="button" class="filter-btn" [class.active]="filter() === 'full'" (click)="setFilter('full')">
+          ✅ Tamamlananlar
+        </button>
+      </div>
+      <div class="filter-buttons" style="flex-wrap: wrap">
+        <button
+          type="button"
+          class="filter-btn"
+          [class.active]="partnerView() === 'all'"
+          (click)="setPartnerView('all')"
+        >
+          Ortak: Tümü
+        </button>
+        <button
+          type="button"
+          class="filter-btn"
+          [class.active]="partnerView() === 'mine'"
+          (click)="setPartnerView('mine')"
+          [disabled]="!d.myPartnerId"
+        >
+          Benim payım
+        </button>
+        @for (p of d.partners; track p.partnerId) {
+          <button
+            type="button"
+            class="filter-btn"
+            [class.active]="partnerView() === p.partnerId"
+            (click)="setPartnerView(p.partnerId)"
+          >
+            {{ p.name }}
+          </button>
+        }
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button type="button" class="btn btn-secondary" (click)="openBulkModal()">
+          📈 Taksit Artış Simülatörü
+        </button>
+        <button type="button" class="btn btn-primary" (click)="goAddInstallment()">➕ Taksit Ekle</button>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Taksit & Tarih</th>
+              <th>Toplam Tutar</th>
+              @for (p of d.partners; track p.partnerId) {
+                <th><span [style.color]="p.color">●</span> {{ p.name }} Payı</th>
+              }
+              <th>Durum</th>
+              <th style="text-align: right">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (inst of filteredInstallments(); track inst.id; let i = $index) {
+              <tr [class]="rowClass(inst)">
+                <td style="font-weight: 700; color: var(--text-muted); width: 30px">{{ i + 1 }}</td>
+                <td>
+                  <div class="installment-title">
+                    {{ inst.name }}
+                    @if (isUrgent(inst)) {
+                      <span class="status-pill partial" style="font-size: 0.65rem">🚨 Yaklaştı</span>
+                    }
+                  </div>
+                  <div class="installment-date">📅 {{ formatDateTr(inst.dueDate) }}</div>
+                </td>
+                <td>
+                  <div class="amount-badge" style="font-size: 0.95rem">{{ inst.totalAmount | tryCurrency }}</div>
+                </td>
+                @for (pay of inst.partnerPayments; track pay.partnerId) {
+                  <td [style.opacity]="isPayColumnDimmed(pay.partnerId) ? 0.35 : 1">
+                    <div class="partner-check-cell">
+                      <span
+                        class="check-tip-wrap"
+                        [attr.data-tip]="paymentCellTitle(inst, pay)"
+                        [class.is-blocked]="!canOpenPayment(inst, pay)"
+                      >
+                        <button
+                          type="button"
+                          class="check-btn"
+                          [class.checked]="pay.isPaid"
+                          [class.pending-review]="isPendingReview(pay)"
+                          [disabled]="!canOpenPayment(inst, pay)"
+                          [attr.aria-label]="paymentCellTitle(inst, pay)"
+                          (click)="openPayment(inst, pay)"
+                        >
+                          {{ pay.isPaid ? '✓' : isPendingReview(pay) ? '…' : '' }}
+                        </button>
+                      </span>
+                      <div class="partner-share-info">
+                        <div class="partner-share-amount">{{ pay.shareAmount | tryCurrency }}</div>
+                        <div class="partner-share-pct">%{{ sharePct(pay, inst.totalAmount) }} pay</div>
+                        @if (isPendingReview(pay)) {
+                          <div class="note-badge" style="color: #fbbf24">Onay bekliyor</div>
+                        }
+                        @if (paymentNote(pay); as note) {
+                          <div class="note-badge">{{ note }}</div>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                }
+                <td>
+                  <span class="status-pill" [class]="statusClass(inst.status)">{{ statusBadgeText(inst) }}</span>
+                </td>
+                <td style="text-align: right">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="goEditInstallment(inst)">
+                    ✏️ Düzenle
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td
+                  [attr.colspan]="5 + d.partners.length"
+                  style="text-align: center; padding: 30px; color: var(--text-muted)"
+                >
+                  Gösterilecek taksit bulunamadı.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="print-signature-block">
+      <h3 style="margin-bottom: 8px">{{ d.title }} / Borç Takip İbraname ve Hesaplaşma Raporu</h3>
+      <p style="font-size: 0.85rem; color: #555">
+        Yukarıda detayları yer alan ödeme planı ve ortaklar arası hesaplaşma durumu onaylanmıştır.
+      </p>
+      <div style="display: flex; justify-content: space-around; margin-top: 50px; flex-wrap: wrap; gap: 24px">
+        @for (p of d.partners; track p.partnerId) {
+          <div style="text-align: center">
+            <strong>İmza / Tarih</strong><br /><br />____________________<br />{{ p.name }}
+          </div>
+        }
+      </div>
+    </div>
+  </div>
   }
-</section>
+}
+
+@if (showBulkModal()) {
+  <div class="modal-overlay active" (click)="closeBulkModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">📈 Taksit Artış Simülatörü (Enflasyon / TEFE)</h3>
+        <button type="button" class="close-btn" (click)="closeBulkModal()">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hangi Taksitten İtibaren Artış Başlasın?</label>
+        <select class="form-select" [(ngModel)]="bulkFromId">
+          @for (i of dashboard()?.installments ?? []; track i.id) {
+            <option [value]="i.id">{{ i.name }} ({{ i.totalAmount | tryCurrency }})</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Artış Türü</label>
+        <select class="form-select" [(ngModel)]="bulkType">
+          <option [ngValue]="0">Yüzdelik Artış (%)</option>
+          <option [ngValue]="1">Sabit Eklenen Tutar (+ ₺)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Değer</label>
+        <input class="form-input" type="number" step="0.01" [(ngModel)]="bulkValue" placeholder="Örn. 10" />
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px">
+        <button type="button" class="btn btn-secondary" (click)="closeBulkModal()">İptal</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="runBulkIncrease()">
+          Toplu Artışı Uygula
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (dialog(); as dlg) {
+  <div class="modal-overlay active" (click)="closeDialog()">
+    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3 class="modal-title">💳 Ödeme Detayı & Dekont Notu</h3>
+        <button type="button" class="close-btn" (click)="closeDialog()">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"
+          >{{ dlg.installment.name }} - {{ dlg.payment.partnerName }} Payı Ödemesi</label
+        >
+        <select class="form-select" [(ngModel)]="dlg.isPaid">
+          <option [ngValue]="true">✅ Ödendi İşaretle</option>
+          <option [ngValue]="false">❌ Ödenmedi İşaretle</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Ödeme Tarihi</label>
+        <input class="form-input" type="date" [(ngModel)]="dlg.paidAt" [disabled]="!dlg.isPaid" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Fiilen Ödeyen Kişi (Ortaklar Arası Mahsuplaşma İçin)</label>
+        <select class="form-select" [(ngModel)]="dlg.paidByPartnerId" [disabled]="!dlg.isPaid">
+          @for (p of dashboard()!.partners; track p.partnerId) {
+            <option [value]="p.partnerId">{{ p.name }} Ödedi</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Dekont / Banka Notu (İsteğe Bağlı)</label>
+        <input
+          class="form-input"
+          type="text"
+          [(ngModel)]="dlg.note"
+          [disabled]="!dlg.isPaid"
+          placeholder="Örn: Garanti Bankası - Dekont #94821"
+        />
+      </div>
+
+      @if (dashboard()?.requireReceipt) {
+        <div class="form-group">
+          <label class="form-label">Dekont dosyası</label>
+          <input
+            class="form-input"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            [disabled]="!dlg.isPaid"
+            (change)="onReceiptSelected($event)"
+          />
+          @if (dlg.hasReceipt && !dlg.receiptFile) {
+            <p class="muted" style="margin-top: 6px">Mevcut dekont yüklü.</p>
+          }
+          @if (dashboard()?.paymentTargetIban) {
+            <p class="muted" style="margin-top: 6px">
+              Yatırılacak IBAN: <code>{{ dashboard()!.paymentTargetIban }}</code>
+            </p>
+          }
+        </div>
+      }
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px">
+        <button type="button" class="btn btn-secondary" (click)="closeDialog()">İptal</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="savePayment()">
+          {{ saving() ? 'Kaydediliyor…' : 'Kaydet' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

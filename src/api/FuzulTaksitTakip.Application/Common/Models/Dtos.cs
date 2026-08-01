@@ -7,7 +7,14 @@ public sealed record PlanDto(
     string Title,
     string Description,
     Guid? DeliveryInstallmentId,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    bool RequireReceipt,
+    IbanMode IbanMode,
+    string? SettlementIban,
+    bool RemindersEnabled,
+    IReadOnlyList<int> ReminderDaysBefore,
+    IReadOnlyList<int> ReminderDaysAfter,
+    bool IsArchived = false);
 
 public sealed record PartnerDto(
     Guid Id,
@@ -15,7 +22,9 @@ public sealed record PartnerDto(
     string Name,
     string Color,
     decimal DefaultPct,
-    int SortOrder);
+    int SortOrder,
+    string? LinkedUserId,
+    string? Iban);
 
 public sealed record CustomShareDto(Guid PartnerId, decimal Amount);
 
@@ -24,7 +33,9 @@ public sealed record PaymentDto(
     bool IsPaid,
     DateOnly? PaidAt,
     Guid? PaidByPartnerId,
-    string Note);
+    string Note,
+    bool HasReceipt,
+    PaymentReviewStatus ReviewStatus = PaymentReviewStatus.None);
 
 public sealed record InstallmentDto(
     Guid Id,
@@ -44,7 +55,9 @@ public sealed record PartnerPaymentStatusDto(
     bool IsPaid,
     DateOnly? PaidAt,
     Guid? PaidByPartnerId,
-    string Note);
+    string Note,
+    bool HasReceipt,
+    PaymentReviewStatus ReviewStatus = PaymentReviewStatus.None);
 
 public sealed record DashboardInstallmentDto(
     Guid Id,
@@ -62,7 +75,8 @@ public sealed record PartnerSummaryDto(
     string Color,
     decimal TotalShare,
     decimal PaidAmount,
-    decimal RemainingAmount);
+    decimal RemainingAmount,
+    string? Iban);
 
 public sealed record SettlementBalanceDto(
     Guid PartnerId,
@@ -75,16 +89,61 @@ public sealed record DashboardMetricsDto(
     decimal GrandRemaining,
     decimal PaidPercent);
 
+public sealed record MyShareMetricsDto(
+    decimal RemainingAmount,
+    decimal PaidAmount,
+    decimal TotalShare,
+    int UnpaidInstallmentCount,
+    DateOnly? NextDueDate,
+    string? NextInstallmentName);
+
 public sealed record DashboardDto(
     Guid PlanId,
     string Title,
     string Description,
     Guid? DeliveryInstallmentId,
     int? DaysUntilDelivery,
+    Guid? MyPartnerId,
+    bool IsOwner,
+    bool RequireReceipt,
+    IbanMode IbanMode,
+    string? SettlementIban,
+    string? PaymentTargetIban,
     DashboardMetricsDto Metrics,
     IReadOnlyList<PartnerSummaryDto> Partners,
     IReadOnlyList<SettlementBalanceDto> Settlements,
-    IReadOnlyList<DashboardInstallmentDto> Installments);
+    IReadOnlyList<DashboardInstallmentDto> Installments,
+    MyShareMetricsDto? MyMetrics = null,
+    int PendingApprovalCount = 0);
+
+public sealed record PlanMemberDto(
+    Guid Id,
+    string UserId,
+    string? Email,
+    string? DisplayName,
+    string Role,
+    Guid? PartnerId,
+    string? PartnerName);
+
+public sealed record PlanInviteDto(
+    Guid Id,
+    string Email,
+    Guid PartnerId,
+    string PartnerName,
+    string Status,
+    string Token,
+    DateTime ExpiresAtUtc,
+    DateTime CreatedAtUtc,
+    bool EmailSent = false);
+
+public sealed record InvitePreviewDto(
+    string Token,
+    string Email,
+    string PartnerName,
+    string PlanTitle,
+    string Status,
+    DateTime ExpiresAtUtc,
+    bool IsAcceptable);
 
 public sealed record PlanExportDto(
     string Title,
@@ -109,3 +168,41 @@ public sealed record InstallmentExportDto(
     int SortOrder,
     IReadOnlyList<CustomShareDto> CustomShares,
     IReadOnlyList<PaymentDto> Payments);
+
+public sealed record ReminderHistoryItemDto(
+    Guid Id,
+    Guid InstallmentId,
+    string InstallmentName,
+    Guid? PartnerId,
+    string? PartnerName,
+    string Kind,
+    int OffsetDays,
+    DateOnly SentOn,
+    DateTime CreatedAtUtc);
+
+public sealed record ReportPartnerBarDto(
+    Guid PartnerId,
+    string Name,
+    string Color,
+    decimal PaidAmount,
+    decimal RemainingAmount,
+    decimal TotalShare);
+
+public sealed record ReportMonthDto(
+    string YearMonth,
+    decimal TotalAmount,
+    decimal PaidAmount,
+    decimal RemainingAmount,
+    int InstallmentCount);
+
+public sealed record ReportSummaryDto(
+    IReadOnlyList<ReportPartnerBarDto> Partners,
+    IReadOnlyList<ReportMonthDto> Months,
+    DashboardMetricsDto Metrics);
+
+public sealed record PlanActivityItemDto(
+    Guid Id,
+    string Type,
+    string Message,
+    string ActorDisplayName,
+    DateTime CreatedAtUtc);

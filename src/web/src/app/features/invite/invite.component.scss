@@ -1,0 +1,63 @@
+:host {
+  display: block;
+}
+
+.invite-card {
+  width: 100%;
+}
+
+.invite-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.invite-plan {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.invite-email {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.invite-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 10px;
+}
+
+.invite-tab {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.invite-tab.active {
+  background: rgba(30, 41, 59, 0.95);
+  color: var(--text-main);
+}
+
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}

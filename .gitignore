@@ -23,6 +23,9 @@ dist/
 .env.*
 !.env.example
 
+# Local receipt uploads
+App_Data/
+
 # Test / coverage
 TestResults/
 coverage/

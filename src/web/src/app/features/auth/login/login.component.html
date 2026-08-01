@@ -1,29 +1,63 @@
-<section class="auth-page">
-  <form class="auth-card" (ngSubmit)="submit()">
-    <h1>Giriş Yap</h1>
-    <p class="muted">Taksitle hesabınıza giriş yapın.</p>
+<section class="auth-stage">
+  <div class="auth-stage__bg" aria-hidden="true">
+    <div class="auth-stage__orb auth-stage__orb--a"></div>
+    <div class="auth-stage__orb auth-stage__orb--b"></div>
+    <div class="auth-stage__mesh"></div>
+  </div>
 
-    @if (error()) {
-      <div class="alert alert-danger">{{ error() }}</div>
-    }
+  <div class="auth-layout">
+    <aside class="auth-brand">
+      <div class="auth-brand__mark" aria-hidden="true">
+        <span></span><span></span>
+      </div>
+      <p class="auth-brand__name">PayDefteri</p>
+      <p class="auth-brand__lead">
+        Ortak borç ve taksit planlarını tek ekranda yönetin. Paydaşlarla şeffaf takip.
+      </p>
+    </aside>
 
-    <label>
-      E-posta
-      <input type="email" name="email" [(ngModel)]="email" required autocomplete="email" />
-    </label>
+    <form class="auth-card" (ngSubmit)="submit()">
+      <div class="auth-card__intro">
+        <p class="auth-card__eyebrow">Hoş geldiniz</p>
+        <h1>Giriş yap</h1>
+        <p class="auth-card__hint">Hesabınıza devam etmek için e-posta ve şifrenizi girin.</p>
+      </div>
 
-    <label>
-      Şifre
-      <input type="password" name="password" [(ngModel)]="password" required autocomplete="current-password" />
-    </label>
 
-    <button class="btn btn-primary" type="submit" [disabled]="loading()">
-      {{ loading() ? 'Giriş yapılıyor…' : 'Giriş Yap' }}
-    </button>
+      <div class="form-group">
+        <label class="form-label">E-posta</label>
+        <input
+          class="form-input"
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          required
+          autocomplete="email"
+          placeholder="ornek@mail.com"
+        />
+      </div>
 
-    <p class="auth-footer">
-      Hesabınız yok mu?
-      <a routerLink="/register">Kayıt olun</a>
-    </p>
-  </form>
+      <div class="form-group">
+        <label class="form-label">Şifre</label>
+        <input
+          class="form-input"
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          required
+          autocomplete="current-password"
+          placeholder="••••••••"
+        />
+      </div>
+
+      <button class="btn btn-primary auth-card__submit" type="submit" [disabled]="loading()">
+        {{ loading() ? 'Giriş yapılıyor…' : 'Giriş yap' }}
+      </button>
+
+      <p class="auth-footer">
+        Hesabınız yok mu?
+        <a routerLink="/register">Kayıt olun</a>
+      </p>
+    </form>
+  </div>
 </section>

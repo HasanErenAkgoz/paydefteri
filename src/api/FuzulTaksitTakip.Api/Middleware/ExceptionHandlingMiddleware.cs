@@ -2,6 +2,7 @@ using System.Text.Json;
 using FluentValidation;
 using FuzulTaksitTakip.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FuzulTaksitTakip.Api.Middleware;
 
@@ -40,13 +41,19 @@ public sealed class ExceptionHandlingMiddleware
             ValidationException ve => (
                 StatusCodes.Status400BadRequest,
                 "Validation failed",
-                "One or more validation errors occurred.",
+                ve.Errors.Select(e => e.ErrorMessage).FirstOrDefault(m => !string.IsNullOrWhiteSpace(m))
+                    ?? "Doğrulama hatası.",
                 ve.Errors
-                    .GroupBy(e => e.PropertyName)
+                    .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? "_form" : e.PropertyName)
                     .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray()) as object),
             NotFoundException nf => (StatusCodes.Status404NotFound, "Not found", nf.Message, null),
             ForbiddenException fb => (StatusCodes.Status403Forbidden, "Forbidden", fb.Message, null),
             ConflictException cf => (StatusCodes.Status409Conflict, "Conflict", cf.Message, null),
+            DbUpdateConcurrencyException => (
+                StatusCodes.Status409Conflict,
+                "Conflict",
+                "Kayıt başka bir işlemle değişmiş veya silinmiş olabilir. Sayfayı yenileyip tekrar deneyin.",
+                null),
             UnauthorizedAccessException ua => (StatusCodes.Status401Unauthorized, "Unauthorized", ua.Message, null),
             _ => (
                 StatusCodes.Status500InternalServerError,

@@ -1,0 +1,106 @@
+<section class="profile">
+  @if (loading()) {
+    <div class="profile-skeleton" aria-busy="true">
+      <div class="sk sk-circle"></div>
+      <div class="sk sk-lines">
+        <div class="sk-bar sk-bar--lg"></div>
+        <div class="sk-bar sk-bar--sm"></div>
+      </div>
+    </div>
+  } @else {
+    <div class="profile-sheet">
+      <header class="profile-head">
+        <div class="profile-avatar" aria-hidden="true">{{ initials() }}</div>
+        <div class="profile-head-text">
+          <h1>{{ savedName() || 'Profil' }}</h1>
+          <p>{{ email() }}</p>
+        </div>
+      </header>
+
+      <section class="profile-block">
+        <div class="profile-block-label">
+          <h2>Görünen ad</h2>
+          <p>Planlarda ve davetlerde bu isim görünür.</p>
+        </div>
+        <div class="profile-block-body">
+          <label class="sr-only" for="profileName">Görünen ad</label>
+          <div class="profile-inline">
+            <input
+              id="profileName"
+              class="profile-input"
+              type="text"
+              name="displayName"
+              [(ngModel)]="displayName"
+              maxlength="100"
+              autocomplete="name"
+              placeholder="Adın"
+            />
+            <button
+              type="button"
+              class="btn btn-primary profile-btn"
+              [disabled]="savingProfile()"
+              (click)="saveProfile()"
+            >
+              {{ savingProfile() ? '…' : 'Kaydet' }}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="profile-block">
+        <div class="profile-block-label">
+          <h2>Şifre</h2>
+          <p>Hesabını güvende tutmak için düzenli değiştir.</p>
+        </div>
+        <div class="profile-block-body profile-password">
+          <div class="form-group">
+            <label class="form-label" for="currentPassword">Mevcut şifre</label>
+            <input
+              id="currentPassword"
+              class="profile-input"
+              type="password"
+              name="currentPassword"
+              [(ngModel)]="currentPassword"
+              autocomplete="current-password"
+              placeholder="••••••••"
+            />
+          </div>
+          <div class="profile-password-grid">
+            <div class="form-group">
+              <label class="form-label" for="newPassword">Yeni şifre</label>
+              <input
+                id="newPassword"
+                class="profile-input"
+                type="password"
+                name="newPassword"
+                [(ngModel)]="newPassword"
+                autocomplete="new-password"
+                placeholder="En az 6 karakter"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="confirmPassword">Tekrar</label>
+              <input
+                id="confirmPassword"
+                class="profile-input"
+                type="password"
+                name="confirmPassword"
+                [(ngModel)]="confirmPassword"
+                autocomplete="new-password"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary profile-btn profile-btn--wide"
+            [disabled]="savingPassword()"
+            (click)="savePassword()"
+          >
+            {{ savingPassword() ? 'Güncelleniyor…' : 'Şifreyi güncelle' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</section>

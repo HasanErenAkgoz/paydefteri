@@ -111,8 +111,16 @@ namespace FuzulTaksitTakip.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<string>("Iban")
+                        .HasMaxLength(34)
+                        .HasColumnType("character varying(34)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("LinkedUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -131,6 +139,8 @@ namespace FuzulTaksitTakip.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PlanId");
+
+                    b.HasIndex("PlanId", "LinkedUserId");
 
                     b.ToTable("partners", (string)null);
                 });
@@ -167,6 +177,33 @@ namespace FuzulTaksitTakip.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PartnerId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ReceiptContentType")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ReceiptFileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)");
+
+                    b.Property<string>("ReceiptStorageKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ReceiptUploadedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReviewStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime?>("ReviewedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReviewedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -180,6 +217,51 @@ namespace FuzulTaksitTakip.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("payments", (string)null);
+                });
+
+            modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.PaymentReminderLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("InstallmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("OffsetDays")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("PartnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("SentOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstallmentId");
+
+                    b.HasIndex("PlanId", "InstallmentId", "PartnerId", "Kind", "OffsetDays", "SentOn")
+                        .IsUnique();
+
+                    b.ToTable("payment_reminder_logs", (string)null);
                 });
 
             modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.Plan", b =>
@@ -199,6 +281,11 @@ namespace FuzulTaksitTakip.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("IbanMode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -206,6 +293,24 @@ namespace FuzulTaksitTakip.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)");
+
+                    b.Property<int[]>("ReminderDaysAfter")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
+                    b.Property<int[]>("ReminderDaysBefore")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
+                    b.Property<bool>("RemindersEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireReceipt")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SettlementIban")
+                        .HasMaxLength(34)
+                        .HasColumnType("character varying(34)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -220,6 +325,148 @@ namespace FuzulTaksitTakip.Infrastructure.Persistence.Migrations
                     b.HasIndex("OwnerUserId");
 
                     b.ToTable("plans", (string)null);
+                });
+
+            modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.PlanActivityLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActorDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ActorUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("character varying(48)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanId", "CreatedAtUtc");
+
+                    b.ToTable("plan_activity_logs", (string)null);
+                });
+
+            modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.PlanInvite", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InvitedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PartnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("PlanId", "Email", "Status");
+
+                    b.ToTable("plan_invites", (string)null);
+                });
+
+            modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.PlanMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("PartnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerId");
+
+                    b.HasIndex("PlanId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("plan_members", (string)null);
                 });
 
             modelBuilder.Entity("FuzulTaksitTakip.Infrastructure.Identity.AppUser", b =>
@@ -489,6 +736,73 @@ namespace FuzulTaksitTakip.Infrastructure.Persistence.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.PaymentReminderLog", b =>
+                {
+                    b.HasOne("FuzulTaksitTakip.Domain.Entities.Installment", "Installment")
+                        .WithMany()
+                        .HasForeignKey("InstallmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FuzulTaksitTakip.Domain.Entities.Plan", "Plan")
+                        .WithMany("ReminderLogs")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Installment");
+
+                    b.Navigation("Plan");
+                });
+
+            modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.PlanActivityLog", b =>
+                {
+                    b.HasOne("FuzulTaksitTakip.Domain.Entities.Plan", "Plan")
+                        .WithMany("ActivityLogs")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Plan");
+                });
+
+            modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.PlanInvite", b =>
+                {
+                    b.HasOne("FuzulTaksitTakip.Domain.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FuzulTaksitTakip.Domain.Entities.Plan", "Plan")
+                        .WithMany("Invites")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Partner");
+
+                    b.Navigation("Plan");
+                });
+
+            modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.PlanMember", b =>
+                {
+                    b.HasOne("FuzulTaksitTakip.Domain.Entities.Partner", "Partner")
+                        .WithMany()
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FuzulTaksitTakip.Domain.Entities.Plan", "Plan")
+                        .WithMany("Members")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Partner");
+
+                    b.Navigation("Plan");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -549,9 +863,17 @@ namespace FuzulTaksitTakip.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("FuzulTaksitTakip.Domain.Entities.Plan", b =>
                 {
+                    b.Navigation("ActivityLogs");
+
                     b.Navigation("Installments");
 
+                    b.Navigation("Invites");
+
+                    b.Navigation("Members");
+
                     b.Navigation("Partners");
+
+                    b.Navigation("ReminderLogs");
                 });
 #pragma warning restore 612, 618
         }

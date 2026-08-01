@@ -1,8 +1,8 @@
 {
   "project": {
-    "name": "taksitle",
-    "displayName": "Taksitle",
-    "description": "Çok ortaklı borç & taksit takip — Taksitle",
+    "name": "paydefteri",
+    "displayName": "PayDefteri",
+    "description": "Çok ortaklı borç & taksit takip — PayDefteri",
     "referenceSpec": "fuzul-taksit-takip.html"
   },
   "language": {

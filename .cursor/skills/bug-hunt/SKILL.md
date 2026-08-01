@@ -1,6 +1,6 @@
 ---
 name: bug-hunt
-description: Reproduces and fixes Taksitle defects with minimal diffs and regression tests. Use for wrong behavior, failing tests, or known HTML-port bugs.
+description: Reproduces and fixes PayDefteri defects with minimal diffs and regression tests. Use for wrong behavior, failing tests, or known HTML-port bugs.
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: implement-phase
-description: Implements an approved Taksitle plan in Backend→DB→API→Frontend order with small diffs and harness rule compliance. Use after plan-phase approval.
+description: Implements an approved PayDefteri plan in Backend→DB→API→Frontend order with small diffs and harness rule compliance. Use after plan-phase approval.
 disable-model-invocation: true
 ---
 

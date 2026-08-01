@@ -2,6 +2,7 @@ using FuzulTaksitTakip.Application.Common.Exceptions;
 using FuzulTaksitTakip.Application.Common.Interfaces;
 using FuzulTaksitTakip.Application.Common.Models;
 using FuzulTaksitTakip.Domain.Entities;
+using FuzulTaksitTakip.Domain.Enums;
 using FuzulTaksitTakip.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -23,10 +24,12 @@ public sealed class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery
 
     public async Task<DashboardDto> Handle(GetDashboardQuery request, CancellationToken cancellationToken)
     {
-        await _auth.EnsureOwnerAsync(request.PlanId, cancellationToken);
+        await _auth.EnsureMemberAsync(request.PlanId, cancellationToken);
+        var myPartnerId = await _auth.GetMyPartnerIdAsync(request.PlanId, cancellationToken);
+        var isOwner = await _auth.IsOwnerAsync(request.PlanId, cancellationToken);
 
         var plan = await _db.Plans.AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == request.PlanId, cancellationToken)
+            .FirstOrDefaultAsync(p => p.Id == request.PlanId && !p.IsDeleted, cancellationToken)
             ?? throw new NotFoundException(nameof(Plan), request.PlanId);
 
         var partners = await _db.Partners.AsNoTracking()
@@ -44,6 +47,7 @@ public sealed class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery
         var partnersCount = partners.Count;
         decimal grandTotal = 0m;
         decimal grandPaid = 0m;
+        var pendingApprovalCount = 0;
 
         var totals = partners.ToDictionary(p => p.Id, _ => 0m);
         var paidAmounts = partners.ToDictionary(p => p.Id, _ => 0m);
@@ -63,6 +67,12 @@ public sealed class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery
 
                 var payment = inst.Payments.FirstOrDefault(p => p.PartnerId == partner.Id);
                 var isPaid = payment?.IsPaid == true;
+                var review = payment?.ReviewStatus ?? PaymentReviewStatus.None;
+                if (review == PaymentReviewStatus.Pending)
+                {
+                    pendingApprovalCount++;
+                }
+
                 if (isPaid)
                 {
                     paidAmounts[partner.Id] += share;
@@ -76,7 +86,9 @@ public sealed class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery
                     isPaid,
                     payment?.PaidAt,
                     payment?.PaidByPartnerId,
-                    payment?.Note ?? string.Empty));
+                    payment?.Note ?? string.Empty,
+                    !string.IsNullOrEmpty(payment?.ReceiptStorageKey),
+                    review));
             }
 
             dashboardInstallments.Add(new DashboardInstallmentDto(
@@ -96,7 +108,8 @@ public sealed class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery
             p.Color,
             totals[p.Id],
             paidAmounts[p.Id],
-            totals[p.Id] - paidAmounts[p.Id])).ToList();
+            totals[p.Id] - paidAmounts[p.Id],
+            p.Iban)).ToList();
 
         var balances = SettlementCalculator.ComputeBalances(installments, partners);
         var settlements = partners.Select(p => new SettlementBalanceDto(
@@ -114,8 +127,34 @@ public sealed class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery
             }
         }
 
+        string? paymentTargetIban = plan.IbanMode switch
+        {
+            IbanMode.Plan => plan.SettlementIban,
+            IbanMode.Partner when myPartnerId is Guid mine =>
+                partners.FirstOrDefault(p => p.Id == mine)?.Iban,
+            _ => null
+        };
+
         var remaining = grandTotal - grandPaid;
         var pct = grandTotal > 0 ? Math.Round(grandPaid / grandTotal * 100m, 1) : 0m;
+
+        MyShareMetricsDto? myMetrics = null;
+        if (myPartnerId is Guid mid)
+        {
+            var unpaid = dashboardInstallments
+                .Select(i => (Inst: i, Pay: i.PartnerPayments.FirstOrDefault(p => p.PartnerId == mid)))
+                .Where(x => x.Pay is not null && !x.Pay.IsPaid)
+                .OrderBy(x => x.Inst.DueDate)
+                .ToList();
+            var next = unpaid.FirstOrDefault();
+            myMetrics = new MyShareMetricsDto(
+                totals[mid] - paidAmounts[mid],
+                paidAmounts[mid],
+                totals[mid],
+                unpaid.Count,
+                next.Inst?.DueDate,
+                next.Inst?.Name);
+        }
 
         return new DashboardDto(
             plan.Id,
@@ -123,9 +162,17 @@ public sealed class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery
             plan.Description,
             plan.DeliveryInstallmentId,
             daysUntilDelivery,
+            myPartnerId,
+            isOwner,
+            plan.RequireReceipt,
+            plan.IbanMode,
+            plan.SettlementIban,
+            paymentTargetIban,
             new DashboardMetricsDto(grandTotal, grandPaid, remaining, pct),
             partnerSummaries,
             settlements,
-            dashboardInstallments);
+            dashboardInstallments,
+            myMetrics,
+            pendingApprovalCount);
     }
 }

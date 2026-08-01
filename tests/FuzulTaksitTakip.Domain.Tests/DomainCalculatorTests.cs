@@ -107,3 +107,50 @@ public class FuzulSeedTemplateTests
         installments.Should().HaveCount(20);
     }
 }
+
+public class PlanTemplateCatalogTests
+{
+    [Theory]
+    [InlineData("fuzul", 20, 1_070_000)]
+    [InlineData("eminevim", 12, 680_000)]
+    [InlineData("birevim", 12, 289_996)]
+    [InlineData("katilimevim", 12, 925_000)]
+    [InlineData("sinpas", 12, 1_230_000)]
+    [InlineData("empty", 0, 0)]
+    public void Template_totals_and_counts_match_html(string key, int count, decimal total)
+    {
+        var def = PlanTemplateCatalog.Get(key);
+        def.Installments.Should().HaveCount(count);
+        def.Installments.Sum(i => i.TotalAmount).Should().Be(total);
+
+        var preview = PlanTemplateCatalog.ToPreview(def);
+        preview.GrandTotal.Should().Be(total);
+        preview.InstallmentCount.Should().Be(count);
+    }
+
+    [Fact]
+    public void Negative_Unknown_template_key_throws()
+    {
+        var act = () => PlanTemplateCatalog.Get("does-not-exist");
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Negative_Custom_shares_mismatch_is_rejected_by_calculator()
+    {
+        var a = Guid.NewGuid();
+        var b = Guid.NewGuid();
+        var inst = new Installment
+        {
+            TotalAmount = 25_000m,
+            ShareType = ShareType.Custom,
+            CustomShares =
+            {
+                new InstallmentShare { PartnerId = a, Amount = 10_000m },
+                new InstallmentShare { PartnerId = b, Amount = 10_000m }
+            }
+        };
+
+        ShareCalculator.CustomSharesMatchTotal(inst).Should().BeFalse();
+    }
+}

@@ -18,6 +18,8 @@ public sealed class AuthController : ControllerBase
 
     public sealed record RegisterRequest(string Email, string Password, string DisplayName);
     public sealed record LoginRequest(string Email, string Password);
+    public sealed record UpdateProfileRequest(string DisplayName);
+    public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
     [AllowAnonymous]
     [HttpPost("register")]
@@ -34,5 +36,23 @@ public sealed class AuthController : ControllerBase
     {
         var result = await _sender.Send(new LoginCommand(request.Email, request.Password), ct);
         return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<ActionResult<UserProfileDto>> Me(CancellationToken ct)
+        => Ok(await _sender.Send(new GetMyProfileQuery(), ct));
+
+    [Authorize]
+    [HttpPut("profile")]
+    public async Task<ActionResult<LoginResult>> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken ct)
+        => Ok(await _sender.Send(new UpdateProfileCommand(request.DisplayName), ct));
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken ct)
+    {
+        await _sender.Send(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword), ct);
+        return NoContent();
     }
 }
