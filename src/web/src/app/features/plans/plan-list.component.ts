@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
-import { PlanDto, PlanInviteDto, PlanType, TemplateListItemDto } from '../../core/models/api.models';
+import { PlanDto, PlanExportDto, PlanInviteDto, PlanType, TemplateListItemDto } from '../../core/models/api.models';
 import { MembershipApi } from '../../core/services/membership.api';
 import { PlanContextService } from '../../core/services/plan-context.service';
 import { PlansApi } from '../../core/services/plans.api';
@@ -36,6 +36,7 @@ export class PlanListComponent implements OnInit {
   readonly templates = signal<TemplateListItemDto[]>([]);
   readonly loading = signal(true);
   readonly creating = signal(false);
+  readonly parsingDocument = signal(false);
   readonly accepting = signal(false);
   readonly showCustomForm = signal(false);
   readonly manageMode = signal(false);
@@ -450,5 +451,92 @@ export class PlanListComponent implements OnInit {
       },
       error: (err) => this.toast.error(err?.error?.detail ?? 'Geri yükleme başarısız.'),
     });
+  }
+
+  onPlanDocumentSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) {
+      return;
+    }
+    const lower = file.name.toLowerCase();
+    if (!/\.(pdf|xlsx|xls|csv)$/.test(lower)) {
+      this.toast.error('Desteklenen dosyalar: PDF, Excel (.xlsx) veya CSV.');
+      return;
+    }
+
+    const cleanTitle = file.name.replace(/\.[^/.]+$/, '');
+    this.parsingDocument.set(true);
+
+    this.plansApi
+      .create({
+        title: cleanTitle,
+        description: `${file.name} dosyasından aktarıldı`,
+        planType: 'Installment' as PlanType,
+      })
+      .pipe(
+        switchMap((plan) =>
+          this.plansApi.parseDocument(plan.id, file).pipe(
+            switchMap((dto) => {
+              const partnersData = dto.partners?.length
+                ? dto.partners
+                : [
+                    { name: 'Ortak 1', color: '#38bdf8', defaultPct: 50 },
+                    { name: 'Ortak 2', color: '#fb923c', defaultPct: 50 },
+                  ];
+
+              const partnerIds = partnersData.map(() => crypto.randomUUID());
+              const installmentIds = (dto.installments ?? []).map(() => crypto.randomUUID());
+              const deliveryId =
+                dto.deliveryIndex >= 0 && dto.deliveryIndex < installmentIds.length
+                  ? installmentIds[dto.deliveryIndex]
+                  : null;
+
+              const exportDto: PlanExportDto = {
+                title: dto.title || plan.title,
+                description: dto.description || plan.description,
+                deliveryInstallmentId: deliveryId,
+                partners: partnersData.map((p, i) => ({
+                  id: partnerIds[i],
+                  name: p.name || `Ortak ${i + 1}`,
+                  color: p.color || '#38bdf8',
+                  defaultPct: Number(p.defaultPct) || 0,
+                  sortOrder: i,
+                })),
+                installments: (dto.installments ?? []).map((row, i) => ({
+                  id: installmentIds[i],
+                  name: row.name,
+                  dueDate: String(row.dueDate).slice(0, 10),
+                  totalAmount: Number(row.totalAmount) || 0,
+                  shareType: 'Default',
+                  sortOrder: i,
+                  customShares: [],
+                  payments: [],
+                })),
+              };
+
+              return this.plansApi.import(plan.id, exportDto);
+            })
+          )
+        )
+      )
+      .subscribe({
+        next: (importedPlan) => {
+          this.parsingDocument.set(false);
+          this.toast.success(`Plan dosyasından ${importedPlan.title} başarıyla oluşturuldu.`);
+          this.planContext.setPlan(
+            importedPlan.id,
+            importedPlan.title,
+            importedPlan.description,
+            importedPlan.planType
+          );
+          void this.router.navigate(planHomeCommands(importedPlan.id, importedPlan.planType));
+        },
+        error: (err) => {
+          this.parsingDocument.set(false);
+          this.toast.error(err?.error?.detail ?? 'Dosya okunamadı veya plan aktarılamadı.');
+        },
+      });
   }
 }

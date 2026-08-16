@@ -168,6 +168,24 @@
       Taksit / finansman şablonu veya ortak gider planı oluşturun.
     </p>
     <div class="template-cards">
+      <div class="template-card document-upload-card">
+        <h4>📄 PDF / Excel'den Plan Aç</h4>
+        <p>Fuzul vb. ödeme planı PDF’ini veya Excel/CSV tablosunu yükleyin. Otomatik başlık, taksit ve tutarları aktarır.</p>
+        <label
+          class="btn btn-primary btn-sm document-upload-btn"
+          style="width: 100%; justify-content: center; margin-top: 12px"
+          [class.disabled]="creating() || parsingDocument()"
+        >
+          {{ parsingDocument() ? 'Ayrıştırılıyor…' : '📁 Dosya Seç & Yükle' }}
+          <input
+            type="file"
+            accept=".pdf,.xlsx,.xls,.csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+            hidden
+            [disabled]="creating() || parsingDocument()"
+            (change)="onPlanDocumentSelected($event)"
+          />
+        </label>
+      </div>
       <div class="template-card">
         <h4>📄 Yeni Özel Plan</h4>
         <p>Boş taksit planı oluşturup ortak ve taksitleri kendiniz ekleyin.</p>
