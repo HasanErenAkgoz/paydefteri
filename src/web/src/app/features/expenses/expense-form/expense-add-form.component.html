@@ -1,0 +1,40 @@
+<div class="card add-expense-card">
+  <div class="form-header">
+    <div>
+      <div class="card-title">➕ Yeni gider</div>
+      <p class="muted receipt-help">Fiş veya fatura fotoğrafıyla alanları otomatik doldurabilirsiniz.</p>
+    </div>
+    <div class="receipt-actions">
+      @if (camera.isNative) {
+        <button type="button" class="btn btn-secondary receipt-button camera-button" [disabled]="analyzingReceipt()" (click)="captureNativeReceipt()">
+          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '📸 Kamera ile çek' }}
+        </button>
+        <button type="button" class="btn btn-secondary receipt-button" [disabled]="analyzingReceipt()" (click)="selectNativeReceipt()">
+          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '🖼️ Fotoğraf seç' }}
+        </button>
+      } @else {
+        <label class="btn btn-secondary receipt-button camera-button" [class.disabled]="analyzingReceipt()">
+          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '📸 Kamera ile çek' }}
+          <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" [disabled]="analyzingReceipt()" (change)="selectReceipt($event)" (cancel)="$event.stopPropagation()" />
+        </label>
+        <label class="btn btn-secondary receipt-button" [class.disabled]="analyzingReceipt()">
+          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '🖼️ Fotoğraf seç' }}
+          <input type="file" accept="image/jpeg,image/png,image/webp" [disabled]="analyzingReceipt()" (change)="selectReceipt($event)" (cancel)="$event.stopPropagation()" />
+        </label>
+      }
+    </div>
+  </div>
+  @if (receiptDraft()) {
+    <div class="receipt-review" [class.warning]="receiptDraft()!.lowConfidenceFields.length > 0">
+      {{ receiptReviewMessage() }}
+      @for (warning of receiptDraft()!.warnings; track warning) { <span>{{ warning }}</span> }
+    </div>
+  }
+  <div class="form-grid">
+    <app-expense-base-fields [state]="state" [categories]="categories()" [partners]="partners()" (stateChange)="updateState($event)" />
+    @if (state.status === 'Paid') { <app-expense-payer-inputs class="span-2" [partners]="partners()" [sharePartners]="sharePartners()" [totalAmount]="state.amount || 0" [initialSinglePayment]="payerState.singlePayment" [initialPayerId]="payerState.payerId" [initialPayments]="payerState.payments" (stateChange)="payerState = $event" /> }
+  </div>
+  @if (preview(); as value) { <app-expense-installment-preview [preview]="value" [firstInstallmentDate]="state.occurredOn" /> }
+  @if (state.shareUi === 'Custom') { <app-expense-custom-shares [partners]="partners()" [expectedTotal]="state.amount || 0" [amounts]="customShares" (amountsChange)="customShares = $event; syncPayments()" /> }
+  <div class="form-actions"><button type="button" class="btn btn-secondary" (click)="formCancelled.emit()">İptal</button><button type="button" class="btn btn-primary" [disabled]="saving()" (click)="submit()">Kaydet</button></div>
+</div>

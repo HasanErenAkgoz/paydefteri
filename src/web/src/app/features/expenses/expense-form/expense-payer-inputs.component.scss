@@ -1,0 +1,5 @@
+:host { display: block; }
+.payer-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 8px; }
+.payer-amounts { display: flex; gap: 8px; flex-wrap: wrap; }.payer-amounts label { display: flex; flex-direction: column; gap: 4px; }.payer-amounts input { width: 110px; }
+.payer-sum { width: 100%; margin: 4px 0 0; color: var(--text-muted); }.payer-sum.ok { color: #34d399; }.payer-sum.bad { color: #fbbf24; }
+.btn-ghost { border: 1px solid var(--border-color); background: rgba(15,23,42,.45); color: var(--text-muted); }

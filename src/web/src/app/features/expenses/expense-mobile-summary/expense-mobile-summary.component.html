@@ -1,0 +1,5 @@
+<div class="expense-main">
+  <strong>{{ expense().name }} @if (expense().recurrenceId) { <span class="rec-badge">↻</span> }</strong>
+  <span class="muted">{{ formatDateTr(expense().occurredOn) }} @if (expense().categoryName) { · {{ expense().categoryName }} } · {{ paid() ? 'Ödendi' : 'Planlandı' }} @if (paid()) { · {{ paymentSummary() }} }</span>
+  <div class="share-chips">@for (line of shareLines(); track line.partnerId) { <span>{{ line.partnerName }} {{ line.shareAmount | tryCurrency }}</span> }</div>
+</div>

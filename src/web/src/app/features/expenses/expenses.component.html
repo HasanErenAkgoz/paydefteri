@@ -1,0 +1,70 @@
+@if (loading()) {
+  <p class="muted">Yükleniyor…</p>
+} @else {
+  @if (board(); as b) {
+    <section class="expense-page view-section active">
+      <app-expense-overview
+        [planTitle]="b.plan.title" [isOwner]="isOwner()" [isAddFormVisible]="showAddForm()"
+        [paidTotal]="paidTotal()" [paidCount]="paidCount()" [plannedTotal]="plannedTotal()" [plannedCount]="plannedCount()"
+        [recurrenceCount]="b.recurrences.length" [transferCount]="b.transfers.length" [balances]="b.balances"
+        (toggleAddForm)="toggleAddForm()" />
+
+      @if (showAddForm()) {
+        <app-expense-add-form
+          id="expense-add-form"
+          [categories]="b.categories"
+          [partners]="partnerOptions()"
+          [saving]="saving()"
+          [analyzingReceipt]="analyzingReceipt()"
+          [receiptDraft]="receiptDraft()"
+          (save)="addExpense($event)"
+          (receiptSelected)="analyzeReceipt($event)"
+          (formCancelled)="closeAddForm()"
+          (validationError)="showAddFormError($event)"
+        />
+      }
+
+      <app-expense-transfer-panel
+        [partners]="partnerOptions()"
+        [transfers]="b.transfers"
+        [isOwner]="isOwner()"
+        [hasOpenBalance]="hasOpenBalance()"
+        [saving]="saving()"
+        [initialFromPartnerId]="fromPartnerId"
+        [initialToPartnerId]="toPartnerId"
+        [initialAmount]="transferAmount"
+        (add)="addTransfer($event)"
+        (remove)="removeTransfer($event)"
+      />
+
+      <div class="card track-card">
+        <app-expense-list-controls [isOwner]="isOwner()" [filter]="filter()" [page]="expensePage()" [pageCount]="expensePageCount" [totalCount]="expenseTotalCount()" [pageSize]="expensePageSize" (filterChange)="setFilter($event)" (pageChange)="changeExpensePage($event)" />
+        <app-expense-list
+          [expenses]="sortedExpenses()"
+          [partners]="partnerOptions()"
+          [markingId]="markingId()"
+          (markPaid)="markPaidFromAction($event)"
+          (edit)="openEdit($event)"
+          (remove)="removeExpense($event.id, $event.name)"
+        />
+      </div>
+
+      <p class="muted setup-hint">
+        Tekrarlayan şablon ve kategorileri
+        <a [routerLink]="['/plans', planId, 'setup']">Kurulum</a> sekmesinden yönetin.
+      </p>
+    </section>
+  }
+}
+
+@if (editingExpense(); as expense) {
+  <app-expense-edit-modal
+    [expense]="expense"
+    [categories]="board()?.categories ?? []"
+    [partners]="partnerOptions()"
+    [saving]="saving()"
+    (save)="saveEditedExpense($event)"
+    (cancel)="closeEditModal()"
+    (validationError)="showAddFormError($event)"
+  />
+}

@@ -1,0 +1,87 @@
+@if (expenses().length === 0) {
+  <p class="muted">Henüz gider yok. “Gider ekle” veya tekrarlayan şablon kullanın.</p>
+} @else {
+  <div class="table-wrap table-responsive">
+    <table class="track-table">
+      <thead>
+        <tr>
+          <th>Tarih</th>
+          <th>Gider</th>
+          <th>Kategori</th>
+          <th>Ödeyen</th>
+          <th>Durum</th>
+          <th class="num">Tutar</th>
+          <th>Paylar</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (expense of expenses(); track expense.id) {
+          <tr [class.is-planned]="!isPaid(expense)">
+            <td>{{ formatDateTr(expense.occurredOn) }}</td>
+            <td>
+              <strong>{{ expense.name }}</strong>
+              @if (expense.recurrenceId) { <span class="rec-badge" title="Tekrarlayan">↻</span> }
+              @if (expense.note) { <div class="muted tiny">{{ expense.note }}</div> }
+            </td>
+            <td>{{ expense.categoryName || '—' }}</td>
+            <td><span class="payer-summary">{{ paymentSummary(expense) }}</span></td>
+            <td>
+              <span class="status-pill" [class.ok]="isPaid(expense)">
+                {{ isPaid(expense) ? 'Ödendi' : 'Planlandı' }}
+              </span>
+            </td>
+            <td class="num">{{ expense.totalAmount | tryCurrency }}</td>
+            <td class="shares-cell">
+              <div class="share-chips">
+                @for (line of visibleShareLines(expense); track line.partnerId) {
+                  <span>{{ line.partnerName }} {{ line.shareAmount | tryCurrency }}</span>
+                }
+              </div>
+            </td>
+            <td class="actions">
+              @if (expense.canManage) {
+                <app-expense-row-actions
+                  [expense]="expense"
+                  [partners]="partners()"
+                  [canManage]="expense.canManage"
+                  [marking]="markingId() === expense.id"
+                  (markPaid)="markPaid.emit($event)"
+                  (edit)="edit.emit($event)"
+                  (remove)="remove.emit($event)"
+                />
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mobile-cards">
+    @for (expense of expenses(); track expense.id) {
+      <article class="expense-row" [class.is-planned]="!isPaid(expense)">
+        <app-expense-mobile-summary
+          [expense]="expense"
+          [paid]="isPaid(expense)"
+          [paymentSummary]="paymentSummary(expense)"
+          [shareLines]="visibleShareLines(expense)"
+        />
+        <div class="expense-side">
+          <b>{{ expense.totalAmount | tryCurrency }}</b>
+          @if (expense.canManage) {
+            <app-expense-row-actions
+              [expense]="expense"
+              [partners]="partners()"
+              [canManage]="expense.canManage"
+              [marking]="markingId() === expense.id"
+              (markPaid)="markPaid.emit($event)"
+              (edit)="edit.emit($event)"
+              (remove)="remove.emit($event)"
+            />
+          }
+        </div>
+      </article>
+    }
+  </div>
+}

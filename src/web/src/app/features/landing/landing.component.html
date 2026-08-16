@@ -1,0 +1,283 @@
+<section class="landing">
+  <div class="landing__bg" aria-hidden="true">
+    <div class="landing__orb landing__orb--a"></div>
+    <div class="landing__orb landing__orb--b"></div>
+    <div class="landing__orb landing__orb--c"></div>
+    <div class="landing__grid"></div>
+  </div>
+
+  <section class="mobile-onboarding" aria-label="PayDefteri tanıtımı">
+    <header class="mobile-onboarding__header">
+      <span class="mobile-onboarding__brand">
+        <img src="/brand-icon.png" width="34" height="34" alt="" />
+        PayDefteri
+      </span>
+      <a routerLink="/login">Giriş</a>
+    </header>
+
+    <div
+      #mobileTrack
+      class="mobile-onboarding__track"
+      (scroll)="onMobileOnboardingScroll($event)"
+    >
+      <article class="mobile-onboarding__slide">
+        <span class="mobile-onboarding__eyebrow">Ortak planlar artık net</span>
+        <img class="mobile-onboarding__hero-mark" src="/brand-icon.png" width="84" height="84" alt="" />
+        <h1>Ortak plan,<br />tek defter</h1>
+        <p>Kim ödedi, kalan pay ne, teslimata kaç gün? Tüm taksit ve giderleri tek ekranda takip edin.</p>
+        <figure class="mobile-onboarding__preview" aria-hidden="true">
+          <img src="/landing/hero-dashboard.png" width="1600" height="1000" alt="" />
+        </figure>
+        <span class="mobile-onboarding__swipe">Devam etmek için yana kaydır <span aria-hidden="true">→</span></span>
+      </article>
+
+      <article class="mobile-onboarding__slide">
+        <span class="mobile-onboarding__slide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3ZM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Z" />
+            <path d="M2.5 19c.6-2.4 2.5-3.8 5.5-3.8S13 16.6 13.5 19" />
+            <path d="M14 15.2c1.6-.4 3.2.1 4.5 1.3" />
+          </svg>
+        </span>
+        <span class="mobile-onboarding__eyebrow">Herkes aynı ekranda</span>
+        <h2>“Sen ödedin mi?”<br />sorusu geride kalsın</h2>
+        <div class="mobile-onboarding__benefits">
+          <div><b>✓</b><span><strong>Ortak taksit takibi</strong>Ödenen, kalan ve ortak payı anında görün.</span></div>
+          <div><b>✓</b><span><strong>Gider ve mahsuplaşma</strong>Kim ödedi, kim borçlu otomatik hesaplansın.</span></div>
+          <div><b>✓</b><span><strong>Vade hatırlatmaları</strong>Yaklaşan ödeme ve teslimatları kaçırmayın.</span></div>
+        </div>
+      </article>
+
+      <article class="mobile-onboarding__slide">
+        <span class="mobile-onboarding__slide-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M5 12.5 9.2 17 19 7" />
+          </svg>
+        </span>
+        <span class="mobile-onboarding__eyebrow">Hemen başlayın</span>
+        <h2>Üç adımda<br />ortak planınız hazır</h2>
+        <ol class="mobile-onboarding__steps">
+          <li><b>1</b><span><strong>Hesabınızı oluşturun</strong>Ücretsiz kaydolun.</span></li>
+          <li><b>2</b><span><strong>Planınızı kurun</strong>Şablon seçin veya dosyanızı yükleyin.</span></li>
+          <li><b>3</b><span><strong>Ortakları davet edin</strong>Aynı defterde birlikte takip edin.</span></li>
+        </ol>
+        <p class="mobile-onboarding__final-note">Fişten otomatik gider ekleme dahil tüm özellikler cebinizde.</p>
+      </article>
+    </div>
+
+    <footer class="mobile-onboarding__footer">
+      <div class="mobile-onboarding__dots" aria-label="Tanıtım sayfaları">
+        @for (slide of [0, 1, 2]; track slide) {
+          <button
+            type="button"
+            [class.active]="mobileSlide() === slide"
+            [attr.aria-current]="mobileSlide() === slide ? 'step' : null"
+            [attr.aria-label]="(slide + 1) + '. tanıtım sayfası'"
+            (click)="showMobileSlide(mobileTrack, slide)"
+          ></button>
+        }
+      </div>
+
+      @if (mobileSlide() < 2) {
+        <button
+          type="button"
+          class="mobile-onboarding__next"
+          (click)="showMobileSlide(mobileTrack, mobileSlide() + 1)"
+        >
+          İleri <span aria-hidden="true">→</span>
+        </button>
+      } @else {
+        <a class="mobile-onboarding__start" routerLink="/register">Ücretsiz başla</a>
+      }
+    </footer>
+  </section>
+
+  <header class="landing-nav">
+    <a class="landing-nav__brand" routerLink="/">
+      <img class="landing-nav__mark" src="/brand-icon.png" width="36" height="36" alt="" />
+      PayDefteri
+    </a>
+    <div class="landing-nav__actions">
+      <a routerLink="/login">Giriş Yap</a>
+      <a class="landing-nav__cta" routerLink="/register">Ücretsiz Başla</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="landing-hero">
+      <div class="landing-hero__copy">
+        <p class="landing-hero__brand">
+          <img src="/brand-icon.png" width="48" height="48" alt="" />
+          <span>PayDefteri</span>
+        </p>
+        <h1>Ortak plan, tek defter</h1>
+        <p class="landing-hero__lead">
+          Kim ödedi, kalan pay ne, teslimata kaç gün — ortak taksit ve giderleri Excel + WhatsApp yerine tek
+          ekranda takip edin.
+        </p>
+        <div class="landing-hero__cta">
+          <a class="btn-primary" routerLink="/register">Hesap Oluştur</a>
+          <a class="btn-ghost" routerLink="/login">Giriş Yap</a>
+        </div>
+      </div>
+
+      <div class="landing-hero__visual" aria-hidden="true">
+        <div class="landing-hero__glow"></div>
+        <figure class="landing-device">
+          <div class="landing-device__chrome">
+            <span></span><span></span><span></span>
+          </div>
+          <img
+            class="landing-device__screen"
+            src="/landing/hero-dashboard.png"
+            width="1600"
+            height="1000"
+            alt=""
+            loading="eager"
+            decoding="async"
+          />
+        </figure>
+        <figure class="landing-phone">
+          <img
+            src="/landing/hero-mobile.png"
+            width="900"
+            height="1948"
+            alt=""
+            loading="eager"
+            decoding="async"
+          />
+        </figure>
+      </div>
+    </section>
+
+    <section class="landing-section" id="sorun">
+      <h2>Excel ve WhatsApp yetmiyor</h2>
+      <p>
+        Ortak taksitte herkes kendi tablosuna bakınca “sen ödedin mi?” uzar. Tatilde herkes ayrı not tutar;
+        ekip yemeğinde biri mail listesi peşinde koşar. PayDefteri bu dağınıklığı tek defterde toplar.
+      </p>
+    </section>
+
+    <section class="landing-section" id="ozellikler">
+      <h2>Ne sunuyor?</h2>
+      <ul class="landing-features">
+        <li>
+          <span class="landing-features__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3ZM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Z" />
+              <path d="M2.5 19c.6-2.4 2.5-3.8 5.5-3.8S13 16.6 13.5 19" />
+              <path d="M14 15.2c1.6-.4 3.2.1 4.5 1.3" />
+            </svg>
+          </span>
+          <strong>Ortak taksit takibi</strong>
+          <span>Ödeme işaretleme, kalan borç ve ortak pay özeti tek bakışta.</span>
+        </li>
+        <li>
+          <span class="landing-features__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M4 7h16v10H4z" />
+              <path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7" />
+              <path d="M9 12h6M9 15h4" />
+            </svg>
+          </span>
+          <strong>Ortak gider / mahsup</strong>
+          <span>Tatil, market veya ekip yemeği — kim ödedi, kim borçlu, net bakiye.</span>
+        </li>
+        <li>
+          <span class="landing-features__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <rect x="3.5" y="5" width="17" height="15" rx="2" />
+              <path d="M8 3.5v3M16 3.5v3M3.5 10h17" />
+            </svg>
+          </span>
+          <strong>Vade ve teslimat</strong>
+          <span>Yaklaşan vadeler ve teslimat geri sayımı ile sürpriz kalmasın.</span>
+        </li>
+        <li>
+          <span class="landing-features__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 20V5A1.5 1.5 0 0 1 7 3.5Z" />
+              <path d="M14 3.5V8h4.5M8.5 12h7M8.5 15.5h5" />
+            </svg>
+          </span>
+          <strong>Şablon ve dosya aktarımı</strong>
+          <span>Hazır plan şablonları veya elinizdeki PDF / Excel ödeme planını içeri alın.</span>
+        </li>
+        <li>
+          <span class="landing-features__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M6 4.5h9l3 3V19a1.5 1.5 0 0 1-1.5 1.5h-10.5A1.5 1.5 0 0 1 4.5 19V6A1.5 1.5 0 0 1 6 4.5Z" />
+              <path d="M8 13h8M8 16h5" />
+            </svg>
+          </span>
+          <strong>PDF hesaplaşma raporu</strong>
+          <span>Şeffaf rapor ile kim ne ödedi tartışmasını bitirin.</span>
+        </li>
+        <li>
+          <span class="landing-features__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M4 7h11a3 3 0 0 1 3 3v7H7a3 3 0 0 1-3-3V7Z" />
+              <path d="M18 10h1a2 2 0 0 1 2 2v3h-3" />
+              <circle cx="8" cy="18.5" r="1.5" />
+              <circle cx="16" cy="18.5" r="1.5" />
+            </svg>
+          </span>
+          <strong>Davet ile ortak ekleme</strong>
+          <span>Planı e-posta ile paylaşın; herkes aynı ekranı kullansın.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="landing-showcase" id="gorunum">
+      <div class="landing-showcase__copy">
+        <h2>Kurulumdan takibe tek akış</h2>
+        <p>Şablon yükle, ortakları davet et, ödemeleri işaretle — mobilde de aynı netlik.</p>
+      </div>
+      <div class="landing-showcase__stage">
+        <figure class="landing-showcase__desk">
+          <img
+            src="/landing/showcase-setup.png"
+            width="1200"
+            height="750"
+            alt="PayDefteri kurulum ekranı"
+            loading="lazy"
+            decoding="async"
+          />
+        </figure>
+        <figure class="landing-showcase__phone">
+          <img
+            src="/landing/hero-mobile.png"
+            width="900"
+            height="1948"
+            alt="PayDefteri mobil görünüm"
+            loading="lazy"
+            decoding="async"
+          />
+        </figure>
+      </div>
+    </section>
+
+    <section class="landing-section" id="nasil">
+      <h2>Nasıl çalışır?</h2>
+      <ol class="landing-steps">
+        <li><strong>Kayıt olun</strong> — ücretsiz hesap oluşturun.</li>
+        <li><strong>Plan kurun</strong> — şablon seçin veya dosyanızı yükleyin.</li>
+        <li><strong>Ortakları davet edin</strong> — ödemeleri birlikte işaretleyin.</li>
+      </ol>
+    </section>
+
+    <section class="landing-cta-band">
+      <h2>Ortak ödeme planınızı netleştirin</h2>
+      <p>Kim ödedi · kalan ne · teslimata kaç gün — tek defterde.</p>
+      <a class="btn-primary" routerLink="/register">Ücretsiz dene</a>
+    </section>
+  </main>
+
+  <footer class="landing-footer">
+    <span>© {{ year }} PayDefteri</span>
+    <nav>
+      <a routerLink="/login">Giriş</a>
+      <a routerLink="/register">Kayıt</a>
+    </nav>
+  </footer>
+</section>

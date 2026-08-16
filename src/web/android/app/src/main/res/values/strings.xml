@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PayDefteri</string>
+    <string name="title_activity_main">PayDefteri</string>
+    <string name="package_name">com.paydefteri.app</string>
+    <string name="custom_url_scheme">com.paydefteri.app</string>
+</resources>

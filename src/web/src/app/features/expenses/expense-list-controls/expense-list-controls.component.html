@@ -1,0 +1,18 @@
+<div class="track-head">
+  <div>
+    <div class="card-title">📒 Gider takip tablosu</div>
+    <p class="muted tiny">{{ isOwner() ? 'Planlanan satırda ödeyeni seçip Ödendi yap ile işaretleyin.' : 'Gider ekleyebilir, kendi eklediğiniz satırları düzenleyip ödeme girebilirsiniz.' }}</p>
+  </div>
+  <div class="filter-tabs" role="tablist">
+    <button type="button" [class.active]="filter() === 'all'" (click)="filterChange.emit('all')">Tümü</button>
+    <button type="button" [class.active]="filter() === 'paid'" (click)="filterChange.emit('paid')">Ödenen</button>
+    <button type="button" [class.active]="filter() === 'planned'" (click)="filterChange.emit('planned')">Planlanan</button>
+  </div>
+</div>
+@if (totalCount() > pageSize()) {
+  <div class="pagination" aria-label="Gider sayfaları">
+    <button type="button" class="btn btn-secondary btn-sm" [disabled]="page() === 1" (click)="pageChange.emit(page() - 1)">Önceki</button>
+    <span class="muted">Sayfa {{ page() }} / {{ pageCount() }} · {{ totalCount() }} gider</span>
+    <button type="button" class="btn btn-secondary btn-sm" [disabled]="page() === pageCount()" (click)="pageChange.emit(page() + 1)">Sonraki</button>
+  </div>
+}

@@ -1,0 +1,23 @@
+<div class="card transfer-card">
+  <div class="transfer-head">
+    <div>
+      <div class="card-title">🔄 Transfer (mahsup)</div>
+      <p class="muted small">{{ !isOwner() ? 'Transferleri görüntülüyorsunuz; kayıt eklemek plan sahibine aittir.' : hasOpenBalance() ? 'Bakiyeyi kapatmak için borçlunun alacaklıya gönderdiği tutarı kaydedin.' : 'Ortaklar arası para geçişini buradan işleyin (gider değil, mahsup).' }}</p>
+    </div>
+    @if (isOwner()) { <button type="button" class="btn btn-secondary btn-sm" (click)="visible = !visible">{{ visible ? 'Gizle' : 'Mahsup kaydet' }}</button> }
+  </div>
+  @if (visible && isOwner()) {
+    <div class="form-grid compact">
+      <label><span>Kimden (borçlu)</span><select class="form-select" [(ngModel)]="fromPartnerId">@for (p of partners(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }</select></label>
+      <label><span>Kime (alacaklı)</span><select class="form-select" [(ngModel)]="toPartnerId">@for (p of partners(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }</select></label>
+      <label><span>Tutar</span><input class="form-input" type="number" [(ngModel)]="amount" min="0" step="0.01" /></label>
+      <label><span>Tarih</span><input class="form-input" type="date" [(ngModel)]="transferredOn" /></label>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm" [disabled]="saving()" (click)="submit()">Transfer ekle</button>
+  }
+  <ul class="simple-list">
+    @for (transfer of transfers(); track transfer.id) {
+      <li><span>{{ transfer.fromPartnerName }} → {{ transfer.toPartnerName }} · {{ transfer.amount | tryCurrency }} · {{ formatDateTr(transfer.transferredOn) }}</span>@if (isOwner()) { <button type="button" class="btn-ghost" (click)="remove.emit(transfer.id)">Sil</button> }</li>
+    } @empty { <li class="muted">Henüz transfer yok.</li> }
+  </ul>
+</div>

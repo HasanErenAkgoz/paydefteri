@@ -1,0 +1,167 @@
+:host {
+  display: block;
+}
+
+.check-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none !important;
+  pointer-events: none;
+}
+
+.check-tip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-tip-wrap.is-blocked {
+  cursor: not-allowed;
+}
+
+.check-tip-wrap::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  z-index: 30;
+  width: max-content;
+  max-width: 220px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.45);
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s;
+}
+
+.check-tip-wrap::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(148, 163, 184, 0.28);
+  z-index: 31;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease, visibility 0.12s;
+}
+
+@media (hover: hover) {
+  .check-tip-wrap:hover::after,
+  .check-tip-wrap:focus-within::after,
+  .check-tip-wrap:hover::before,
+  .check-tip-wrap:focus-within::before {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .check-tip-wrap:hover::after,
+  .check-tip-wrap:focus-within::after {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.touch-tip {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.installment-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.installment-card.paid-row {
+  background: rgba(16, 185, 129, 0.04);
+}
+
+.installment-card.upcoming-urgent {
+  background: rgba(245, 158, 11, 0.06);
+  border-left: 3px solid #f59e0b;
+}
+
+.installment-card--empty {
+  text-align: center;
+  padding: 28px 16px;
+  color: var(--text-muted);
+}
+
+.installment-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.installment-card__meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.installment-card__index {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.installment-card__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.installment-card__partners {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.installment-card__partner {
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.installment-card__partner .partner-check-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.installment-card__foot {
+  display: flex;
+  justify-content: stretch;
+}
+
+.installment-card__foot .btn {
+  width: 100%;
+  justify-content: center;
+}

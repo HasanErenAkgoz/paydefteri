@@ -1,0 +1,8 @@
+:host { display: block; }
+.track-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.card-title { margin: 0; }
+.tiny { margin: 6px 0 0; }
+.filter-tabs { display: flex; gap: 6px; padding: 4px; border-radius: 10px; background: rgba(15, 23, 42, .55); border: 1px solid var(--border-color); }
+.filter-tabs button { border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: .82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.filter-tabs button.active { background: rgba(52, 211, 153, .16); color: #a7f3d0; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 14px; }

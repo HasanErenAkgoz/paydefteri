@@ -1,0 +1,32 @@
+<header class="expense-hero">
+  <div>
+    <p class="eyebrow">Ortak gider planı</p>
+    <h1>Takip Tablosu</h1>
+    <p class="muted">{{ planTitle() }} · kim ödedi · pay · net bakiye</p>
+    @if (!isOwner()) {
+      <p class="muted member-note">Gider ekleyebilir; yalnızca kendi eklediği giderleri düzenleyebilir veya silebilir.</p>
+    }
+  </div>
+  <button type="button" class="btn btn-primary" (click)="toggleAddForm.emit()">
+    {{ isAddFormVisible() ? 'Formu gizle' : '➕ Gider ekle' }}
+  </button>
+</header>
+
+<div class="highlights">
+  <div class="hl-card"><span class="hl-label">Ödenen</span><strong>{{ paidTotal() | tryCurrency }}</strong><small>{{ paidCount() }} kayıt</small></div>
+  <div class="hl-card"><span class="hl-label">Planlanan</span><strong>{{ plannedTotal() | tryCurrency }}</strong><small>{{ plannedCount() }} kayıt</small></div>
+  <div class="hl-card"><span class="hl-label">Tekrarlayan</span><strong>{{ recurrenceCount() }}</strong><small>aktif şablon</small></div>
+  <div class="hl-card"><span class="hl-label">Transfer</span><strong>{{ transferCount() }}</strong><small>mahsup kaydı</small></div>
+</div>
+
+<div class="balance-grid">
+  @for (row of balances(); track row.partnerId) {
+    <div class="balance-card" [class.is-credit]="row.balance > 0.005" [class.is-debt]="row.balance < -0.005">
+      <span class="dot" [style.background]="row.color"></span>
+      <div><strong>{{ row.partnerName }}</strong><small>{{ balanceHint(row.balance) }}</small></div>
+      <b>{{ row.balance | tryCurrency }}</b>
+    </div>
+  } @empty {
+    <p class="muted">Net bakiye için Kurulum’dan en az 2 ortak ekleyin.</p>
+  }
+</div>

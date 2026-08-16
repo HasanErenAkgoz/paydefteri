@@ -1,0 +1,20 @@
+<div class="payer-block">
+  <div class="payer-head">
+    <span>Ödeyen (kasada kim ödedi)</span>
+    @if (sharePartners().length > 1) {
+      <button type="button" class="btn btn-ghost btn-sm" (click)="toggleMode()">{{ singlePayment ? 'Paylara göre' : 'Tek ödeme' }}</button>
+    }
+  </div>
+  @if (singlePayment || sharePartners().length <= 1) {
+    <select class="form-select" [(ngModel)]="payerId" (ngModelChange)="emitState()">
+      @for (partner of partners(); track partner.id) { <option [value]="partner.id">{{ partner.name }}</option> }
+    </select>
+  } @else {
+    <div class="payer-amounts">
+      @for (partner of sharePartners(); track partner.id) {
+        <label><span>{{ partner.name }}</span><input class="form-input" type="number" min="0" step="0.01" [ngModel]="payments[partner.id]" (ngModelChange)="updatePayment(partner.id, $event)" /></label>
+      }
+      <p class="payer-sum" [class.ok]="matches()" [class.bad]="!matches()">Ödenen toplam: {{ paymentTotal() | tryCurrency }}</p>
+    </div>
+  }
+</div>

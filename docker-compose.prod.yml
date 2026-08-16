@@ -1,0 +1,88 @@
+# Production stack — next to Coolify/CV on the same host.
+# Usage: docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+name: paydefteri
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-paydefteri}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-paydefteri}
+    volumes:
+      - paydefteri_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  api:
+    build:
+      context: .
+      dockerfile: src/api/FuzulTaksitTakip.Api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-paydefteri};Username=${POSTGRES_USER:-paydefteri};Password=${POSTGRES_PASSWORD}
+      Jwt__Issuer: PayDefteri
+      Jwt__Audience: PayDefteri
+      Jwt__Key: ${JWT_KEY:?set JWT_KEY}
+      Jwt__ExpiryMinutes: ${JWT_EXPIRY_MINUTES:-30}
+      MobileSession__RefreshTokenDays: ${MOBILE_REFRESH_TOKEN_DAYS:-30}
+      Gemini__ApiKey: ${GEMINI_API_KEY:-}
+      Gemini__ReceiptModel: ${GEMINI_RECEIPT_MODEL:-gemini-3.1-flash-lite}
+      OpenAI__ApiKey: ${OPENAI_API_KEY:-}
+      OpenAI__ReceiptModel: ${OPENAI_RECEIPT_MODEL:-gpt-5.6-luna}
+      App__PublicWebUrl: ${PUBLIC_WEB_URL:?set PUBLIC_WEB_URL}
+      Cors__Origins__0: ${PUBLIC_WEB_URL}
+      Cors__Origins__1: capacitor://localhost
+      Cors__Origins__2: https://localhost
+      Email__Enabled: ${EMAIL_ENABLED:-false}
+      Email__FromAddress: ${EMAIL_FROM_ADDRESS:-info@paydefteri.com}
+      Email__FromName: ${EMAIL_FROM_NAME:-PayDefteri}
+      Email__Smtp__Host: ${EMAIL_SMTP_HOST:-}
+      Email__Smtp__Port: ${EMAIL_SMTP_PORT:-587}
+      Email__Smtp__EnableSsl: ${EMAIL_SMTP_ENABLE_SSL:-true}
+      Email__Smtp__UserName: ${EMAIL_SMTP_USERNAME:-}
+      Email__Smtp__Password: ${EMAIL_SMTP_PASSWORD:-}
+      Seed__SuperAdmin__Enabled: ${SEED_SUPERADMIN_ENABLED:-true}
+      Seed__SuperAdmin__Email: ${SEED_SUPERADMIN_EMAIL:-superadmin@paydefteri.com}
+      Seed__SuperAdmin__Password: ${SEED_SUPERADMIN_PASSWORD:-}
+      Seed__SuperAdmin__DisplayName: ${SEED_SUPERADMIN_DISPLAY_NAME:-Super Admin}
+      Storage__ReceiptsPath: /app/App_Data/receipts
+    volumes:
+      - paydefteri_receipts:/app/App_Data/receipts
+      - paydefteri_dataprotection:/root/.aspnet/DataProtection-Keys
+    expose:
+      - "8080"
+    networks:
+      - internal
+
+  web:
+    build:
+      context: src/web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    # Public :8890 until paydefteri.erenakgoz.dev DNS + Caddy are wired.
+    ports:
+      - "8890:80"
+    networks:
+      - internal
+
+volumes:
+  paydefteri_pgdata:
+  paydefteri_receipts:
+  paydefteri_dataprotection:
+
+networks:
+  internal:
+    driver: bridge

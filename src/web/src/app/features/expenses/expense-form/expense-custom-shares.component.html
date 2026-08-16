@@ -1,0 +1,20 @@
+<div class="custom-shares-box">
+  <div class="custom-shares-title">Kişi başı pay</div>
+  @for (partner of partners(); track partner.id) {
+    <div class="form-group">
+      <label class="form-label">{{ partner.name }}</label>
+      <input
+        class="form-input"
+        type="number"
+        min="0"
+        step="0.01"
+        [ngModel]="values[partner.id]"
+        (ngModelChange)="update(partner.id, $event)"
+        [name]="'add-share-' + partner.id"
+      />
+    </div>
+  }
+  <p class="custom-shares-sum" [class.ok]="matches()" [class.bad]="!matches()">
+    Toplam pay: {{ total() | tryCurrency }}
+  </p>
+</div>

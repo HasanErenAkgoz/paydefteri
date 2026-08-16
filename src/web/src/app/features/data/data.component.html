@@ -1,0 +1,608 @@
+<section class="page view-section active data-page data-print-root">
+  <header class="data-hero no-print">
+    <div class="data-hero-copy">
+      <p class="data-kicker">Plan araçları</p>
+      <h1>Yedek &amp; Rapor</h1>
+      <p class="data-lead">
+        @if (isExpense()) {
+          Net bakiyeleri inceleyin, gider listesini PDF/CSV alın.
+        } @else {
+          Özeti inceleyin, PDF alın, yedekleyin veya geri yükleyin.
+        }
+        @if (planTitle()) {
+          <span class="data-plan-chip">{{ planTitle() }}</span>
+        }
+      </p>
+    </div>
+    <button
+      type="button"
+      class="btn btn-primary data-print-cta"
+      [disabled]="busy() || (isExpense() ? !expenseBoard() : !report())"
+      (click)="printReport()"
+    >
+      Yazdır / PDF Al
+    </button>
+  </header>
+
+  @if (isExpense()) {
+  <section class="data-panel no-print report-panel">
+    <div class="data-panel-head">
+      <div>
+        <h2 class="data-panel-title">Gider özet raporu</h2>
+        <p class="data-panel-sub">Net bakiye, ödenen / planlanan ve transferler</p>
+      </div>
+    </div>
+    @if (expenseBoard(); as board) {
+      <div class="data-kpi-grid">
+        <div class="data-kpi data-kpi--ok">
+          <span class="data-kpi-label">Ödenen</span>
+          <span class="data-kpi-value">{{ expensePaidTotal() | tryCurrency }}</span>
+        </div>
+        <div class="data-kpi data-kpi--warn">
+          <span class="data-kpi-label">Planlanan</span>
+          <span class="data-kpi-value">{{ expensePlannedTotal() | tryCurrency }}</span>
+        </div>
+        <div class="data-kpi">
+          <span class="data-kpi-label">Gider</span>
+          <span class="data-kpi-value">{{ board.expenses.length }}</span>
+        </div>
+        <div class="data-kpi">
+          <span class="data-kpi-label">Tekrarlayan</span>
+          <span class="data-kpi-value">{{ board.recurrences.length }}</span>
+        </div>
+      </div>
+
+      <h3 class="data-section-label">Net bakiye</h3>
+      <div class="data-settle-grid">
+        @for (s of board.balances; track s.partnerId) {
+          <div
+            class="data-settle"
+            [class.is-credit]="s.balance > 0.009"
+            [class.is-debit]="s.balance < -0.009"
+          >
+            <span class="data-settle-name">{{ s.partnerName }}</span>
+            <strong class="data-settle-val">{{ s.balance | tryCurrency }}</strong>
+            <span class="data-settle-tag">
+              @if (s.balance > 0.009) {
+                Alacaklı
+              } @else if (s.balance < -0.009) {
+                Borçlu
+              } @else {
+                Dengede
+              }
+            </span>
+          </div>
+        }
+      </div>
+
+      <h3 class="data-section-label">Son giderler</h3>
+      <div class="table-responsive data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tarih</th>
+              <th>Gider</th>
+              <th>Ödeyen</th>
+              <th>Durum</th>
+              <th class="num">Tutar</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of board.expenses; track e.id) {
+              <tr>
+                <td>{{ formatDateTr(e.occurredOn) }}</td>
+                <td>{{ e.name }}</td>
+                <td>{{ partnerName(e.paidByPartnerId) }}</td>
+                <td>{{ e.status === 'Paid' || e.status === 1 ? 'Ödendi' : 'Planlandı' }}</td>
+                <td class="num">{{ e.totalAmount | tryCurrency }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="muted">Henüz gider yok.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="data-empty">Rapor yükleniyor veya henüz veri yok.</p>
+    }
+  </section>
+  } @else {
+  <section class="data-panel no-print report-panel">
+    <div class="data-panel-head">
+      <div>
+        <h2 class="data-panel-title">Özet rapor</h2>
+        <p class="data-panel-sub">Ortak payları, aylık durum ve ilerleme</p>
+      </div>
+      @if (report(); as r) {
+        <div class="data-progress-pill" [attr.title]="'%' + (r.metrics.paidPercent | number: '1.0-0')">
+          <span class="data-progress-ring" [style.--pct]="barPaidPct(r.metrics.grandPaid, r.metrics.grandTotal)">
+            <strong>{{ r.metrics.paidPercent | number: '1.0-0' }}%</strong>
+          </span>
+          <span>tamamlandı</span>
+        </div>
+      }
+    </div>
+
+    @if (report(); as r) {
+      <div class="data-kpi-grid">
+        <div class="data-kpi">
+          <span class="data-kpi-label">Toplam</span>
+          <span class="data-kpi-value">{{ r.metrics.grandTotal | tryCurrency }}</span>
+        </div>
+        <div class="data-kpi data-kpi--ok">
+          <span class="data-kpi-label">Ödenen</span>
+          <span class="data-kpi-value">{{ r.metrics.grandPaid | tryCurrency }}</span>
+        </div>
+        <div class="data-kpi data-kpi--warn">
+          <span class="data-kpi-label">Kalan</span>
+          <span class="data-kpi-value">{{ r.metrics.grandRemaining | tryCurrency }}</span>
+        </div>
+        <div class="data-kpi">
+          <span class="data-kpi-label">Ortak</span>
+          <span class="data-kpi-value">{{ r.partners.length }}</span>
+        </div>
+      </div>
+
+      <div class="data-overall-bar" aria-hidden="true">
+        <div class="data-overall-fill" [style.width.%]="barPaidPct(r.metrics.grandPaid, r.metrics.grandTotal)"></div>
+      </div>
+
+      <h3 class="data-section-label">Ortaklar</h3>
+      <div class="data-partner-list">
+        @for (p of r.partners; track p.partnerId) {
+          <div class="data-partner-row">
+            <div class="data-partner-meta">
+              <span class="data-dot" [style.background]="p.color"></span>
+              <div>
+                <div class="data-partner-name">{{ p.name }}</div>
+                <div class="data-partner-sub">
+                  {{ barPaidPct(p.paidAmount, p.totalShare) }}% · kalan {{ p.remainingAmount | tryCurrency }}
+                </div>
+              </div>
+            </div>
+            <div class="data-partner-bar-wrap">
+              <div class="data-partner-bar">
+                <div
+                  class="data-partner-fill"
+                  [style.width.%]="barPaidPct(p.paidAmount, p.totalShare)"
+                  [style.background]="p.color"
+                ></div>
+              </div>
+            </div>
+            <div class="data-partner-amt">
+              <strong>{{ p.paidAmount | tryCurrency }}</strong>
+              <span>/ {{ p.totalShare | tryCurrency }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (settlements().length) {
+        <h3 class="data-section-label">Net bakiye</h3>
+        <div class="data-settle-grid">
+          @for (s of settlements(); track s.partnerId) {
+            <div
+              class="data-settle"
+              [class.is-credit]="s.balance > 0.009"
+              [class.is-debit]="s.balance < -0.009"
+            >
+              <span class="data-settle-name">{{ s.partnerName }}</span>
+              <strong class="data-settle-val">{{ s.balance | tryCurrency }}</strong>
+              <span class="data-settle-tag">
+                @if (s.balance > 0.009) {
+                  Alacaklı
+                } @else if (s.balance < -0.009) {
+                  Borçlu
+                } @else {
+                  Dengede
+                }
+              </span>
+            </div>
+          }
+        </div>
+      }
+
+      @if (r.months.length) {
+        <h3 class="data-section-label">Aylık durum</h3>
+        <div class="table-responsive data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Ay</th>
+                <th class="num">Taksit</th>
+                <th class="num">Toplam</th>
+                <th class="num">Ödenen</th>
+                <th class="num">Kalan</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of r.months; track m.yearMonth) {
+                <tr [class.has-remain]="m.remainingAmount > 0.009">
+                  <td>{{ formatYearMonth(m.yearMonth) }}</td>
+                  <td class="num">{{ m.installmentCount }}</td>
+                  <td class="num">{{ m.totalAmount | tryCurrency }}</td>
+                  <td class="num ok">{{ m.paidAmount | tryCurrency }}</td>
+                  <td class="num" [class.warn]="m.remainingAmount > 0.009">
+                    {{ m.remainingAmount | tryCurrency }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    } @else {
+      <p class="data-empty">Rapor yükleniyor veya henüz veri yok.</p>
+    }
+  </section>
+  }
+
+  <div class="data-tools no-print">
+    <section class="data-panel tool-panel">
+      <h2 class="data-panel-title">Dışa aktar</h2>
+      <p class="data-panel-sub">
+        {{ isExpense() ? 'Gider listesi ve özet dosyası indirin.' : 'Yedek, tablo veya takvim dosyası indirin.' }}
+      </p>
+      <div class="data-tool-actions">
+        <button type="button" class="data-tool-btn data-tool-btn--primary" [disabled]="busy()" (click)="exportJson()">
+          <span class="data-tool-icon">JSON</span>
+          <span>
+            <strong>Yedek indir</strong>
+            <small>{{ isExpense() ? 'Gider board anlık görüntüsü' : 'Tam plan anlık görüntüsü' }}</small>
+          </span>
+        </button>
+        <button type="button" class="data-tool-btn" [disabled]="busy()" (click)="exportCsv()">
+          <span class="data-tool-icon">CSV</span>
+          <span>
+            <strong>Excel / CSV</strong>
+            <small>{{ isExpense() ? 'Gider tablosu' : 'Tablo olarak açılır' }}</small>
+          </span>
+        </button>
+        <button type="button" class="data-tool-btn" [disabled]="busy()" (click)="exportIcs()">
+          <span class="data-tool-icon">ICS</span>
+          <span>
+            <strong>Takvim</strong>
+            <small>{{ isExpense() ? 'Gider tarihlerini ekle' : 'Vade tarihlerini ekle' }}</small>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    @if (!isExpense()) {
+    <section class="data-panel tool-panel">
+      <h2 class="data-panel-title">Geri yükle</h2>
+      <p class="data-panel-sub">Daha önce indirdiğiniz JSON yedeğini seçin.</p>
+      <label class="data-dropzone" [class.is-disabled]="busy()">
+        <input type="file" accept="application/json,.json" hidden (change)="onImportFile($event)" [disabled]="busy()" />
+        <span class="data-dropzone-mark">JSON</span>
+        <span class="data-dropzone-title">JSON yedek seç</span>
+        <span class="data-dropzone-hint">Maks. 2 MB · PayDefteri yedek dosyası</span>
+      </label>
+    </section>
+    }
+  </div>
+
+  <div class="data-secondary no-print">
+    @if (!isExpense()) {
+    <section class="data-panel">
+      <div class="data-panel-head">
+        <div>
+          <h2 class="data-panel-title">Hatırlatmalar</h2>
+          <p class="data-panel-sub">Gönderilmiş e-posta kayıtları</p>
+        </div>
+        @if (isOwner()) {
+          <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="processReminders()">
+            Şimdi çalıştır
+          </button>
+        }
+      </div>
+      @if (!reminders().length) {
+        <p class="data-empty">Henüz gönderilmiş hatırlatma yok.</p>
+      } @else {
+        <div class="table-responsive data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Taksit</th>
+                <th>Alıcı</th>
+                <th>Tür</th>
+                <th class="num">Gün</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of reminders(); track row.id) {
+                <tr>
+                  <td>{{ formatDateTr(row.sentOn) }}</td>
+                  <td>{{ row.installmentName }}</td>
+                  <td>{{ row.partnerName || '—' }}</td>
+                  <td>
+                    <span class="data-tag">{{ row.kind === 'After' || row.kind === '1' ? 'Sonra' : 'Önce' }}</span>
+                  </td>
+                  <td class="num">{{ row.offsetDays }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+    }
+
+    <section class="data-panel">
+      <h2 class="data-panel-title">Son hareketler</h2>
+      <p class="data-panel-sub" style="margin-bottom: 14px">Plan üzerindeki değişiklikler</p>
+      @if (!activity().length) {
+        <p class="data-empty">Henüz kayıt yok.</p>
+      } @else {
+        <ul class="data-activity">
+          @for (a of activity(); track a.id) {
+            <li>
+              <div class="data-activity-dot" aria-hidden="true"></div>
+              <div>
+                <p><strong>{{ a.actorDisplayName }}</strong> {{ a.message }}</p>
+                <time>{{ a.createdAtUtc | date: 'short' }}</time>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+
+  <!-- Print-only A4 document -->
+  <article class="print-only-block print-doc" aria-hidden="true">
+    <div class="print-topbar"></div>
+
+    <header class="print-doc-header">
+      <div class="print-brand-block">
+        <div class="print-mark" aria-hidden="true">P</div>
+        <div>
+          <p class="print-brand">PayDefteri</p>
+          <p class="print-doc-kind">{{ isExpense() ? 'Gider hesaplaşma raporu' : 'Hesaplaşma raporu' }}</p>
+        </div>
+      </div>
+      <div class="print-meta">
+        <strong>{{ generatedAtLabel() }}</strong>
+        <span>Resmi özet · A4</span>
+      </div>
+    </header>
+
+    <div class="print-plan-band">
+      <h1 class="print-plan-title">{{ planTitle() }}</h1>
+      @if (planDescription()) {
+        <p class="print-plan-desc">{{ planDescription() }}</p>
+      }
+    </div>
+
+    @if (isExpense()) {
+      @if (expenseBoard(); as board) {
+        <section class="print-kpis" aria-label="Özet rakamlar">
+          <div class="print-kpi print-kpi--accent">
+            <span class="print-kpi-label">Ödenen</span>
+            <span class="print-kpi-value">{{ expensePaidTotal() | tryCurrency }}</span>
+          </div>
+          <div class="print-kpi print-kpi--warn">
+            <span class="print-kpi-label">Planlanan</span>
+            <span class="print-kpi-value">{{ expensePlannedTotal() | tryCurrency }}</span>
+          </div>
+          <div class="print-kpi">
+            <span class="print-kpi-label">Gider</span>
+            <span class="print-kpi-value">{{ board.expenses.length }}</span>
+          </div>
+          <div class="print-kpi">
+            <span class="print-kpi-label">Tekrarlayan</span>
+            <span class="print-kpi-value">{{ board.recurrences.length }}</span>
+          </div>
+        </section>
+
+        <section class="print-section">
+          <div class="print-section-head">
+            <h2 class="print-section-title">Ortaklar arası net bakiye</h2>
+          </div>
+          <p class="print-legend">Pozitif = alacak · Negatif = borç</p>
+          <div class="print-settle-grid">
+            @for (s of board.balances; track s.partnerId) {
+              <div
+                class="print-settle-card"
+                [class.is-credit]="s.balance > 0.009"
+                [class.is-debit]="s.balance < -0.009"
+                [class.is-zero]="s.balance <= 0.009 && s.balance >= -0.009"
+              >
+                <div class="print-settle-name">{{ s.partnerName }}</div>
+                <div class="print-settle-value">{{ s.balance | tryCurrency }}</div>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="print-section">
+          <div class="print-section-head">
+            <h2 class="print-section-title">Gider listesi</h2>
+          </div>
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Gider</th>
+                <th>Ödeyen</th>
+                <th>Durum</th>
+                <th class="num">Tutar</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (e of board.expenses; track e.id) {
+                <tr>
+                  <td>{{ formatDateTr(e.occurredOn) }}</td>
+                  <td>{{ e.name }}</td>
+                  <td>{{ partnerName(e.paidByPartnerId) }}</td>
+                  <td>{{ e.status === 'Paid' || e.status === 1 ? 'Ödendi' : 'Planlandı' }}</td>
+                  <td class="num">{{ e.totalAmount | tryCurrency }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      } @else {
+        <p class="print-note">Rapor verisi yüklenemedi. Ekrandan tekrar Yazdır / PDF Al deneyin.</p>
+      }
+    } @else {
+      @if (report(); as r) {
+        <section class="print-kpis" aria-label="Özet rakamlar">
+          <div class="print-kpi">
+            <span class="print-kpi-label">Toplam plan</span>
+            <span class="print-kpi-value">{{ r.metrics.grandTotal | tryCurrency }}</span>
+          </div>
+          <div class="print-kpi print-kpi--accent">
+            <span class="print-kpi-label">Ödenen</span>
+            <span class="print-kpi-value">{{ r.metrics.grandPaid | tryCurrency }}</span>
+          </div>
+          <div class="print-kpi print-kpi--warn">
+            <span class="print-kpi-label">Kalan</span>
+            <span class="print-kpi-value">{{ r.metrics.grandRemaining | tryCurrency }}</span>
+          </div>
+          <div class="print-kpi print-kpi--pct">
+            <span class="print-kpi-label">İlerleme</span>
+            <span class="print-kpi-value">%{{ r.metrics.paidPercent | number: '1.0-0' }}</span>
+            <div class="print-mini-bar" aria-hidden="true">
+              <div
+                class="print-mini-fill"
+                [style.width.%]="barPaidPct(r.metrics.grandPaid, r.metrics.grandTotal)"
+              ></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="print-section">
+          <div class="print-section-head">
+            <h2 class="print-section-title">Ortaklar</h2>
+            <span class="print-section-meta">{{ r.partners.length }} kişi</span>
+          </div>
+          <div class="print-partner-table">
+            <div class="print-partner-head">
+              <span>Ortak</span>
+              <span>İlerleme</span>
+              <span class="num">Ödenen</span>
+              <span class="num">Kalan</span>
+              <span class="num">%</span>
+            </div>
+            @for (p of r.partners; track p.partnerId) {
+              <div class="print-partner-row">
+                <div class="print-partner-name">
+                  <span class="print-dot" [style.background]="p.color"></span>
+                  {{ p.name }}
+                </div>
+                <div class="print-bar-track" aria-hidden="true">
+                  <div
+                    class="print-bar-fill"
+                    [style.width.%]="barPaidPct(p.paidAmount, p.totalShare)"
+                    [style.background]="p.color"
+                  ></div>
+                </div>
+                <div class="print-amt num">{{ p.paidAmount | tryCurrency }}</div>
+                <div class="print-amt num">{{ p.remainingAmount | tryCurrency }}</div>
+                <div class="print-pct num">{{ barPaidPct(p.paidAmount, p.totalShare) }}%</div>
+              </div>
+            }
+          </div>
+        </section>
+
+        @if (r.months.length > 0) {
+          <section class="print-section">
+            <div class="print-section-head">
+              <h2 class="print-section-title">Aylık durum</h2>
+              <span class="print-section-meta">{{ r.months.length }} ay</span>
+            </div>
+            <table class="print-table">
+              <thead>
+                <tr>
+                  <th>Ay</th>
+                  <th class="num">Taksit</th>
+                  <th class="num">Toplam</th>
+                  <th class="num">Ödenen</th>
+                  <th class="num">Kalan</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of r.months; track m.yearMonth) {
+                  <tr [class.is-open]="m.remainingAmount > 0.009">
+                    <td>{{ formatYearMonth(m.yearMonth) }}</td>
+                    <td class="num">{{ m.installmentCount }}</td>
+                    <td class="num">{{ m.totalAmount | tryCurrency }}</td>
+                    <td class="num">{{ m.paidAmount | tryCurrency }}</td>
+                    <td class="num remain">{{ m.remainingAmount | tryCurrency }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </section>
+        }
+
+        @if (settlements().length) {
+          <section class="print-section">
+            <div class="print-section-head">
+              <h2 class="print-section-title">Ortaklar arası net bakiye</h2>
+            </div>
+            <p class="print-legend">Pozitif = alacak · Negatif = borç (başkası adına ödeme / mahsup)</p>
+            <div class="print-settle-grid">
+              @for (s of settlements(); track s.partnerId) {
+                <div
+                  class="print-settle-card"
+                  [class.is-credit]="s.balance > 0.009"
+                  [class.is-debit]="s.balance < -0.009"
+                  [class.is-zero]="s.balance <= 0.009 && s.balance >= -0.009"
+                >
+                  <div class="print-settle-name">{{ s.partnerName }}</div>
+                  <div class="print-settle-value">{{ s.balance | tryCurrency }}</div>
+                  <p class="print-settle-hint">
+                    @if (s.balance > 0.009) {
+                      Alacaklı
+                    } @else if (s.balance < -0.009) {
+                      Borçlu
+                    } @else {
+                      Dengede
+                    }
+                  </p>
+                </div>
+              }
+            </div>
+          </section>
+        }
+      } @else {
+        <p class="print-note">Rapor verisi yüklenemedi. Ekrandan tekrar Yazdır / PDF Al deneyin.</p>
+      }
+    }
+
+    <section class="print-sign-block">
+      <div class="print-section-head">
+        <h2 class="print-section-title">Onay ve imza</h2>
+      </div>
+      <p class="print-sign-lead">
+        Yukarıdaki ödeme planı özeti ve ortaklar arası hesaplaşma durumu taraflarca incelendi. İmza, bu çıktıdaki
+        bakiyelerin kabulünü ifade eder.
+      </p>
+      <div class="print-sign-grid">
+        @for (name of partnerNames(); track name) {
+          <div class="print-sign-box">
+            <span class="print-sign-label">İmza / Tarih</span>
+            <div class="print-sign-line"></div>
+            <div class="print-sign-name">{{ name }}</div>
+          </div>
+        } @empty {
+          <div class="print-sign-box">
+            <span class="print-sign-label">İmza / Tarih</span>
+            <div class="print-sign-line"></div>
+            <div class="print-sign-name">Ortak</div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <footer class="print-footer">
+      <span>PayDefteri · Hesaplaşma raporu</span>
+      <span>{{ planTitle() }}</span>
+    </footer>
+  </article>
+</section>

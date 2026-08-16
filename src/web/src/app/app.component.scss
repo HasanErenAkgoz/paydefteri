@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.offline-banner {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px;
+  background: #b45309;
+  color: #fff7ed;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.auth-shell {
+  min-height: 100vh;
+}
+
+.auth-container {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.brand-text h1 {
+  margin: 0;
+}
+
+.nav-label-short {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .nav-label-full {
+    display: none;
+  }
+
+  .nav-label-short {
+    display: inline;
+  }
+}

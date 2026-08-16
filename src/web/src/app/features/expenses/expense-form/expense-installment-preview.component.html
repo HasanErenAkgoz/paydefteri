@@ -1,0 +1,5 @@
+<p class="muted small">
+  {{ preview().count }} taksit: aylık {{ preview().baseAmount | tryCurrency }}
+  @if (preview().finalAmount !== preview().baseAmount) { · son taksit {{ preview().finalAmount | tryCurrency }} }
+  · ilk taksit {{ formatDateTr(firstInstallmentDate()) }} tarihinde kaydedilir.
+</p>

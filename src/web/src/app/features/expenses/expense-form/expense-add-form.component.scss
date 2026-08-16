@@ -1,0 +1,102 @@
+:host {
+  display: block;
+}
+
+.add-expense-card {
+  margin-bottom: 16px;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.receipt-help {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+}
+
+.receipt-button {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.camera-button {
+  display: none;
+}
+
+.receipt-button.disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.receipt-button input {
+  display: none;
+}
+
+.receipt-review {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 10px;
+  background: rgba(52, 211, 153, 0.09);
+  color: #a7f3d0;
+  font-size: 0.82rem;
+}
+
+.receipt-review.warning {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.09);
+  color: #fde68a;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+@media (max-width: 640px) {
+  .form-header {
+    flex-direction: column;
+  }
+
+  .receipt-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .receipt-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .camera-button {
+    display: flex;
+  }
+}
+
+@media (max-width: 420px) {
+  .receipt-actions {
+    grid-template-columns: 1fr;
+  }
+}

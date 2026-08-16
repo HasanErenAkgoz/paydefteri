@@ -1,0 +1,6 @@
+@FuzulTaksitTakip.Api_HostAddress = http://localhost:5096
+
+GET {{FuzulTaksitTakip.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

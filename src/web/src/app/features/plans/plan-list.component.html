@@ -1,0 +1,332 @@
+<section class="plans-page view-section active">
+  <header class="plans-hero">
+    <div class="plans-hero-copy">
+      <p class="plans-eyebrow">PayDefteri</p>
+      <h1>Tüm Planlar</h1>
+      <p class="muted">
+        Planlar arasında geçiş yapın, yenisini oluşturun veya davetleri kabul edin.
+      </p>
+      @if (sortedPlans().length) {
+        <button type="button" class="btn btn-secondary btn-sm back-btn" (click)="backToDashboard()">
+          ← Plana dön
+        </button>
+      }
+    </div>
+    <div class="plans-hero-stats">
+      <div class="plans-stat">
+        <span class="plans-stat-value">{{ plans().length }}</span>
+        <span class="plans-stat-label">Aktif plan</span>
+      </div>
+      <div class="plans-stat">
+        <span class="plans-stat-value">{{ pendingInvites().length }}</span>
+        <span class="plans-stat-label">Bekleyen davet</span>
+      </div>
+    </div>
+  </header>
+
+
+  @if (pendingInvites().length) {
+    <div class="card invites-card">
+      <div class="card-title">📨 Bekleyen Davetler</div>
+      <div class="invites-list">
+        @for (inv of pendingInvites(); track inv.id) {
+          <div class="invite-row">
+            <div class="invite-main">
+              <strong>{{ inv.partnerName }}</strong>
+              <span class="muted">ortak satırı olarak katıl · {{ inv.email }}</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              [disabled]="accepting()"
+              (click)="acceptInvite(inv)"
+            >
+              Kabul et
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="card">
+    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center">
+      <span>📁 Mevcut Planlar</span>
+      @if (!loading()) {
+        <span class="muted" style="font-size: 0.8rem; font-weight: 500">{{ plans().length }} kayıt</span>
+      }
+    </div>
+
+    @if (loading()) {
+      <p class="muted">Yükleniyor…</p>
+    } @else if (sortedPlans().length === 0) {
+      <div class="empty-plans">
+        <img class="empty-icon" src="/brand-icon.png" width="56" height="56" alt="" />
+        <h3>Henüz plan yok</h3>
+        <p class="muted">Taksit şablonu veya ortak gider planı ile başlayın.</p>
+      </div>
+    } @else {
+      <div class="plan-grid">
+        @for (plan of sortedPlans(); track plan.id) {
+          <a class="plan-card" [routerLink]="openPlan(plan)">
+            <div class="plan-card-accent" [class.expense]="isExpensePlan(plan)"></div>
+            <div class="plan-card-body">
+              <div class="plan-card-top">
+                <div class="plan-card-title-row">
+                  <h3>{{ plan.title }}</h3>
+                  <span class="plan-type-badge" [class.expense]="isExpensePlan(plan)">
+                    {{ planTypeLabel(plan) }}
+                  </span>
+                </div>
+                <div class="plan-card-actions">
+                  <button
+                    type="button"
+                    class="plan-action-btn"
+                    title="Kopyala"
+                    aria-label="Planı kopyala"
+                    (click)="copyPlan(plan, $event)"
+                  >
+                    📋
+                  </button>
+                  <button
+                    type="button"
+                    class="plan-action-btn"
+                    title="Arşivle"
+                    aria-label="Planı arşivle"
+                    (click)="archivePlan(plan, $event)"
+                  >
+                    📦
+                  </button>
+                  <button
+                    type="button"
+                    class="plan-action-btn plan-action-btn--danger"
+                    title="Sil"
+                    aria-label="Planı sil"
+                    (click)="remove(plan, $event)"
+                  >
+                    <app-icon-trash />
+                  </button>
+                </div>
+              </div>
+              <p class="plan-desc">
+                {{ plan.description || 'Açıklama yok' }}
+              </p>
+              <div class="plan-card-footer">
+                <span class="meta">📅 {{ formatDateTr(plan.createdAtUtc) }}</span>
+                <span class="open-hint">Takibe git →</span>
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+    }
+  </div>
+
+  @if (archivedPlans().length) {
+    <div class="card">
+      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center">
+        <span>🗄️ Arşivlenen planlar</span>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showArchived.set(!showArchived())">
+          {{ showArchived() ? 'Gizle' : 'Göster' }}
+        </button>
+      </div>
+      @if (showArchived()) {
+        <div class="plan-grid">
+          @for (plan of archivedPlans(); track plan.id) {
+            <div class="plan-card" style="opacity: 0.85">
+              <div class="plan-card-accent"></div>
+              <div class="plan-card-body">
+                <div class="plan-card-top">
+                  <h3>{{ plan.title }}</h3>
+                  <div class="plan-card-actions">
+                    <button type="button" class="btn btn-primary btn-sm" (click)="restorePlan(plan, $event)">
+                      Geri yükle
+                    </button>
+                    <button
+                      type="button"
+                      class="plan-action-btn plan-action-btn--danger"
+                      title="Kalıcı sil"
+                      aria-label="Planı kalıcı sil"
+                      (click)="remove(plan, $event)"
+                    >
+                      <app-icon-trash />
+                    </button>
+                  </div>
+                </div>
+                <p class="plan-desc">{{ plan.description || 'Açıklama yok' }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="card">
+    <div class="card-title">⚡ Yeni Plan</div>
+    <p class="muted" style="font-size: 0.85rem; margin-bottom: 16px">
+      Taksit / finansman şablonu veya ortak gider planı oluşturun.
+    </p>
+    <div class="template-cards">
+      <div class="template-card">
+        <h4>📄 Yeni Özel Plan</h4>
+        <p>Boş taksit planı oluşturup ortak ve taksitleri kendiniz ekleyin.</p>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          style="width: 100%; justify-content: center; margin-top: 12px"
+          [disabled]="creating()"
+          (click)="createEmpty()"
+        >
+          ✨ Boş Plan Aç
+        </button>
+      </div>
+      <div class="template-card expense-create-card">
+        <h4>🧾 Ortak Gider Planı</h4>
+        <p>Kim ödedi, pay nasıl, kim kime borçlu — fatura, market, transfer ve tekrarlayan giderler.</p>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          style="width: 100%; justify-content: center; margin-top: 12px"
+          [disabled]="creating()"
+          (click)="createExpensePlan()"
+        >
+          ✨ Gider Planı Aç
+        </button>
+      </div>
+      <div class="template-card expense-create-card">
+        <h4>💑 Örnek Karı-Koca Planı</h4>
+        <p>
+          İki ortaklı ev örneği: fatura, market, kişisel internet, tekrarlayan elektrik ve mahsup.
+          Ortak isimleri her seferinde rastgele seçilir.
+        </p>
+        <div style="display: flex; gap: 8px; margin-top: 12px">
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            style="flex: 1; justify-content: center"
+            [disabled]="creating()"
+            (click)="previewExpenseSample('couple')"
+          >
+            👁️ Ön İzle
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            style="flex: 1; justify-content: center"
+            [disabled]="creating()"
+            (click)="createExpenseSample('couple')"
+          >
+            📥 Örnekle Aç
+          </button>
+        </div>
+      </div>
+      <div class="template-card expense-create-card">
+        <h4>🏖️ Örnek Tatil / Arkadaş Grubu</h4>
+        <p>
+          Dört kişilik kısa tatil: konaklama, yemek, ulaşım. Kim ödedi, kim borçlu — Excel yerine tek defter.
+        </p>
+        <div style="display: flex; gap: 8px; margin-top: 12px">
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            style="flex: 1; justify-content: center"
+            [disabled]="creating()"
+            (click)="previewExpenseSample('trip')"
+          >
+            👁️ Ön İzle
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            style="flex: 1; justify-content: center"
+            [disabled]="creating()"
+            (click)="createExpenseSample('trip')"
+          >
+            📥 Örnekle Aç
+          </button>
+        </div>
+      </div>
+      <div class="template-card expense-create-card">
+        <h4>🍽️ Örnek Ekip Öğle Yemeği</h4>
+        <p>
+          Altı kişilik ekip hesabı: eşit pay, yemek kartı ile ödeyen, mahsup. Mail listesi peşinde koşmaya gerek yok.
+        </p>
+        <div style="display: flex; gap: 8px; margin-top: 12px">
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            style="flex: 1; justify-content: center"
+            [disabled]="creating()"
+            (click)="previewExpenseSample('teamlunch')"
+          >
+            👁️ Ön İzle
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            style="flex: 1; justify-content: center"
+            [disabled]="creating()"
+            (click)="createExpenseSample('teamlunch')"
+          >
+            📥 Örnekle Aç
+          </button>
+        </div>
+      </div>
+      @for (t of templates(); track t.key) {
+        <div class="template-card">
+          <h4>{{ templateIcon(t.key) }} {{ t.title }}</h4>
+          <p>{{ t.description }}</p>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            style="width: 100%; justify-content: center; margin-top: 12px"
+            [disabled]="creating()"
+            (click)="createFromTemplate(t.key)"
+          >
+            📥 Bu Şablonla Aç
+          </button>
+        </div>
+      }
+    </div>
+
+    <div class="custom-create">
+      @if (!showCustomForm()) {
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showCustomForm.set(true)">
+          ✏️ Özel başlıkla oluştur
+        </button>
+      } @else {
+        <div class="card-title" style="margin-top: 8px; font-size: 0.95rem">Özel Plan Oluştur</div>
+        <form class="custom-form" (ngSubmit)="create()">
+          <div class="form-group">
+            <label class="form-label">Plan Adı</label>
+            <input
+              class="form-input"
+              type="text"
+              name="title"
+              [(ngModel)]="newTitle"
+              required
+              placeholder="Örn: Fuzul Ev Konut Projesi"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Açıklama</label>
+            <input
+              class="form-input"
+              type="text"
+              name="description"
+              [(ngModel)]="newDescription"
+              placeholder="İsteğe bağlı not"
+            />
+          </div>
+          <div class="custom-form-actions">
+            <button type="button" class="btn btn-secondary" (click)="showCustomForm.set(false)">İptal</button>
+            <button class="btn btn-primary" type="submit" [disabled]="creating()">
+              {{ creating() ? 'Oluşturuluyor…' : 'Oluştur' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+</section>

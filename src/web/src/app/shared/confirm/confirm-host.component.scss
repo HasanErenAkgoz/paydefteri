@@ -1,0 +1,120 @@
+:host {
+  display: block;
+}
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(5px);
+  animation: confirm-fade 0.18s ease both;
+}
+
+:host-context(.native-app) .confirm-backdrop {
+  padding-top: calc(16px + var(--app-safe-top, 0px));
+  padding-right: calc(16px + var(--app-safe-right, 0px));
+  padding-bottom: calc(16px + var(--app-safe-bottom, 0px));
+  padding-left: calc(16px + var(--app-safe-left, 0px));
+}
+
+.confirm-dialog {
+  width: min(440px, 100%);
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(30, 41, 59, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 22px 50px rgba(2, 6, 23, 0.5);
+  animation: confirm-rise 0.22s ease both;
+}
+
+.confirm-dialog__accent {
+  background: linear-gradient(180deg, #38bdf8, #6366f1);
+}
+
+.confirm-dialog__accent--danger {
+  background: linear-gradient(180deg, #f87171, #dc2626);
+}
+
+.confirm-dialog__accent--success {
+  background: linear-gradient(180deg, #34d399, #059669);
+}
+
+.btn-success-solid {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.btn-success-solid:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45);
+}
+
+.confirm-dialog__body {
+  padding: 22px 22px 18px;
+}
+
+.confirm-dialog__title {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+}
+
+.confirm-dialog__message {
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@keyframes confirm-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes confirm-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 520px) {
+  .confirm-backdrop {
+    align-items: end;
+  }
+
+  .confirm-dialog {
+    border-radius: 18px 18px 12px 12px;
+  }
+
+  .confirm-dialog__actions .btn {
+    flex: 1 1 120px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}

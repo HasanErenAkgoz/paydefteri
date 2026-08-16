@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Disallow: /plans
+Disallow: /profile
+Disallow: /invite
+Disallow: /home
+
+Sitemap: https://paydefteri.com/sitemap.xml

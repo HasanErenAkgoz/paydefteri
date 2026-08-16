@@ -1,0 +1,13 @@
+@if (canManage()) {
+  @if (!isPaid()) {
+    @if (sharePartners().length > 1) { <button type="button" class="btn btn-ghost btn-sm" (click)="singlePayment = !singlePayment">{{ singlePayment ? 'Paylara göre' : 'Tek ödeme' }}</button> }
+    @if (!canUseSplit()) {
+      <select class="form-select mark-payer" [(ngModel)]="payerId">@for (partner of partners(); track partner.id) { <option [value]="partner.id">{{ partner.name }}</option> }</select>
+    } @else {
+      <div class="payer-amounts compact">@for (partner of sharePartners(); track partner.id) { <label><span>{{ partner.name }}</span><input class="form-input" type="number" min="0" step="0.01" [(ngModel)]="payments[partner.id]" /></label> }</div>
+    }
+    <button type="button" class="btn btn-primary btn-sm" [disabled]="marking() || (!singlePayment && !matchesTotal())" (click)="submit()">Ödendi yap</button>
+  }
+  <button type="button" class="btn btn-secondary btn-sm" (click)="edit.emit(expense())">✏️ Düzenle</button>
+  <button type="button" class="btn btn-secondary btn-sm" (click)="remove.emit(expense())">Sil</button>
+}

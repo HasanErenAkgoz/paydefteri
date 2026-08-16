@@ -1,0 +1,145 @@
+<section class="auth-stage">
+  <div class="auth-stage__bg" aria-hidden="true">
+    <div class="auth-stage__orb auth-stage__orb--a"></div>
+    <div class="auth-stage__orb auth-stage__orb--b"></div>
+    <div class="auth-stage__mesh"></div>
+  </div>
+
+  <div class="auth-layout">
+    <aside class="auth-brand">
+      <img class="auth-brand__mark" src="/brand-icon.png" width="48" height="48" alt="" />
+      <p class="auth-brand__name">PayDefteri</p>
+      <p class="auth-brand__lead">Plan davetini kabul ederek ortak ödemeleri takip etmeye başlayın.</p>
+    </aside>
+
+    <div class="auth-card invite-card">
+      <a class="invite-back" routerLink="/" aria-label="Tanıtım ekranına dön">
+        <span aria-hidden="true">←</span> Geri
+      </a>
+      <div class="auth-card__intro">
+        <p class="auth-card__eyebrow">Davetiye</p>
+        <h1>Plan daveti</h1>
+      </div>
+
+      @if (loading()) {
+        <p class="muted">Davet yükleniyor…</p>
+      } @else if (!preview()) {
+        @if (error()) {
+          <div class="alert alert-danger">{{ error() }}</div>
+        }
+        <p class="auth-footer">
+          <a routerLink="/login">Giriş sayfasına dön</a>
+        </p>
+      } @else {
+        <div class="invite-summary">
+          <p class="invite-plan">{{ preview()!.planTitle }}</p>
+          <p class="muted">
+            <strong>{{ preview()!.partnerName }}</strong> ortağı olarak davet edildiniz.
+          </p>
+          <p class="muted invite-email">Davet adresi: {{ preview()!.email }}</p>
+        </div>
+
+        @if (error()) {
+          <div class="alert alert-danger">{{ error() }}</div>
+        }
+
+        @if (preview()!.isAcceptable) {
+          @if (emailMismatch()) {
+            <p class="muted">
+              Daveti kabul etmek için
+              <strong>{{ preview()!.email }}</strong>
+              hesabıyla devam edin.
+            </p>
+            <button type="button" class="btn btn-primary auth-card__submit" (click)="switchAccount()">
+              Bu hesapla devam et (çıkış yap)
+            </button>
+          } @else if (auth.isAuthenticated()) {
+            <p class="muted">Hesabınızla davet kabul ediliyor…</p>
+            <button
+              type="button"
+              class="btn btn-primary auth-card__submit"
+              [disabled]="busy()"
+              (click)="acceptInvite()"
+            >
+              {{ busy() ? 'Kabul ediliyor…' : 'Daveti kabul et' }}
+            </button>
+          } @else {
+            <div class="invite-tabs">
+              <button
+                type="button"
+                class="invite-tab"
+                [class.active]="mode() === 'register'"
+                (click)="setMode('register')"
+              >
+                Kayıt ol
+              </button>
+              <button
+                type="button"
+                class="invite-tab"
+                [class.active]="mode() === 'login'"
+                (click)="setMode('login')"
+              >
+                Giriş yap
+              </button>
+            </div>
+
+            @if (preview()!.accountExists && mode() === 'login') {
+              <p class="muted">Bu e-posta ile hesabınız var. Şifrenizle giriş yapıp daveti kabul edin.</p>
+            }
+
+            <form (ngSubmit)="submitAuth()">
+              @if (mode() === 'register') {
+                <div class="form-group">
+                  <label class="form-label">Ad</label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    name="displayName"
+                    [(ngModel)]="displayName"
+                    autocomplete="name"
+                  />
+                </div>
+              }
+
+              <div class="form-group">
+                <label class="form-label">E-posta</label>
+                <input
+                  class="form-input"
+                  type="email"
+                  name="email"
+                  [(ngModel)]="email"
+                  required
+                  autocomplete="email"
+                  readonly
+                />
+                <p class="field-hint muted">Davet yalnızca bu adrese aittir; değiştirilemez.</p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Şifre</label>
+                <input
+                  class="form-input"
+                  type="password"
+                  name="password"
+                  [(ngModel)]="password"
+                  required
+                  [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'"
+                />
+              </div>
+
+              <button class="btn btn-primary auth-card__submit" type="submit" [disabled]="busy()">
+                {{
+                  busy()
+                    ? 'İşleniyor…'
+                    : mode() === 'register'
+                      ? 'Kayıt ol ve katıl'
+                      : 'Giriş yap ve katıl'
+                }}
+              </button>
+            </form>
+          }
+        }
+      }
+    </div>
+  </div>
+</section>

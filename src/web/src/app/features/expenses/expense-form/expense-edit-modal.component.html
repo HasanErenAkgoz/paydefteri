@@ -1,0 +1,80 @@
+<div class="modal-overlay active" (click)="cancel.emit()">
+  <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="expense-edit-title">
+    <div class="modal-header">
+      <h3 class="modal-title" id="expense-edit-title">✏️ Gideri düzenle</h3>
+      <button type="button" class="close-btn" aria-label="Kapat" (click)="cancel.emit()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="edit-expense-name">Gider adı</label>
+      <input id="edit-expense-name" class="form-input" [(ngModel)]="name" placeholder="Elektrik, market…" />
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label" for="edit-expense-amount">Tutar</label>
+        <input id="edit-expense-amount" class="form-input" type="number" min="0" step="0.01" [(ngModel)]="amount" (ngModelChange)="onShareOrAmountChange()" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="edit-expense-date">Tarih</label>
+        <input id="edit-expense-date" class="form-input" type="date" [(ngModel)]="occurredOn" />
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label" for="edit-expense-category">Kategori</label>
+        <select id="edit-expense-category" class="form-select" [(ngModel)]="categoryId">
+          <option value="">—</option>
+          @for (category of categories(); track category.id) { <option [value]="category.id">{{ category.name }}</option> }
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="edit-expense-share">Paylaşım</label>
+        <select id="edit-expense-share" class="form-select" [(ngModel)]="shareUi" (ngModelChange)="onShareOrAmountChange()">
+          <option value="Equal">Eşit böl</option>
+          <option value="Default">Varsayılan %</option>
+          <option value="sole">Tek ortak</option>
+          <option value="Custom">Özel tutarlar</option>
+        </select>
+      </div>
+    </div>
+
+    @if (shareUi === 'sole') {
+      <div class="form-group">
+        <label class="form-label" for="edit-expense-owner">Pay sahibi</label>
+        <select id="edit-expense-owner" class="form-select" [(ngModel)]="solePartnerId" (ngModelChange)="syncPayments()">
+          @for (partner of partners(); track partner.id) { <option [value]="partner.id">{{ partner.name }}</option> }
+        </select>
+      </div>
+    }
+
+    @if (shareUi === 'Custom') {
+      <app-expense-custom-shares [partners]="partners()" [expectedTotal]="amount || 0" [amounts]="customShares" (amountsChange)="onCustomSharesChange($event)" />
+    }
+
+    <div class="form-group">
+      <label class="form-label" for="edit-expense-status">Durum</label>
+      <select id="edit-expense-status" class="form-select" [(ngModel)]="status">
+        <option value="Paid">Ödendi</option>
+        <option value="Planned">Planlandı</option>
+      </select>
+    </div>
+
+    @if (status === 'Paid') {
+      <app-expense-payer-inputs [partners]="partners()" [sharePartners]="sharePartners()" [totalAmount]="amount || 0" [initialSinglePayment]="payerState.singlePayment" [initialPayerId]="payerState.payerId" [initialPayments]="payerState.payments" (stateChange)="payerState = $event" />
+    }
+
+    <div class="form-group note-field">
+      <label class="form-label" for="edit-expense-note">Not</label>
+      <input id="edit-expense-note" class="form-input" [(ngModel)]="note" />
+    </div>
+
+    <div class="modal-actions-row">
+      <button type="button" class="btn btn-secondary" (click)="cancel.emit()">İptal</button>
+      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="submit()">
+        {{ saving() ? 'Kaydediliyor…' : 'Kaydet' }}
+      </button>
+    </div>
+  </div>
+</div>
