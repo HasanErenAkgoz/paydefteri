@@ -103,13 +103,19 @@
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 768px) {
   .confirm-backdrop {
-    align-items: end;
+    padding: 0;
+    align-items: flex-end;
   }
 
   .confirm-dialog {
-    border-radius: 18px 18px 12px 12px;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    border-bottom: none;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   }
 
   .confirm-dialog__actions .btn {

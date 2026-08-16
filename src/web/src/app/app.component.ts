@@ -80,7 +80,18 @@ export class AppComponent implements OnInit {
   });
 
   logout(): void {
+    this.triggerHaptic();
     this.planContext.clear();
     this.auth.logout();
+  }
+
+  triggerHaptic(): void {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(8);
+      } catch {
+        // Silently ignore if unsupported
+      }
+    }
   }
 }

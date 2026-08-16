@@ -20,6 +20,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -29,6 +30,8 @@
             min-height: 100vh;
             padding-bottom: 60px;
             overflow-x: clip;
+            overscroll-behavior-y: none;
+            -webkit-font-smoothing: antialiased;
         }
 
         body.native-app {
@@ -333,6 +336,32 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUpSheet {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .mobile-sheet-handle {
+            width: 38px;
+            height: 4px;
+            border-radius: 4px;
+            background: rgba(148, 163, 184, 0.4);
+            margin: -4px auto 14px auto;
+            display: block;
+        }
+
+        /* Native touch active scale feedback & user-select reset */
+        .btn, .nav-tab, .filter-btn, .check-btn, .template-card, .metric-card, .partner-card, .highlight-card {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .btn:active, .nav-tab:active, .filter-btn:active, .check-btn:active, .template-card:active {
+            transform: scale(0.97) !important;
+            opacity: 0.92;
+            transition: transform 0.08s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.08s ease;
         }
 
         /* Special Highlights Grid */
@@ -1187,16 +1216,23 @@
 
             .modal-overlay,
             .modal-backdrop {
-                padding: 12px;
+                padding: 0;
                 align-items: flex-end;
+                justify-content: center;
+                background: rgba(2, 6, 23, 0.78);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
             }
 
             .modal-content,
             .modal-backdrop .modal {
-                max-height: min(92vh, 100%);
-                padding: 18px 16px;
-                border-radius: 16px 16px 12px 12px;
+                max-height: min(88vh, 100%);
+                padding: 16px 20px calc(20px + max(12px, env(safe-area-inset-bottom, 0px))) 20px;
+                border-radius: 24px 24px 0 0;
+                border-bottom: none;
                 width: 100%;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+                animation: slideUpSheet 0.28s cubic-bezier(0.16, 1, 0.3, 1);
             }
 
             .table-wrap,

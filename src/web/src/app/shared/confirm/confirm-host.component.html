@@ -8,6 +8,7 @@
       [attr.aria-describedby]="'confirm-message'"
       (click)="$event.stopPropagation()"
     >
+      <div class="mobile-sheet-handle"></div>
       <div
         class="confirm-dialog__accent"
         [class.confirm-dialog__accent--danger]="dialog.danger"
