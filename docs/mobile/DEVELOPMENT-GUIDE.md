@@ -12,7 +12,7 @@
 
 ```bash
 docker compose up -d
-dotnet run --project src/api/FuzulTaksitTakip.Api
+dotnet run --project src/api/PayDefteri.Api
 npm start --prefix src/web
 ```
 
@@ -71,7 +71,7 @@ API URL, app sürümü ve telemetry ortam bazlı olabilir. API key, JWT signing 
 ## Yerel doğrulama
 
 ```bash
-dotnet build FuzulTaksitTakip.sln
+dotnet build PayDefteri.sln
 dotnet test
 npm test --prefix src/web -- --watch=false
 npm run build --prefix src/web -- --configuration=production

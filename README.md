@@ -20,7 +20,7 @@ docker compose up -d
 # Postgres: user/password/db = taksitle (container: taksitle-db)
 
 # 2. API (http://localhost:5096 — Swagger at /swagger)
-dotnet run --project src/api/FuzulTaksitTakip.Api
+dotnet run --project src/api/PayDefteri.Api
 
 # 3. Web (http://localhost:4200)
 npm start --prefix src/web
@@ -38,9 +38,9 @@ dosyasına yazmayın; geliştirme ortamında user-secrets kullanın:
 
 ```bash
 dotnet user-secrets set "Gemini:ApiKey" "gemini-api-key" \
-  --project src/api/FuzulTaksitTakip.Api
+  --project src/api/PayDefteri.Api
 dotnet user-secrets set "OpenAI:ApiKey" "sk-..." \
-  --project src/api/FuzulTaksitTakip.Api
+  --project src/api/PayDefteri.Api
 ```
 
 Varsayılan Gemini modeli `gemini-3.1-flash-lite` olup `Gemini:ReceiptModel` ile değiştirilebilir.
@@ -51,7 +51,7 @@ analiz sonucu yalnızca kullanıcı tarafından kontrol edilip kaydedilecek bir 
 ## Solution layout
 
 ```
-FuzulTaksitTakip.sln          # technical solution id (legacy path)
+PayDefteri.sln          # technical solution id (legacy path)
 src/api/...                   # Clean Architecture API
 src/web/                      # Angular — PayDefteri UI
 tests/
@@ -59,17 +59,17 @@ tests/
 docker-compose.yml
 ```
 
-> Product brand: **PayDefteri**. Code namespaces may still say `FuzulTaksitTakip` until a dedicated rename pass.
+> Product brand: **PayDefteri**. Code namespaces may still say `PayDefteri` until a dedicated rename pass.
 
 ## Commands
 
 | Action | Command |
 |--------|---------|
-| Build API | `dotnet build FuzulTaksitTakip.sln` |
+| Build API | `dotnet build PayDefteri.sln` |
 | Domain tests | `dotnet test` |
 | Web serve | `npm start --prefix src/web` |
 | Web build | `cd src/web && npx ng build` |
-| New migration | `dotnet ef migrations add Name -p src/api/FuzulTaksitTakip.Infrastructure -s src/api/FuzulTaksitTakip.Api -o Persistence/Migrations` |
+| New migration | `dotnet ef migrations add Name -p src/api/PayDefteri.Infrastructure -s src/api/PayDefteri.Api -o Persistence/Migrations` |
 
 ## First use
 

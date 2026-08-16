@@ -23,7 +23,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: src/api/FuzulTaksitTakip.Api/Dockerfile
+      dockerfile: src/api/PayDefteri.Api/Dockerfile
     restart: unless-stopped
     depends_on:
       postgres:

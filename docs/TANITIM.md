@@ -85,7 +85,7 @@ Dördüncü senaryo: işyeri ekip yemeği — “şunun yemeği şu kadar” mai
 | Domain | paydefteri.com (Cloudflare) |
 | E-posta | Resend SMTP (`info@paydefteri.com`) |
 
-Kod tarafında bazı namespace’ler hâlâ `FuzulTaksitTakip` (legacy); ürün markası **PayDefteri**.
+Kod tarafında bazı namespace’ler hâlâ `PayDefteri` (legacy); ürün markası **PayDefteri**.
 
 ---
 
