@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
   mobile: true,
-  apiUrl: 'https://paydefteri.com/api',
+  apiUrl: 'http://192.168.1.40:5096/api',
 };
