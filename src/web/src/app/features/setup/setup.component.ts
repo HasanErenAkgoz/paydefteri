@@ -115,10 +115,35 @@ export class SetupComponent implements OnInit {
   readonly templates = signal<TemplateListItemDto[]>([]);
   readonly previewDraft = signal<PreviewDraft | null>(null);
   readonly showInstModal = signal(false);
+  readonly activeTab = signal<'settings' | 'partners' | 'items' | 'templates'>('settings');
   readonly loading = signal(true);
   readonly busy = signal(false);
   /** Plan structure edits (name, partners, installments, templates) — owner only. */
   readonly isOwner = signal(false);
+
+  setTab(tab: 'settings' | 'partners' | 'items' | 'templates'): void {
+    this.activeTab.set(tab);
+  }
+
+  readonly setupSearch = signal('');
+
+  readonly totalSetupAmount = computed(() =>
+    this.installments().reduce((sum, i) => sum + (Number(i.totalAmount) || 0), 0)
+  );
+
+  readonly filteredSetupInstallments = computed(() => {
+    const q = this.setupSearch().trim().toLowerCase();
+    const list = this.installments();
+    if (!q) {
+      return list;
+    }
+    return list.filter((i) => {
+      const name = (i.name ?? '').toLowerCase();
+      const date = formatDateTr(i.dueDate).toLowerCase();
+      const amount = (i.totalAmount ?? 0).toString();
+      return name.includes(q) || date.includes(q) || amount.includes(q);
+    });
+  });
 
   /** Current user already claimed a partner row — hide “Bu benim” elsewhere. */
   readonly selfAlreadyLinked = computed(() => {

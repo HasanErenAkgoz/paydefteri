@@ -1,4 +1,4 @@
-<section class="profile">
+<section class="profile-page-wrapper">
   @if (loading()) {
     <div class="profile-skeleton" aria-busy="true">
       <div class="sk sk-circle"></div>
@@ -8,149 +8,367 @@
       </div>
     </div>
   } @else {
-    <div class="profile-sheet">
-      <header class="profile-head">
-        <div class="profile-avatar" aria-hidden="true">{{ initials() }}</div>
-        <div class="profile-head-text">
-          <h1>{{ savedName() || 'Profil' }}</h1>
-          <p>{{ email() }}</p>
-        </div>
-      </header>
-
-      <section class="profile-block">
-        <div class="profile-block-label">
-          <h2>Görünen ad</h2>
-          <p>Planlarda ve davetlerde bu isim görünür.</p>
-        </div>
-        <div class="profile-block-body">
-          <label class="sr-only" for="profileName">Görünen ad</label>
-          <div class="profile-inline">
-            <input
-              id="profileName"
-              class="profile-input"
-              type="text"
-              name="displayName"
-              [(ngModel)]="displayName"
-              maxlength="100"
-              autocomplete="name"
-              placeholder="Adın"
-            />
-            <button
-              type="button"
-              class="btn btn-primary profile-btn"
-              [disabled]="savingProfile()"
-              (click)="saveProfile()"
-            >
-              {{ savingProfile() ? '…' : 'Kaydet' }}
-            </button>
+    <div class="settings-hub">
+      <!-- 1. LEFT SIDEBAR: PROFILE IDENTITY & NAV -->
+      <aside class="settings-sidebar">
+        <!-- Identity Capsule -->
+        <div class="user-identity-card">
+          <div class="user-avatar-wrap">
+            <div class="user-avatar" aria-hidden="true">{{ initials() }}</div>
+            <span class="user-status-dot" title="Çevrimiçi"></span>
           </div>
-        </div>
-      </section>
-
-      <section class="profile-block">
-        <div class="profile-block-label">
-          <h2>Şifre</h2>
-          <p>Hesabını güvende tutmak için düzenli değiştir.</p>
-        </div>
-        <div class="profile-block-body profile-password">
-          <div class="form-group">
-            <label class="form-label" for="currentPassword">Mevcut şifre</label>
-            <input
-              id="currentPassword"
-              class="profile-input"
-              type="password"
-              name="currentPassword"
-              [(ngModel)]="currentPassword"
-              autocomplete="current-password"
-              placeholder="••••••••"
-            />
-          </div>
-          <div class="profile-password-grid">
-            <div class="form-group">
-              <label class="form-label" for="newPassword">Yeni şifre</label>
-              <input
-                id="newPassword"
-                class="profile-input"
-                type="password"
-                name="newPassword"
-                [(ngModel)]="newPassword"
-                autocomplete="new-password"
-                placeholder="En az 10 karakter, harf ve rakam"
-              />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="confirmPassword">Tekrar</label>
-              <input
-                id="confirmPassword"
-                class="profile-input"
-                type="password"
-                name="confirmPassword"
-                [(ngModel)]="confirmPassword"
-                autocomplete="new-password"
-                placeholder="••••••••"
-              />
+          <div class="user-meta">
+            <div class="user-name-title">{{ savedName() || 'Kullanıcı' }}</div>
+            <div class="user-email-text">{{ email() }}</div>
+            <div class="user-badge-pill">
+              <span class="badge-dot"></span>
+              <span>Doğrulanmış Hesap</span>
             </div>
           </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="settings-nav" role="tablist" aria-label="Profil ayarları sekmeleri">
           <button
             type="button"
-            class="btn btn-primary profile-btn profile-btn--wide"
-            [disabled]="savingPassword()"
-            (click)="savePassword()"
+            class="settings-nav-item"
+            [class.active]="activeTab() === 'account'"
+            (click)="activeTab.set('account')"
+            role="tab"
+            [attr.aria-selected]="activeTab() === 'account'"
           >
-            {{ savingPassword() ? 'Güncelleniyor…' : 'Şifreyi güncelle' }}
+            <span class="nav-icon">👤</span>
+            <div class="nav-text">
+              <strong>Hesap Bilgileri</strong>
+              <small>Ad ve temel bilgiler</small>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="settings-nav-item"
+            [class.active]="activeTab() === 'security'"
+            (click)="activeTab.set('security')"
+            role="tab"
+            [attr.aria-selected]="activeTab() === 'security'"
+          >
+            <span class="nav-icon">🔐</span>
+            <div class="nav-text">
+              <strong>Şifre & Güvenlik</strong>
+              <small>Şifre güncelleme</small>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="settings-nav-item"
+            [class.active]="activeTab() === 'sessions'"
+            (click)="activeTab.set('sessions')"
+            role="tab"
+            [attr.aria-selected]="activeTab() === 'sessions'"
+          >
+            <span class="nav-icon">📱</span>
+            <div class="nav-text">
+              <strong>Cihazlar & Oturum</strong>
+              <small>Aktif cihazlar ve çıkış</small>
+            </div>
+          </button>
+        </nav>
+
+        <!-- Quick Logout in Sidebar -->
+        <div class="sidebar-footer">
+          <button type="button" class="btn-sidebar-logout" (click)="logout()">
+            <span class="logout-icon">🚪</span>
+            <span>Oturumu Kapat</span>
           </button>
         </div>
-      </section>
+      </aside>
 
-      @if (isMobileApp) {
-        <section class="profile-block">
-          <div class="profile-block-label">
-            <h2>Cihaz oturumları</h2>
-            <p>Hesabının açık olduğu telefonları yönet.</p>
-          </div>
-          <div class="profile-block-body session-list">
-            @if (sessionsLoading()) {
-              <p class="session-muted">Cihazlar yükleniyor…</p>
-            } @else {
-              @for (session of mobileSessions(); track session.id) {
-                <article class="session-row">
-                  <div>
-                    <strong>{{ session.deviceName }}</strong>
-                    <span>{{ session.platform }} · {{ session.appVersion }}</span>
-                    <small>Son kullanım: {{ sessionDate(session.lastUsedAtUtc || session.createdAtUtc) }}</small>
-                  </div>
-                  @if (session.isCurrent) {
-                    <span class="session-current">Bu cihaz</span>
-                  } @else {
+      <!-- 2. RIGHT MAIN CONTENT PANEL -->
+      <main class="settings-content-pane">
+        <!-- TAB 1: ACCOUNT DETAILS -->
+        @if (activeTab() === 'account') {
+          <div class="pane-card" role="tabpanel">
+            <header class="pane-header">
+              <div>
+                <h2 class="pane-title">Hesap Bilgileri</h2>
+                <p class="pane-subtitle">PayDefteri üzerindeki görünen kimlik ve hesap detaylarınız.</p>
+              </div>
+            </header>
+
+            <div class="pane-body">
+              <!-- DISPLAY NAME ROW -->
+              <div class="settings-row">
+                <div class="row-info">
+                  <label class="row-label" for="profileName">Görünen Ad</label>
+                  <span class="row-desc">Planlarda, ortak harcamalarda ve davetlerde bu isim görünür.</span>
+                </div>
+                <div class="row-control">
+                  <div class="control-input-wrap">
+                    <input
+                      id="profileName"
+                      class="hub-input"
+                      type="text"
+                      name="displayName"
+                      [(ngModel)]="displayName"
+                      maxlength="100"
+                      autocomplete="name"
+                      placeholder="Adınız Soyadınız"
+                    />
                     <button
                       type="button"
-                      class="btn btn-danger btn-sm"
-                      [disabled]="revokingSessionId() === session.id"
-                      (click)="revokeSession(session)"
+                      class="btn-hub-save"
+                      [disabled]="savingProfile() || displayName.trim() === savedName() || !displayName.trim()"
+                      (click)="saveProfile()"
                     >
-                      {{ revokingSessionId() === session.id ? 'Kapatılıyor…' : 'Oturumu kapat' }}
+                      {{ savingProfile() ? 'Kaydediliyor…' : 'Kaydet' }}
                     </button>
-                  }
-                </article>
-              } @empty {
-                <p class="session-muted">Aktif mobil oturum bulunamadı.</p>
-              }
-            }
-          </div>
-        </section>
+                  </div>
+                </div>
+              </div>
 
-        <section class="profile-block profile-signout">
-          <div class="profile-block-label">
-            <h2>Oturum</h2>
-            <p>Bu cihazdaki PayDefteri oturumunu güvenli şekilde kapat.</p>
+              <!-- EMAIL ROW (READONLY) -->
+              <div class="settings-row">
+                <div class="row-info">
+                  <label class="row-label">E-posta Adresi</label>
+                  <span class="row-desc">Giriş yapmak ve bildirim almak için kullanılan kayıtlı adresiniz.</span>
+                </div>
+                <div class="row-control">
+                  <div class="readonly-email-box">
+                    <span class="readonly-text">{{ email() }}</span>
+                    <span class="badge-locked" title="E-posta değiştirilemez">🔒 Korumalı</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ACCOUNT STATUS ROW -->
+              <div class="settings-row">
+                <div class="row-info">
+                  <label class="row-label">Hesap Durumu</label>
+                  <span class="row-desc">PayDefteri üyelik ve yetkilendirme seviyeniz.</span>
+                </div>
+                <div class="row-control">
+                  <div class="status-summary-card">
+                    <div class="status-icon-box">🛡️</div>
+                    <div class="status-text-box">
+                      <strong>Aktif Kullanıcı</strong>
+                      <small>Tüm plan ve gider yönetimi özellikleri açık.</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="profile-block-body">
-            <button type="button" class="btn btn-danger profile-btn profile-btn--wide" (click)="logout()">
-              Oturumu kapat
-            </button>
+        }
+
+        <!-- TAB 2: PASSWORD & SECURITY -->
+        @if (activeTab() === 'security') {
+          <div class="pane-card" role="tabpanel">
+            <header class="pane-header">
+              <div>
+                <h2 class="pane-title">Şifre & Güvenlik</h2>
+                <p class="pane-subtitle">Hesabınızın güvenliği için güçlü bir şifre belirleyin.</p>
+              </div>
+            </header>
+
+            <div class="pane-body">
+              <!-- CURRENT PASSWORD -->
+              <div class="settings-row">
+                <div class="row-info">
+                  <label class="row-label" for="currentPassword">Mevcut Şifre</label>
+                  <span class="row-desc">Değişiklik yapabilmek için mevcut şifrenizi girin.</span>
+                </div>
+                <div class="row-control">
+                  <div class="password-input-wrap">
+                    <input
+                      id="currentPassword"
+                      class="hub-input"
+                      [type]="showCurrentPassword() ? 'text' : 'password'"
+                      name="currentPassword"
+                      [(ngModel)]="currentPassword"
+                      autocomplete="current-password"
+                      placeholder="Mevcut şifreniz"
+                    />
+                    <button
+                      type="button"
+                      class="btn-eye"
+                      (click)="showCurrentPassword.set(!showCurrentPassword())"
+                      [title]="showCurrentPassword() ? 'Gizle' : 'Göster'"
+                    >
+                      {{ showCurrentPassword() ? '👁️' : '👁️‍🗨️' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- NEW PASSWORD -->
+              <div class="settings-row">
+                <div class="row-info">
+                  <label class="row-label" for="newPassword">Yeni Şifre</label>
+                  <span class="row-desc">En az 10 karakter; harf ve rakam içermelidir.</span>
+                </div>
+                <div class="row-control">
+                  <div class="password-input-wrap">
+                    <input
+                      id="newPassword"
+                      class="hub-input"
+                      [type]="showNewPassword() ? 'text' : 'password'"
+                      name="newPassword"
+                      [(ngModel)]="newPassword"
+                      autocomplete="new-password"
+                      placeholder="Yeni şifreniz"
+                    />
+                    <button
+                      type="button"
+                      class="btn-eye"
+                      (click)="showNewPassword.set(!showNewPassword())"
+                      [title]="showNewPassword() ? 'Gizle' : 'Göster'"
+                    >
+                      {{ showNewPassword() ? '👁️' : '👁️‍🗨️' }}
+                    </button>
+                  </div>
+
+                  <!-- STRENGTH BAR & LIVE PILLS -->
+                  @if (newPassword) {
+                    <div class="strength-box">
+                      <div class="strength-track">
+                        <div
+                          class="strength-fill"
+                          [class.s1]="passwordStrengthScore === 1"
+                          [class.s2]="passwordStrengthScore === 2"
+                          [class.s3]="passwordStrengthScore === 3"
+                          [class.s4]="passwordStrengthScore >= 4"
+                        ></div>
+                      </div>
+                      <div class="criteria-list">
+                        <span class="crit-tag" [class.ok]="hasMinLength">
+                          {{ hasMinLength ? '✓' : '○' }} 10+ Karakter
+                        </span>
+                        <span class="crit-tag" [class.ok]="hasLetter">
+                          {{ hasLetter ? '✓' : '○' }} Harf
+                        </span>
+                        <span class="crit-tag" [class.ok]="hasNumber">
+                          {{ hasNumber ? '✓' : '○' }} Rakam
+                        </span>
+                        <span class="crit-tag" [class.ok]="passwordsMatch">
+                          {{ passwordsMatch ? '✓' : '○' }} Eşleşti
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- CONFIRM PASSWORD -->
+              <div class="settings-row">
+                <div class="row-info">
+                  <label class="row-label" for="confirmPassword">Yeni Şifre (Tekrar)</label>
+                  <span class="row-desc">Doğrulamak için yeni şifrenizi tekrar yazın.</span>
+                </div>
+                <div class="row-control">
+                  <input
+                    id="confirmPassword"
+                    class="hub-input"
+                    type="password"
+                    name="confirmPassword"
+                    [(ngModel)]="confirmPassword"
+                    autocomplete="new-password"
+                    placeholder="Şifre tekrarı"
+                  />
+                </div>
+              </div>
+
+              <!-- UPDATE BUTTON ROW -->
+              <div class="settings-row action-row">
+                <div class="row-info"></div>
+                <div class="row-control">
+                  <button
+                    type="button"
+                    class="btn-hub-primary"
+                    [disabled]="savingPassword() || !currentPassword || !hasMinLength || !hasLetter || !hasNumber || !passwordsMatch"
+                    (click)="savePassword()"
+                  >
+                    {{ savingPassword() ? 'Güncelleniyor…' : '🔐 Şifreyi Güncelle' }}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
-      }
+        }
+
+        <!-- TAB 3: SESSIONS & LOGOUT -->
+        @if (activeTab() === 'sessions') {
+          <div class="pane-card" role="tabpanel">
+            <header class="pane-header">
+              <div>
+                <h2 class="pane-title">Cihazlar & Oturum Yönetimi</h2>
+                <p class="pane-subtitle">Hesabınızın açık olduğu mobil ve web oturumlarını yönetin.</p>
+              </div>
+            </header>
+
+            <div class="pane-body">
+              @if (isMobileApp) {
+                <div class="sessions-block">
+                  <h3 class="block-section-title">📱 Aktif Mobil Cihazlar</h3>
+                  @if (sessionsLoading()) {
+                    <div class="session-loading-box">
+                      <span class="spinner-sm"></span>
+                      <span>Cihazlar listeleniyor…</span>
+                    </div>
+                  } @else {
+                    <div class="session-items-wrap">
+                      @for (session of mobileSessions(); track session.id) {
+                        <article class="hub-session-card" [class.is-current]="session.isCurrent">
+                          <div class="session-icon">
+                            {{ session.platform.toLowerCase().includes('ios') ? '🍎' : '🤖' }}
+                          </div>
+                          <div class="session-main">
+                            <div class="session-title-line">
+                              <strong>{{ session.deviceName || 'Mobil Cihaz' }}</strong>
+                              @if (session.isCurrent) {
+                                <span class="badge-online">
+                                  <span class="pulse-dot"></span>
+                                  <span>Bu Cihaz</span>
+                                </span>
+                              }
+                            </div>
+                            <div class="session-sub-line">{{ session.platform }} · Sürüm {{ session.appVersion }}</div>
+                            <small class="session-time-text">Son aktivite: {{ sessionDate(session.lastUsedAtUtc || session.createdAtUtc) }}</small>
+                          </div>
+
+                          @if (!session.isCurrent) {
+                            <button
+                              type="button"
+                              class="btn-session-revoke"
+                              [disabled]="revokingSessionId() === session.id"
+                              (click)="revokeSession(session)"
+                            >
+                              {{ revokingSessionId() === session.id ? '…' : 'Oturumu Kapat' }}
+                            </button>
+                          }
+                        </article>
+                      } @empty {
+                        <p class="session-empty-text">Kayıtlı aktif mobil oturum bulunamadı.</p>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- LOGOUT SECTION -->
+              <div class="logout-section-box">
+                <div class="logout-text-wrap">
+                  <h4>Oturumu Sonlandır</h4>
+                  <p>Bu tarayıcı veya cihazdaki PayDefteri oturumunu güvenle kapatın.</p>
+                </div>
+                <button type="button" class="btn-hub-danger" (click)="logout()">
+                  <span>Hesaptan Çıkış Yap</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </main>
     </div>
   }
 </section>

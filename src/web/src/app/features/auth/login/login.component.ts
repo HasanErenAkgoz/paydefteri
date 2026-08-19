@@ -50,7 +50,7 @@ export class LoginComponent implements OnInit {
   }
 
   submit(): void {
-    const email = this.email.trim();
+    const email = this.email.trim().toLowerCase();
     const password = this.password;
     if (!email || !password) {
       this.toast.error('E-posta ve şifre gerekli.');

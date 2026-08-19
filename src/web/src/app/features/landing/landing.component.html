@@ -9,10 +9,9 @@
   <section class="mobile-onboarding" aria-label="PayDefteri tanıtımı">
     <header class="mobile-onboarding__header">
       <span class="mobile-onboarding__brand">
-        <img src="/brand-icon.png" width="34" height="34" alt="" />
-        PayDefteri
+        <img src="/brand-icon.png" width="36" height="36" alt="" />
+        <span>PayDefteri</span>
       </span>
-      <a routerLink="/login">Giriş</a>
     </header>
 
     <div
@@ -20,48 +19,91 @@
       class="mobile-onboarding__track"
       (scroll)="onMobileOnboardingScroll($event)"
     >
+      <!-- SLIDE 1 -->
       <article class="mobile-onboarding__slide">
-        <span class="mobile-onboarding__eyebrow">Ortak planlar artık net</span>
-        <img class="mobile-onboarding__hero-mark" src="/brand-icon.png" width="84" height="84" alt="" />
-        <h1>Ortak plan,<br />tek defter</h1>
-        <p>Kim ödedi, kalan pay ne, teslimata kaç gün? Tüm taksit ve giderleri tek ekranda takip edin.</p>
-        <figure class="mobile-onboarding__preview" aria-hidden="true">
-          <img src="/landing/hero-dashboard.png" width="1600" height="1000" alt="" />
-        </figure>
+        <span class="mobile-onboarding__eyebrow">✦ ORTAK TASARRUF & FİNANSMAN</span>
+        <h1>Ortak Plan,<br /><span class="gradient-accent">Tek Defter</span></h1>
+        
+        <div class="onboard-mockup-card">
+          <div class="mockup-header">
+            <div class="mockup-user">
+              <span class="mockup-avatar">🏠</span>
+              <div>
+                <strong>120 Aylık Konut Planı</strong>
+                <small>Eren &amp; Yusuf Ortaklığı</small>
+              </div>
+            </div>
+            <span class="mockup-badge">Aktif Plan</span>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-stat">
+              <small>Benim Kalan Payım</small>
+              <b>₺14.250</b>
+            </div>
+            <div class="mockup-stat">
+              <small>Teslimat Vadesi</small>
+              <b style="color: #34d399">4 Ay Kaldı</b>
+            </div>
+          </div>
+          <div class="mockup-pill-row">
+            <span class="mockup-pill checked">✓ Eren Ödedi</span>
+            <span class="mockup-pill checked">✓ Yusuf Ödedi</span>
+          </div>
+        </div>
+
+        <p class="mobile-onboarding__desc">FuzulEv, Eminevim, araç/konut kredileri ve ortak borçlarda kimin ne kadar ödediğini anında görün.</p>
         <span class="mobile-onboarding__swipe">Devam etmek için yana kaydır <span aria-hidden="true">→</span></span>
       </article>
 
+      <!-- SLIDE 2 -->
       <article class="mobile-onboarding__slide">
-        <span class="mobile-onboarding__slide-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3ZM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Z" />
-            <path d="M2.5 19c.6-2.4 2.5-3.8 5.5-3.8S13 16.6 13.5 19" />
-            <path d="M14 15.2c1.6-.4 3.2.1 4.5 1.3" />
-          </svg>
-        </span>
-        <span class="mobile-onboarding__eyebrow">Herkes aynı ekranda</span>
-        <h2>“Sen ödedin mi?”<br />sorusu geride kalsın</h2>
-        <div class="mobile-onboarding__benefits">
-          <div><b>✓</b><span><strong>Ortak taksit takibi</strong>Ödenen, kalan ve ortak payı anında görün.</span></div>
-          <div><b>✓</b><span><strong>Gider ve mahsuplaşma</strong>Kim ödedi, kim borçlu otomatik hesaplansın.</span></div>
-          <div><b>✓</b><span><strong>Vade hatırlatmaları</strong>Yaklaşan ödeme ve teslimatları kaçırmayın.</span></div>
+        <span class="mobile-onboarding__eyebrow">✦ KARIŞIKLIĞA SON</span>
+        <h2>“Sen Ödedin mi?”<br /><span class="gradient-accent">Sorusu Bitti</span></h2>
+
+        <div class="onboard-mockup-card">
+          <div class="mockup-settle">
+            <div class="mockup-settle-icon">🔄</div>
+            <div>
+              <small>Otomatik Mahsuplaşma</small>
+              <strong style="color: #fbbf24">Eren ➔ Yusuf'a ₺4.500 Borçlu</strong>
+            </div>
+          </div>
+          <div class="mockup-expense-list">
+            <div class="mockup-expense-row">
+              <span>🛒 Market &amp; Mutfak</span>
+              <b>₺1.850 (%50 Pay)</b>
+            </div>
+            <div class="mockup-expense-row">
+              <span>⚡ Ortak Fatura</span>
+              <b>₺920 (%50 Pay)</b>
+            </div>
+          </div>
         </div>
+
+        <p class="mobile-onboarding__desc">Ortak harcamalarınızı tek tuşla bölüşün; kimin kime ne kadar borçlu olduğunu sistem otomatik dengeleyip sıfırlasın.</p>
       </article>
 
+      <!-- SLIDE 3 -->
       <article class="mobile-onboarding__slide">
-        <span class="mobile-onboarding__slide-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M5 12.5 9.2 17 19 7" />
-          </svg>
-        </span>
-        <span class="mobile-onboarding__eyebrow">Hemen başlayın</span>
-        <h2>Üç adımda<br />ortak planınız hazır</h2>
+        <span class="mobile-onboarding__eyebrow">✦ 30 SANİYEDE HAZIR</span>
+        <h2>Dakikalar İçinde<br /><span class="gradient-accent">Planınızı Başlatın</span></h2>
+
         <ol class="mobile-onboarding__steps">
-          <li><b>1</b><span><strong>Hesabınızı oluşturun</strong>Ücretsiz kaydolun.</span></li>
-          <li><b>2</b><span><strong>Planınızı kurun</strong>Şablon seçin veya dosyanızı yükleyin.</span></li>
-          <li><b>3</b><span><strong>Ortakları davet edin</strong>Aynı defterde birlikte takip edin.</span></li>
+          <li>
+            <b class="step-num">1</b>
+            <span><strong>Ücretsiz Kaydolun</strong>Email veya Google ile anında başlayın.</span>
+          </li>
+          <li>
+            <b class="step-num">2</b>
+            <span><strong>Planınızı Kurun</strong>Hazır şablon seçin veya PDF/Excel yükleyin.</span>
+          </li>
+          <li>
+            <b class="step-num">3</b>
+            <span><strong>Ortağınızı Davet Edin</strong>Tüm süreci aynı şeffaf defterde birlikte yönetin.</span>
+          </li>
         </ol>
-        <p class="mobile-onboarding__final-note">Fişten otomatik gider ekleme dahil tüm özellikler cebinizde.</p>
+
+        <p class="mobile-onboarding__final-note">📸 Fiş tarama ve akıllı OCR özelliği dahildir.</p>
       </article>
     </div>
 
@@ -79,15 +121,27 @@
       </div>
 
       @if (mobileSlide() < 2) {
-        <button
-          type="button"
-          class="mobile-onboarding__next"
-          (click)="showMobileSlide(mobileTrack, mobileSlide() + 1)"
-        >
-          İleri <span aria-hidden="true">→</span>
-        </button>
+        <div class="mobile-onboarding__btn-group">
+          <a routerLink="/login" class="mobile-onboarding__btn-secondary">
+            Giriş Yap
+          </a>
+          <button
+            type="button"
+            class="mobile-onboarding__btn-primary"
+            (click)="showMobileSlide(mobileTrack, mobileSlide() + 1)"
+          >
+            İleri <span aria-hidden="true">→</span>
+          </button>
+        </div>
       } @else {
-        <a class="mobile-onboarding__start" routerLink="/register">Ücretsiz başla</a>
+        <div class="mobile-onboarding__btn-stack">
+          <a class="mobile-onboarding__btn-primary full-width" routerLink="/register">
+            ✨ Ücretsiz Hesap Aç
+          </a>
+          <a class="mobile-onboarding__login-subtext" routerLink="/login">
+            Zaten hesabınız var mı? <strong>Giriş Yapın →</strong>
+          </a>
+        </div>
       }
     </footer>
   </section>

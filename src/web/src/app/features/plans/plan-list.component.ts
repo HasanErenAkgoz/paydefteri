@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
-import { PlanDto, PlanExportDto, PlanInviteDto, PlanType, TemplateListItemDto } from '../../core/models/api.models';
+import { PlanDto, PlanExportDto, PlanInviteDto, PlanTemplatePreviewDto, PlanType, TemplateListItemDto } from '../../core/models/api.models';
 import { MembershipApi } from '../../core/services/membership.api';
 import { PlanContextService } from '../../core/services/plan-context.service';
 import { PlansApi } from '../../core/services/plans.api';
@@ -12,11 +12,12 @@ import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmService } from '../../shared/confirm/confirm.service';
 import { formatDateTr } from '../../shared/utils/format';
 import { IconTrashComponent } from '../../shared/icons/icon-trash.component';
+import { CurrencyTryPipe } from '../../shared/pipes/currency-try.pipe';
 
 @Component({
   selector: 'app-plan-list',
   standalone: true,
-  imports: [FormsModule, RouterLink, IconTrashComponent],
+  imports: [FormsModule, RouterLink, IconTrashComponent, CurrencyTryPipe],
   templateUrl: './plan-list.component.html',
   styleUrl: './plan-list.component.scss',
 })
@@ -41,6 +42,11 @@ export class PlanListComponent implements OnInit {
   readonly showCustomForm = signal(false);
   readonly manageMode = signal(false);
   readonly showArchived = signal(false);
+  readonly activeTab = signal<'my-plans' | 'templates' | 'import' | 'blank' | 'invites' | 'archived'>('my-plans');
+  readonly planSearch = signal('');
+
+  readonly previewModal = signal<PlanTemplatePreviewDto | null>(null);
+  readonly previewKey = signal<string>('');
 
   newTitle = '';
   newDescription = '';
@@ -49,9 +55,27 @@ export class PlanListComponent implements OnInit {
   isExpensePlan = isExpensePlan;
   planHomeCommands = planHomeCommands;
 
+  setTab(tab: 'my-plans' | 'templates' | 'import' | 'blank' | 'invites' | 'archived'): void {
+    this.activeTab.set(tab);
+  }
+
   readonly sortedPlans = computed(() =>
     [...this.plans()].sort((a, b) => String(b.createdAtUtc).localeCompare(String(a.createdAtUtc)))
   );
+
+  readonly filteredPlans = computed(() => {
+    const q = this.planSearch().trim().toLowerCase();
+    const list = this.sortedPlans();
+    if (!q) {
+      return list;
+    }
+    return list.filter((p) => {
+      const title = (p.title ?? '').toLowerCase();
+      const desc = (p.description ?? '').toLowerCase();
+      const type = isExpensePlan(p) ? 'gider' : 'taksit';
+      return title.includes(q) || desc.includes(q) || type.includes(q);
+    });
+  });
 
   ngOnInit(): void {
     // Keep last planId so navbar tabs stay available while managing plans.
@@ -232,44 +256,50 @@ export class PlanListComponent implements OnInit {
   }
 
   previewExpenseSample(key: 'couple' | 'trip' | 'teamlunch'): void {
+    this.previewTemplate(key);
+  }
+
+  previewTemplate(key: string): void {
     this.creating.set(true);
     this.templatesApi.preview(key).subscribe({
-      next: async (dto) => {
+      next: (dto) => {
         this.creating.set(false);
-        const partners = (dto.partners ?? []).map((p) => p.name).join(', ') || 'Ortaklar';
-        const items = (dto.installments ?? [])
-          .slice(0, 5)
-          .map((r) => `• ${r.name}`)
-          .join('\n');
-        const more =
-          (dto.installments?.length ?? 0) > 5
-            ? `\n… +${(dto.installments?.length ?? 0) - 5} kalem daha`
-            : '';
-        if (
-          !(await this.confirm.ask({
-            title: dto.title || 'Örnek gider planı',
-            message: `${dto.description}\n\nOrtaklar: ${partners}\n\n${items}${more}\n\nBu önizlemeyle yeni gider planı açılsın mı?`,
-            confirmLabel: 'Örnekle aç',
-            success: true,
-          }))
-        ) {
-          return;
-        }
-        this.createExpenseSample(key, {
-          title: dto.title,
-          description: dto.description,
-          partners: (dto.partners ?? []).map((p) => ({
-            name: p.name,
-            color: p.color,
-            defaultPct: Number(p.defaultPct) || 0,
-          })),
-        });
+        this.previewKey.set(key);
+        this.previewModal.set(dto);
       },
       error: (err) => {
         this.creating.set(false);
         this.toast.error(err?.error?.detail ?? 'Önizleme yüklenemedi.');
       },
     });
+  }
+
+  closePreviewModal(): void {
+    this.previewModal.set(null);
+    this.previewKey.set('');
+  }
+
+  confirmAndCreateFromPreview(): void {
+    const pt = this.previewModal();
+    const key = this.previewKey();
+    if (!pt || !key) {
+      return;
+    }
+    this.closePreviewModal();
+
+    if (key === 'couple' || key === 'trip' || key === 'teamlunch') {
+      this.createExpenseSample(key as 'couple' | 'trip' | 'teamlunch', {
+        title: pt.title,
+        description: pt.description,
+        partners: (pt.partners ?? []).map((p) => ({
+          name: p.name,
+          color: p.color,
+          defaultPct: Number(p.defaultPct) || 0,
+        })),
+      });
+    } else {
+      this.createFromTemplate(key);
+    }
   }
 
   createCoupleExpenseSample(seedBody?: {

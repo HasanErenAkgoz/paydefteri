@@ -2,101 +2,848 @@
   display: block;
 }
 
-.add-expense-card {
-  margin-bottom: 16px;
+.expense-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 2px;
 }
 
-.form-header {
+/* 1. AI RECEIPT SCANNER BAR */
+.receipt-scan-bar {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 12px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(16, 185, 129, 0.07);
+  border: 1px dashed rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
 }
 
-.receipt-help {
-  margin: 4px 0 0;
-  font-size: 0.8rem;
+.receipt-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.receipt-button {
+.scan-icon {
+  font-size: 0.95rem;
+}
+
+.scan-text {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #a7f3d0;
+}
+
+.receipt-bar-actions {
+  display: flex;
+  gap: 6px;
+
+  @media (max-width: 500px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.btn-scan-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 4px 10px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
+  transition: all 0.15s ease;
+
+  input[type="file"] {
+    display: none;
+  }
+
+  &:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #ffffff;
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
 }
 
-.receipt-actions {
+/* RECEIPT ALERT BADGE */
+.receipt-alert-badge {
   display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 10px;
+  color: #a7f3d0;
+
+  &.warning {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fde68a;
+  }
+
+  .alert-icon {
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+
+  .alert-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .alert-msg {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .alert-sub {
+    font-size: 0.72rem;
+    opacity: 0.85;
+  }
+}
+
+/* 2. HERO FINANCIAL INPUT CARD */
+.hero-amount-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   gap: 8px;
 }
 
-.camera-button {
-  display: none;
+.amount-input-wrapper {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
 }
 
-.receipt-button.disabled {
-  cursor: wait;
-  opacity: 0.65;
+.amount-currency-symbol {
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: #10b981;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
 }
 
-.receipt-button input {
-  display: none;
+.hero-amount-input {
+  background: transparent;
+  border: none;
+  color: #f1f5f9;
+  font-family: inherit;
+  font-size: 1.85rem;
+  font-weight: 900;
+  text-align: left;
+  letter-spacing: -0.02em;
+  width: 175px;
+  outline: none;
+  padding: 0;
+
+  &::placeholder {
+    color: rgba(148, 163, 184, 0.4);
+  }
+
+  /* Remove spin buttons */
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
 }
 
-.receipt-review {
+.hero-name-wrapper {
+  width: 100%;
+}
+
+.hero-name-input {
+  width: 100%;
+  padding: 6px 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  }
+
+  &::placeholder {
+    color: #64748b;
+    font-weight: 500;
+  }
+}
+
+/* Category chips horizontal reel */
+.category-chips-strip {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  overflow-x: auto;
+  padding: 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.cat-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 100px;
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  .cat-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: rgba(51, 65, 85, 0.8);
+    color: #ffffff;
+  }
+
+  &.active {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.6);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  }
+}
+
+/* 4 & 5. 2-COLUMN ROW FOR SHARE AND PAYMENT MODE */
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  @media (max-width: 540px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-section-card {
+  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-card-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+/* Segmented button strips */
+.share-segmented-group,
+.payment-mode-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  background: rgba(30, 41, 59, 0.5);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+
+  @media (max-width: 420px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.payment-mode-group {
+  grid-template-columns: 1fr 1fr;
+}
+
+.share-seg-btn,
+.payment-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 4px 6px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  white-space: nowrap;
+
+  &:hover {
+    color: #e2e8f0;
+  }
+
+  &.active {
+    background: #1e293b;
+    color: #38bdf8;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+}
+
+.payment-mode-btn.active {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+/* Sole partner chips */
+.sole-partner-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.sole-hint {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.sole-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 6px;
+}
+
+.sole-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  padding: 4px 8px;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1.5px solid rgba(148, 163, 184, 0.15);
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.active {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: #10b981;
+    color: #ffffff;
+  }
+
+  .sole-check {
+    font-weight: 900;
+    color: #34d399;
+  }
+}
+
+/* Installment Stepper */
+.installment-stepper-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+}
+
+.stepper-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #1e293b;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+.stepper-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 46px;
+
+  strong {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #f1f5f9;
+    line-height: 1;
+  }
+
+  small {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #94a3b8;
+  }
+}
+
+.installment-preview-pill {
+  padding: 4px 8px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 7px;
+  font-size: 0.75rem;
+  color: #6ee7b7;
+  text-align: right;
+
+  strong {
+    color: #ffffff;
+  }
+
+  @media (max-width: 480px) {
+    text-align: center;
+  }
+}
+
+/* 6. DETAILS GRID (Date, Status, Note) */
+.form-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  border-radius: 10px;
-  background: rgba(52, 211, 153, 0.09);
-  color: #a7f3d0;
+
+  &.span-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.field-input {
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 10px;
   font-size: 0.82rem;
+  border-radius: 10px;
 }
 
-.receipt-review.warning {
-  border-color: rgba(251, 191, 36, 0.35);
-  background: rgba(251, 191, 36, 0.09);
-  color: #fde68a;
+/* 7. STICKY THUMB ACTION FOOTER */
+.form-sticky-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+
+  .btn {
+    min-height: 44px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    border-radius: 12px;
+  }
+
+  .btn-cancel-modal {
+    flex: 0 0 90px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(51, 65, 85, 0.9);
+      color: #ffffff;
+    }
+  }
+
+  .btn-save-modal {
+    flex: 1 1 auto;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: 1px solid #34d399;
+    color: #ffffff;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+/* 4 & 5. FORM SECTION CARDS (Share, Payment Mode) */
+.form-section-card {
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
-.form-actions {
+.section-card-header {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-card-title {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+/* Segmented button strips */
+.share-segmented-group,
+.payment-mode-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  background: rgba(30, 41, 59, 0.5);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.payment-mode-group {
+  grid-template-columns: 1fr 1fr;
+}
+
+.share-seg-btn,
+.payment-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-align: center;
+  white-space: nowrap;
+
+  &:hover {
+    color: #e2e8f0;
+  }
+
+  &.active {
+    background: #1e293b;
+    color: #38bdf8;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+}
+
+.payment-mode-btn.active {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+/* Sole partner chips */
+.sole-partner-chips {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
 }
 
-@media (max-width: 640px) {
-  .form-header {
+.sole-hint {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.sole-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.sole-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 42px;
+  padding: 8px 12px;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1.5px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &.active {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: #10b981;
+    color: #ffffff;
+  }
+
+  .sole-check {
+    font-weight: 900;
+    color: #34d399;
+  }
+}
+
+/* Installment Stepper */
+.installment-stepper-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 12px;
+
+  @media (max-width: 480px) {
     flex-direction: column;
-  }
-
-  .receipt-button {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .receipt-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
-  }
-
-  .camera-button {
-    display: flex;
+    align-items: stretch;
+    gap: 10px;
   }
 }
 
-@media (max-width: 420px) {
-  .receipt-actions {
+.stepper-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stepper-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #1e293b;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+.stepper-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+
+  strong {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #f1f5f9;
+    line-height: 1;
+  }
+
+  small {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94a3b8;
+  }
+}
+
+.installment-preview-pill {
+  padding: 6px 12px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #6ee7b7;
+  text-align: right;
+
+  strong {
+    color: #ffffff;
+  }
+
+  @media (max-width: 480px) {
+    text-align: center;
+  }
+}
+
+/* 6. DETAILS GRID (Date, Status, Note) */
+.form-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @media (max-width: 520px) {
     grid-template-columns: 1fr;
+  }
+}
+
+.field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &.span-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.field-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 0.86rem;
+}
+
+/* 7. STICKY THUMB ACTION FOOTER */
+.form-sticky-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+
+  .btn {
+    min-height: 50px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    border-radius: 14px;
+  }
+
+  .btn-cancel-modal {
+    flex: 0 0 100px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(51, 65, 85, 0.9);
+      color: #ffffff;
+    }
+  }
+
+  .btn-save-modal {
+    flex: 1 1 auto;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: 1px solid #34d399;
+    color: #ffffff;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+
+    &:active {
+      transform: scale(0.98);
+    }
   }
 }

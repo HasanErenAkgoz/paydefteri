@@ -3,56 +3,180 @@
 } @else {
   @if (board(); as b) {
     <section class="expense-page view-section active">
-      <app-expense-overview
-        [planTitle]="b.plan.title" [isOwner]="isOwner()" [isAddFormVisible]="showAddForm()"
-        [paidTotal]="paidTotal()" [paidCount]="paidCount()" [plannedTotal]="plannedTotal()" [plannedCount]="plannedCount()"
-        [recurrenceCount]="b.recurrences.length" [transferCount]="b.transfers.length" [balances]="b.balances"
-        (toggleAddForm)="toggleAddForm()" />
+      <!-- Header with Summary & Add CTA -->
+      <header class="expense-hero">
+        <div class="expense-hero-copy">
+          <p class="eyebrow">🧾 Ortak Gider Defteri</p>
+          <h1>{{ b.plan.title }}</h1>
+          <p class="muted">{{ paidTotal() | tryCurrency }} ödendi · {{ plannedTotal() | tryCurrency }} planlandı</p>
+        </div>
+        <div class="expense-hero-actions">
+          <button type="button" class="btn btn-primary btn-add-hero" (click)="openAddModal()">
+            ➕ Gider Ekle
+          </button>
+        </div>
+      </header>
 
-      @if (showAddForm()) {
-        <app-expense-add-form
-          id="expense-add-form"
-          [categories]="b.categories"
-          [partners]="partnerOptions()"
-          [saving]="saving()"
-          [analyzingReceipt]="analyzingReceipt()"
-          [receiptDraft]="receiptDraft()"
-          (save)="addExpense($event)"
-          (receiptSelected)="analyzeReceipt($event)"
-          (formCancelled)="closeAddForm()"
-          (validationError)="showAddFormError($event)"
-        />
+      <!-- Segmented Navigation: 3 Focused Tabs -->
+      <div class="expense-tabs-nav" role="tablist" aria-label="Gider sekmeleri">
+        <button
+          type="button"
+          class="expense-tab-btn"
+          [class.active]="activeTab() === 'list'"
+          (click)="setTab('list')"
+          role="tab"
+          [attr.aria-selected]="activeTab() === 'list'"
+        >
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span>Giderler</span>
+          <span class="tab-badge">{{ (b.expenses?.length || 0) }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="expense-tab-btn"
+          [class.active]="activeTab() === 'summary'"
+          (click)="setTab('summary')"
+          role="tab"
+          [attr.aria-selected]="activeTab() === 'summary'"
+        >
+          <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Özet &amp; Bakiyeler</span>
+        </button>
+
+        <button
+          type="button"
+          class="expense-tab-btn"
+          [class.active]="activeTab() === 'transfers'"
+          (click)="setTab('transfers')"
+          role="tab"
+          [attr.aria-selected]="activeTab() === 'transfers'"
+        >
+          <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          <span>Mahsup &amp; Transfer</span>
+          @if (b.transfers?.length) {
+            <span class="tab-badge">{{ b.transfers.length }}</span>
+          }
+        </button>
+      </div>
+
+      <!-- TAB 1: GİDERLER LİSTESİ -->
+      @if (activeTab() === 'list') {
+        <div class="card track-card">
+          <app-expense-list-controls
+            [isOwner]="isOwner()"
+            [filter]="filter()"
+            [page]="expensePage()"
+            [pageCount]="expensePageCount"
+            [totalCount]="expenseTotalCount()"
+            [pageSize]="expensePageSize"
+            (filterChange)="setFilter($event)"
+            (pageChange)="changeExpensePage($event)"
+          />
+          <app-expense-list
+            [expenses]="sortedExpenses()"
+            [partners]="partnerOptions()"
+            [markingId]="markingId()"
+            (markPaid)="markPaidFromAction($event)"
+            (edit)="openEdit($event)"
+            (remove)="removeExpense($event.id, $event.name)"
+          />
+        </div>
       }
 
-      <app-expense-transfer-panel
-        [partners]="partnerOptions()"
-        [transfers]="b.transfers"
-        [isOwner]="isOwner()"
-        [hasOpenBalance]="hasOpenBalance()"
-        [saving]="saving()"
-        [initialFromPartnerId]="fromPartnerId"
-        [initialToPartnerId]="toPartnerId"
-        [initialAmount]="transferAmount"
-        (add)="addTransfer($event)"
-        (remove)="removeTransfer($event)"
-      />
+      <!-- TAB 2: ÖZET & BAKİYELER -->
+      @if (activeTab() === 'summary') {
+        <div class="card">
+          <div class="card-title">📊 Harcama &amp; Bakiye Durumu</div>
+          <div class="highlights">
+            <div class="hl-card">
+              <span class="hl-label">Ödenen</span>
+              <strong style="color: #34d399">{{ paidTotal() | tryCurrency }}</strong>
+              <small>{{ paidCount() }} kayıt</small>
+            </div>
+            <div class="hl-card">
+              <span class="hl-label">Planlanan</span>
+              <strong>{{ plannedTotal() | tryCurrency }}</strong>
+              <small>{{ plannedCount() }} kayıt</small>
+            </div>
+            <div class="hl-card">
+              <span class="hl-label">Tekrarlayan</span>
+              <strong>{{ b.recurrences.length }}</strong>
+              <small>aktif şablon</small>
+            </div>
+            <div class="hl-card">
+              <span class="hl-label">Transfer</span>
+              <strong>{{ b.transfers.length }}</strong>
+              <small>mahsup kaydı</small>
+            </div>
+          </div>
 
-      <div class="card track-card">
-        <app-expense-list-controls [isOwner]="isOwner()" [filter]="filter()" [page]="expensePage()" [pageCount]="expensePageCount" [totalCount]="expenseTotalCount()" [pageSize]="expensePageSize" (filterChange)="setFilter($event)" (pageChange)="changeExpensePage($event)" />
-        <app-expense-list
-          [expenses]="sortedExpenses()"
+          <div class="balance-section-title" style="margin: 18px 0 8px; font-weight: 700; font-size: 0.9rem">
+            <span>👥 Ortaklar &amp; Net Bakiye</span>
+          </div>
+
+          <div class="balance-grid">
+            @for (row of b.balances; track row.partnerId) {
+              <div class="balance-card" [class.is-credit]="row.balance > 0.005" [class.is-debt]="row.balance < -0.005">
+                <span class="dot" [style.background]="row.color"></span>
+                <div>
+                  <strong>{{ row.partnerName }}</strong>
+                  <small>{{ balanceHint(row.balance) }}</small>
+                </div>
+                <b>{{ row.balance | tryCurrency }}</b>
+              </div>
+            } @empty {
+              <p class="muted">Net bakiye için Kurulum’dan en az 2 ortak ekleyin.</p>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- TAB 3: MAHSUP & TRANSFER -->
+      @if (activeTab() === 'transfers') {
+        <app-expense-transfer-panel
           [partners]="partnerOptions()"
-          [markingId]="markingId()"
-          (markPaid)="markPaidFromAction($event)"
-          (edit)="openEdit($event)"
-          (remove)="removeExpense($event.id, $event.name)"
+          [transfers]="b.transfers"
+          [isOwner]="isOwner()"
+          [hasOpenBalance]="hasOpenBalance()"
+          [saving]="saving()"
+          [initialFromPartnerId]="fromPartnerId"
+          [initialToPartnerId]="toPartnerId"
+          [initialAmount]="transferAmount"
+          (add)="addTransfer($event)"
+          (remove)="removeTransfer($event)"
         />
-      </div>
+      }
 
       <p class="muted setup-hint">
         Tekrarlayan şablon ve kategorileri
         <a [routerLink]="['/plans', planId, 'setup']">Kurulum</a> sekmesinden yönetin.
       </p>
+
+      <!-- DEDICATED ADD EXPENSE MODAL DIALOG -->
+      @if (showAddForm()) {
+        <div class="modal-overlay active" (click)="closeAddForm()">
+          <div class="modal-content expense-add-modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="expense-add-modal-title">
+            <div class="mobile-sheet-handle"></div>
+            <div class="modal-header" style="margin-bottom: 8px">
+              <h3 class="modal-title" id="expense-add-modal-title">➕ Yeni Gider Ekle</h3>
+              <button type="button" class="close-btn" aria-label="Kapat" (click)="closeAddForm()">✕</button>
+            </div>
+            <app-expense-add-form
+              id="expense-add-form"
+              [categories]="b.categories"
+              [partners]="partnerOptions()"
+              [saving]="saving()"
+              [analyzingReceipt]="analyzingReceipt()"
+              [receiptDraft]="receiptDraft()"
+              (save)="addExpense($event)"
+              (receiptSelected)="analyzeReceipt($event)"
+              (formCancelled)="closeAddForm()"
+              (validationError)="showAddFormError($event)"
+            />
+          </div>
+        </div>
+      }
     </section>
   }
 }

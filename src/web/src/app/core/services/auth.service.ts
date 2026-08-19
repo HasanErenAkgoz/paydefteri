@@ -1,9 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { map, Observable, switchMap, tap } from 'rxjs';
+import { catchError, from, map, Observable, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { UserProfileDto } from '../models/api.models';
+import { LoginResult, UserProfileDto } from '../models/api.models';
 import { MobileSessionService } from './mobile-session.service';
 import { MobileSessionDto } from '../models/mobile-auth.models';
 
@@ -21,7 +21,30 @@ export class AuthService {
     if (this.mobileSession.enabled) {
       return this.mobileSession.login(email, password).pipe(
         tap((result) => this.profileSignal.set(result.user)),
-        map((result) => result.user)
+        map((result) => result.user),
+        catchError(() =>
+          this.http.post<LoginResult>(`${environment.apiUrl}/auth/login`, { email, password }).pipe(
+            switchMap((res) => {
+              if (res?.accessToken) {
+                return this.mobileSession
+                  .accept({
+                    accessToken: res.accessToken,
+                    accessTokenExpiresAt: new Date(res.expiresAt).toISOString(),
+                    refreshToken: res.accessToken,
+                    refreshTokenExpiresAt: new Date(res.expiresAt).toISOString(),
+                    sessionId: 'web-fallback',
+                    user: {
+                      userId: '',
+                      email,
+                      displayName: email.split('@')[0],
+                    },
+                  })
+                  .pipe(switchMap(() => this.me()));
+              }
+              return this.me();
+            })
+          )
+        )
       );
     }
 
@@ -35,7 +58,36 @@ export class AuthService {
     if (this.mobileSession.enabled) {
       return this.mobileSession.register(email, password, displayName).pipe(
         tap((result) => this.profileSignal.set(result.user)),
-        map((result) => result.user)
+        map((result) => result.user),
+        catchError(() =>
+          this.http
+            .post<LoginResult>(`${environment.apiUrl}/auth/register`, {
+              email,
+              password,
+              displayName,
+            })
+            .pipe(
+              switchMap((res) => {
+                if (res?.accessToken) {
+                  return this.mobileSession
+                    .accept({
+                      accessToken: res.accessToken,
+                      accessTokenExpiresAt: new Date(res.expiresAt).toISOString(),
+                      refreshToken: res.accessToken,
+                      refreshTokenExpiresAt: new Date(res.expiresAt).toISOString(),
+                      sessionId: 'web-fallback',
+                      user: {
+                        userId: '',
+                        email,
+                        displayName,
+                      },
+                    })
+                    .pipe(switchMap(() => this.me()));
+                }
+                return this.me();
+              })
+            )
+        )
       );
     }
 

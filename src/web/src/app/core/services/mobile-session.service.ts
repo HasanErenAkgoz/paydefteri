@@ -118,15 +118,21 @@ export class MobileSessionService {
     this.accessTokenSignal.set(null);
     this.sessionIdSignal.set(null);
     this.memoryRefreshToken = null;
-    if (this.platform.isNative) {
-      await Promise.all([
-        SecureStorage.remove(REFRESH_TOKEN_KEY),
-        SecureStorage.remove(SESSION_ID_KEY),
-      ]);
+    try {
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.removeItem(SESSION_ID_KEY);
+      if (this.platform.isNative) {
+        await Promise.all([
+          SecureStorage.remove(REFRESH_TOKEN_KEY),
+          SecureStorage.remove(SESSION_ID_KEY),
+        ]);
+      }
+    } catch {
+      // Ignore cleanup errors
     }
   }
 
-  private accept(result: MobileAuthResult): Observable<MobileAuthResult> {
+  accept(result: MobileAuthResult): Observable<MobileAuthResult> {
     return from(this.persist(result)).pipe(map(() => result));
   }
 
@@ -134,33 +140,50 @@ export class MobileSessionService {
     this.accessTokenSignal.set(result.accessToken);
     this.sessionIdSignal.set(result.sessionId);
     this.memoryRefreshToken = result.refreshToken;
-    if (this.platform.isNative) {
-      await SecureStorage.set(REFRESH_TOKEN_KEY, result.refreshToken);
-      await SecureStorage.set(SESSION_ID_KEY, result.sessionId);
+    try {
+      localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken);
+      localStorage.setItem(SESSION_ID_KEY, result.sessionId);
+      if (this.platform.isNative) {
+        await SecureStorage.set(REFRESH_TOKEN_KEY, result.refreshToken);
+        await SecureStorage.set(SESSION_ID_KEY, result.sessionId);
+      }
+    } catch {
+      localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken);
+      localStorage.setItem(SESSION_ID_KEY, result.sessionId);
     }
   }
 
   private async readRefreshToken(): Promise<string | null> {
     if (!this.platform.isNative) {
-      return this.memoryRefreshToken;
+      return this.memoryRefreshToken || localStorage.getItem(REFRESH_TOKEN_KEY);
     }
 
-    const value = await SecureStorage.get(REFRESH_TOKEN_KEY, false);
-    const sessionId = await SecureStorage.get(SESSION_ID_KEY, false);
-    this.sessionIdSignal.set(typeof sessionId === 'string' ? sessionId : null);
-    return typeof value === 'string' ? value : null;
+    try {
+      const value = await SecureStorage.get(REFRESH_TOKEN_KEY, false);
+      const sessionId = await SecureStorage.get(SESSION_ID_KEY, false);
+      this.sessionIdSignal.set(typeof sessionId === 'string' ? sessionId : null);
+      if (typeof value === 'string' && value) {
+        return value;
+      }
+    } catch {
+      // Fallback below
+    }
+    return this.memoryRefreshToken || localStorage.getItem(REFRESH_TOKEN_KEY);
   }
 
   private async deviceInfo(): Promise<MobileDeviceInfo> {
-    if (!this.platform.isNative) {
-      return { deviceName: 'Web geliştirme', platform: 'web', appVersion: 'dev' };
+    try {
+      if (this.platform.isNative) {
+        const app = await App.getInfo();
+        return {
+          deviceName: this.platform.platform === 'ios' ? 'iPhone / iPad' : 'Android Cihaz',
+          platform: this.platform.platform || 'android',
+          appVersion: app?.version || '1.0.0',
+        };
+      }
+    } catch {
+      // Fallback if App.getInfo fails on native
     }
-
-    const app = await App.getInfo();
-    return {
-      deviceName: this.platform.platform === 'ios' ? 'iPhone / iPad' : 'Android cihaz',
-      platform: this.platform.platform,
-      appVersion: app.version,
-    };
+    return { deviceName: 'Android Cihaz', platform: 'android', appVersion: '1.0.0' };
   }
 }

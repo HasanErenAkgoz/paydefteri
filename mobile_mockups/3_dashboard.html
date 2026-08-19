@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Takip Defteri - PayDefteri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-oled: #090d16;
+      --bg-surface: #111827;
+      --bg-card: #131b2e;
+      --bg-card-subtle: rgba(19, 27, 46, 0.7);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --accent: #8b5cf6;
+      --success: #10b981;
+      --success-soft: rgba(16, 185, 129, 0.15);
+      --warning: #f59e0b;
+      --warning-soft: rgba(245, 158, 11, 0.15);
+      --danger: #ef4444;
+      --border-color: rgba(99, 102, 241, 0.18);
+      --border-focus: rgba(129, 140, 248, 0.5);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: var(--bg-oled);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 90px;
+    }
+
+    /* Top Compact Header */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(9, 13, 22, 0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #4f46e5, #8b5cf6);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-meta h2 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .brand-meta p {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      display: grid;
+      place-items: center;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    /* Content Area */
+    .screen-content {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Hero "Benim Payım" Card */
+    .hero-share-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.16), rgba(19, 27, 46, 0.98));
+      border: 1px solid rgba(129, 140, 248, 0.35);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-share-card::after {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.3), transparent 70%);
+      pointer-events: none;
+    }
+
+    .card-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .chip-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .hero-amount {
+      font-family: var(--font-display);
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #34d399;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .hero-subtext {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      height: 6px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 38.4%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      border-radius: 10px;
+    }
+
+    .segmented-control {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 12px;
+      padding: 3px;
+      gap: 3px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .segment-btn {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 9px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .segment-btn.active {
+      background: rgba(99, 102, 241, 0.3);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 2x2 Metric Grid */
+    .metric-grid-2x2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mini-metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+
+    .metric-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 4px;
+    }
+
+    .metric-val {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+
+    .metric-val.green { color: #34d399; }
+    .metric-val.amber { color: #fbbf24; }
+    .metric-val.indigo { color: #818cf8; }
+
+    .metric-caption {
+      font-size: 0.66rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Side-by-side Highlights */
+    .highlights-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .compact-highlight {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .compact-highlight.delivery {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(19, 27, 46, 0.95));
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .compact-highlight.settlement {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(19, 27, 46, 0.95));
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .highlight-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .highlight-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .highlight-big {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #34d399;
+      margin-bottom: 2px;
+    }
+
+    .highlight-sub {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    /* Horizontal Scrollable Filter Chips */
+    .filter-chip-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 4px 2px;
+      margin-top: 4px;
+    }
+
+    .filter-chip-bar::-webkit-scrollbar { display: none; }
+
+    .chip-item {
+      white-space: nowrap;
+      flex-shrink: 0;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .chip-item.active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    }
+
+    /* Installment Timeline Cards */
+    .timeline-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .installment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .inst-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+    }
+
+    .inst-card.paid-complete {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(19, 27, 46, 0.98));
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .inst-card.urgent {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(19, 27, 46, 0.98));
+      border-left: 4px solid #f59e0b;
+    }
+
+    .inst-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .inst-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .inst-num {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--primary-light, #818cf8);
+    }
+
+    .inst-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .inst-date {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .inst-total-group {
+      text-align: right;
+    }
+
+    .inst-amount {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .inst-status-pill {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 12px;
+      display: inline-block;
+      margin-top: 2px;
+    }
+
+    .inst-status-pill.full {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .inst-status-pill.pending {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    /* Partner Rows */
+    .partner-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .partner-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 12px;
+      padding: 8px 10px;
+    }
+
+    .p-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .p-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #0284c7;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+
+    .p-avatar.yusuf { background: #f97316; }
+
+    .p-name-block {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .p-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .p-share-pct {
+      font-size: 0.66rem;
+      color: var(--text-muted);
+    }
+
+    .p-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .p-amount {
+      font-family: var(--font-display);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .check-btn-mock {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 2px solid rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.9);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .check-btn-mock.checked {
+      background: #10b981;
+      border-color: #10b981;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Fixed Bottom Bar */
+    .mobile-bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      height: 68px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: rgba(9, 13, 22, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-color);
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+      color: var(--text-muted);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .tab-item.active {
+      color: #fff;
+      background: rgba(99, 102, 241, 0.22);
+      box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.35);
+    }
+
+    .tab-icon { font-size: 1.25rem; }
+    .tab-label { font-size: 0.68rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <!-- Top Header -->
+  <header class="top-header">
+    <div class="brand-group">
+      <div class="brand-logo">P</div>
+      <div class="brand-meta">
+        <h2>Fuzul Ev Konut Projesi</h2>
+        <p>Eren & Yusuf Ortak Planı</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" title="Hızlı Taksit Ekle">➕</button>
+      <button class="icon-btn" title="Menü">⋮</button>
+    </div>
+  </header>
+
+  <!-- Screen Content -->
+  <main class="screen-content">
+    <!-- Hero "Benim Payım" Card -->
+    <section class="hero-share-card">
+      <div class="card-top-row">
+        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">👤 Benim Kalan Payım</span>
+        <span class="chip-badge">16 Açık Vade</span>
+      </div>
+      <div class="hero-amount">₺329.375,00</div>
+      <div class="hero-subtext">Ödenen: ₺205.625 / ₺535.000 · Sonraki Vade: 05.09.2026</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="segmented-control">
+        <button class="segment-btn active" onclick="toggleSegment(this)">Sadece Benim Payım</button>
+        <button class="segment-btn" onclick="toggleSegment(this)">Tüm Ortaklar</button>
+      </div>
+    </section>
+
+    <!-- 2x2 Metric Grid -->
+    <section class="metric-grid-2x2">
+      <div class="mini-metric-card">
+        <div class="metric-title">Toplam Maliyet</div>
+        <div class="metric-val">₺1.070.000</div>
+        <div class="metric-caption">20 Kalem Taksit</div>
+      </div>
+      <div class="mini-metric-card">
+        <div class="metric-title">Toplam Ödenen</div>
+        <div class="metric-val green">₺411.250</div>
+        <div class="metric-caption">%38.4 Tamamlandı</div>
+      </div>
+      <div class="mini-metric-card">
+        <div class="metric-title">Kalan Toplam</div>
+        <div class="metric-val amber">₺658.750</div>
+        <div class="metric-caption">Ödenecek Borç</div>
+      </div>
+      <div class="mini-metric-card">
+        <div class="metric-title">Taksit Durumu</div>
+        <div class="metric-val indigo">4 / 20</div>
+        <div class="metric-caption">Ay Tamamlandı</div>
+      </div>
+    </section>
+
+    <!-- Side-by-side Highlights -->
+    <section class="highlights-row">
+      <div class="compact-highlight delivery">
+        <div class="highlight-top">
+          <span class="highlight-label">🏠 Ev Teslimatı</span>
+          <span style="font-size: 0.7rem;">🎯</span>
+        </div>
+        <div class="highlight-big">1 Ay 18 Gün</div>
+        <div class="highlight-sub">Hedef: 05.10.2026</div>
+      </div>
+      <div class="compact-highlight settlement">
+        <div class="highlight-top">
+          <span class="highlight-label">🔄 Mahsuplaşma</span>
+          <span style="font-size: 0.7rem;">⚖️</span>
+        </div>
+        <div class="highlight-big" style="color: #818cf8; font-size: 0.95rem;">Hesaplar Dengede</div>
+        <div class="highlight-sub">İç Borç: 0 ₺</div>
+      </div>
+    </section>
+
+    <!-- Horizontal Filter Chips -->
+    <div class="filter-chip-bar">
+      <button class="chip-item active">Tümü (20)</button>
+      <button class="chip-item">⌛ Bekleyenler (16)</button>
+      <button class="chip-item">⚡ Kısmi Ödenen</button>
+      <button class="chip-item">✅ Tamamlanan (4)</button>
+      <button class="chip-item">👤 Hasan Eren</button>
+      <button class="chip-item">👤 Yusuf</button>
+    </div>
+
+    <!-- Timeline List -->
+    <div class="timeline-title">
+      <span>Taksit Zaman Çizelgesi</span>
+      <span style="font-size: 0.7rem; color: var(--primary-light);">Sırala: Tarihe Göre ↓</span>
+    </div>
+
+    <div class="installment-list">
+      <!-- Card #1: Paid -->
+      <article class="inst-card paid-complete">
+        <header class="inst-header">
+          <div class="inst-meta">
+            <span class="inst-num">#1 Taksit</span>
+            <h3 class="inst-name">Peşinat + 1. Tasarruf</h3>
+            <span class="inst-date">📅 05.05.2026</span>
+          </div>
+          <div class="inst-total-group">
+            <div class="inst-amount">₺310.000</div>
+            <span class="inst-status-pill full">✓ TAMAMLANDI</span>
+          </div>
+        </header>
+
+        <div class="partner-rows">
+          <div class="partner-row">
+            <div class="p-left">
+              <div class="p-avatar">H</div>
+              <div class="p-name-block">
+                <span class="p-name">Hasan Eren</span>
+                <span class="p-share-pct">%50 pay</span>
+              </div>
+            </div>
+            <div class="p-right">
+              <span class="p-amount">₺155.000</span>
+              <button class="check-btn-mock checked" title="Ödendi">✓</button>
+            </div>
+          </div>
+
+          <div class="partner-row">
+            <div class="p-left">
+              <div class="p-avatar yusuf">Y</div>
+              <div class="p-name-block">
+                <span class="p-name">Yusuf</span>
+                <span class="p-share-pct">%50 pay</span>
+              </div>
+            </div>
+            <div class="p-right">
+              <span class="p-amount">₺155.000</span>
+              <button class="check-btn-mock checked" title="Ödendi">✓</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card #2: Urgent Upcoming -->
+      <article class="inst-card urgent">
+        <header class="inst-header">
+          <div class="inst-meta">
+            <span class="inst-num" style="color: #fbbf24;">#5 Taksit (Sıradaki)</span>
+            <h3 class="inst-name">5. Tasarruf + Org. Ücreti</h3>
+            <span class="inst-date">📅 05.09.2026 (18 gün kaldı)</span>
+          </div>
+          <div class="inst-total-group">
+            <div class="inst-amount">₺33.750</div>
+            <span class="inst-status-pill pending">⏳ BEKLİYOR</span>
+          </div>
+        </header>
+
+        <div class="partner-rows">
+          <div class="partner-row">
+            <div class="p-left">
+              <div class="p-avatar">H</div>
+              <div class="p-name-block">
+                <span class="p-name">Hasan Eren</span>
+                <span class="p-share-pct">%50 pay</span>
+              </div>
+            </div>
+            <div class="p-right">
+              <span class="p-amount">₺16.875</span>
+              <button class="check-btn-mock" onclick="this.classList.toggle('checked')"></button>
+            </div>
+          </div>
+
+          <div class="partner-row">
+            <div class="p-left">
+              <div class="p-avatar yusuf">Y</div>
+              <div class="p-name-block">
+                <span class="p-name">Yusuf</span>
+                <span class="p-share-pct">%50 pay</span>
+              </div>
+            </div>
+            <div class="p-right">
+              <span class="p-amount">₺16.875</span>
+              <button class="check-btn-mock" onclick="this.classList.toggle('checked')"></button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <!-- Fixed Bottom Navigation -->
+  <nav class="mobile-bottom-bar">
+    <div class="tab-item active">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Takip</span>
+    </div>
+    <div class="tab-item" onclick="parent.loadScreen('5_setup.html', this)">
+      <span class="tab-icon">⚙️</span>
+      <span class="tab-label">Kurulum</span>
+    </div>
+    <div class="tab-item" onclick="parent.loadScreen('6_data_reports.html', this)">
+      <span class="tab-icon">💾</span>
+      <span class="tab-label">Yedek</span>
+    </div>
+    <div class="tab-item" onclick="parent.loadScreen('7_plan_list.html', this)">
+      <span class="tab-icon">📁</span>
+      <span class="tab-label">Planlar</span>
+    </div>
+    <div class="tab-item" onclick="parent.loadScreen('8_profile.html', this)">
+      <span class="tab-icon">👤</span>
+      <span class="tab-label">Profil</span>
+    </div>
+  </nav>
+
+  <script>
+    function toggleSegment(btn) {
+      document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>

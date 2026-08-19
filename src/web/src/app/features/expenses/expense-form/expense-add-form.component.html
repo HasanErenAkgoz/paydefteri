@@ -1,40 +1,283 @@
-<div class="card add-expense-card">
-  <div class="form-header">
-    <div>
-      <div class="card-title">➕ Yeni gider</div>
-      <p class="muted receipt-help">Fiş veya fatura fotoğrafıyla alanları otomatik doldurabilirsiniz.</p>
+<div class="expense-form-container">
+
+  <!-- 1. AI RECEIPT SCANNER HEADER BAR -->
+  <div class="receipt-scan-bar">
+    <div class="receipt-bar-left">
+      <span class="scan-icon">⚡</span>
+      <span class="scan-text">Fiş veya faturadan otomatik doldur</span>
     </div>
-    <div class="receipt-actions">
+    <div class="receipt-bar-actions">
       @if (camera.isNative) {
-        <button type="button" class="btn btn-secondary receipt-button camera-button" [disabled]="analyzingReceipt()" (click)="captureNativeReceipt()">
-          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '📸 Kamera ile çek' }}
+        <button type="button" class="btn-scan-action" [disabled]="analyzingReceipt()" (click)="captureNativeReceipt()">
+          {{ analyzingReceipt() ? '⏳ Taranıyor…' : '📸 Kamera' }}
         </button>
-        <button type="button" class="btn btn-secondary receipt-button" [disabled]="analyzingReceipt()" (click)="selectNativeReceipt()">
-          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '🖼️ Fotoğraf seç' }}
+        <button type="button" class="btn-scan-action" [disabled]="analyzingReceipt()" (click)="selectNativeReceipt()">
+          {{ analyzingReceipt() ? '⏳ Taranıyor…' : '🖼️ Fotoğraf' }}
         </button>
       } @else {
-        <label class="btn btn-secondary receipt-button camera-button" [class.disabled]="analyzingReceipt()">
-          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '📸 Kamera ile çek' }}
+        <label class="btn-scan-action" [class.disabled]="analyzingReceipt()">
+          {{ analyzingReceipt() ? '⏳ Taranıyor…' : '📸 Kamera' }}
           <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" [disabled]="analyzingReceipt()" (change)="selectReceipt($event)" (cancel)="$event.stopPropagation()" />
         </label>
-        <label class="btn btn-secondary receipt-button" [class.disabled]="analyzingReceipt()">
-          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '🖼️ Fotoğraf seç' }}
+        <label class="btn-scan-action" [class.disabled]="analyzingReceipt()">
+          {{ analyzingReceipt() ? '⏳ Taranıyor…' : '🖼️ Fotoğraf' }}
           <input type="file" accept="image/jpeg,image/png,image/webp" [disabled]="analyzingReceipt()" (change)="selectReceipt($event)" (cancel)="$event.stopPropagation()" />
         </label>
       }
     </div>
   </div>
+
   @if (receiptDraft()) {
-    <div class="receipt-review" [class.warning]="receiptDraft()!.lowConfidenceFields.length > 0">
-      {{ receiptReviewMessage() }}
-      @for (warning of receiptDraft()!.warnings; track warning) { <span>{{ warning }}</span> }
+    <div class="receipt-alert-badge" [class.warning]="receiptDraft()!.lowConfidenceFields.length > 0">
+      <span class="alert-icon">✓</span>
+      <div class="alert-copy">
+        <p class="alert-msg">{{ receiptReviewMessage() }}</p>
+        @for (warning of receiptDraft()!.warnings; track warning) { <small class="alert-sub">{{ warning }}</small> }
+      </div>
     </div>
   }
-  <div class="form-grid">
-    <app-expense-base-fields [state]="state" [categories]="categories()" [partners]="partners()" (stateChange)="updateState($event)" />
-    @if (state.status === 'Paid') { <app-expense-payer-inputs class="span-2" [partners]="partners()" [sharePartners]="sharePartners()" [totalAmount]="state.amount || 0" [initialSinglePayment]="payerState.singlePayment" [initialPayerId]="payerState.payerId" [initialPayments]="payerState.payments" (stateChange)="payerState = $event" /> }
+
+  <!-- 2. HERO FINANCIAL INPUT CARD (Tutar & Başlık) -->
+  <div class="hero-amount-card">
+    <div class="amount-input-wrapper">
+      <span class="amount-currency-symbol">₺</span>
+      <input
+        class="hero-amount-input"
+        type="number"
+        min="0"
+        step="0.01"
+        placeholder="0,00"
+        [ngModel]="state.amount"
+        (ngModelChange)="updateState({ name: state.name, amount: $event, paymentMode: state.paymentMode, installmentCount: state.installmentCount, occurredOn: state.occurredOn, categoryId: state.categoryId, shareUi: state.shareUi, solePartnerId: state.solePartnerId, status: state.status, note: state.note })"
+      />
+    </div>
+
+    <div class="hero-name-wrapper">
+      <input
+        class="hero-name-input"
+        type="text"
+        placeholder="Gider adı (örn. Market, Elektrik, Yemek…)"
+        [ngModel]="state.name"
+        (ngModelChange)="updateState({ name: $event, amount: state.amount, paymentMode: state.paymentMode, installmentCount: state.installmentCount, occurredOn: state.occurredOn, categoryId: state.categoryId, shareUi: state.shareUi, solePartnerId: state.solePartnerId, status: state.status, note: state.note })"
+      />
+    </div>
+
+    <!-- Quick Category Carousel -->
+    @if (categories().length) {
+      <div class="category-chips-strip" role="radiogroup" aria-label="Kategori seçimi">
+        @for (cat of categories(); track cat.id) {
+          <button
+            type="button"
+            class="cat-chip"
+            [class.active]="state.categoryId === cat.id"
+            (click)="selectCategory(cat.id)"
+          >
+            <span class="cat-dot" [style.background]="cat.color || '#10b981'"></span>
+            <span>{{ cat.name }}</span>
+          </button>
+        }
+      </div>
+    }
   </div>
-  @if (preview(); as value) { <app-expense-installment-preview [preview]="value" [firstInstallmentDate]="state.occurredOn" /> }
-  @if (state.shareUi === 'Custom') { <app-expense-custom-shares [partners]="partners()" [expectedTotal]="state.amount || 0" [amounts]="customShares" (amountsChange)="customShares = $event; syncPayments()" /> }
-  <div class="form-actions"><button type="button" class="btn btn-secondary" (click)="formCancelled.emit()">İptal</button><button type="button" class="btn btn-primary" [disabled]="saving()" (click)="submit()">Kaydet</button></div>
+
+  <!-- 3. HARCAMAYI KİM ÖDEDİ? (PAYER COMPONENT) -->
+  @if (state.status === 'Paid') {
+    <app-expense-payer-inputs
+      [partners]="partners()"
+      [sharePartners]="sharePartners()"
+      [totalAmount]="state.amount || 0"
+      [initialSinglePayment]="payerState.singlePayment"
+      [initialPayerId]="payerState.payerId"
+      [initialPayments]="payerState.payments"
+      (stateChange)="payerState = $event"
+    />
+  }
+
+  <!-- 4 & 5. NASIL BÖLÜŞÜLECEK & ÖDEME TİPİ (2-COL ON DESKTOP) -->
+  <div class="form-row-2col">
+    <!-- 4. NASIL BÖLÜŞÜLECEK? (SHARE TYPE) -->
+    <div class="form-section-card">
+      <div class="section-card-header">
+        <span class="section-card-title">⚖️ Nasıl Bölüşülecek?</span>
+      </div>
+
+      <div class="share-segmented-group">
+        <button
+          type="button"
+          class="share-seg-btn"
+          [class.active]="state.shareUi === 'Equal'"
+          (click)="setShareUi('Equal')"
+        >
+          <span>Eşit Böl</span>
+        </button>
+
+        <button
+          type="button"
+          class="share-seg-btn"
+          [class.active]="state.shareUi === 'Default'"
+          (click)="setShareUi('Default')"
+        >
+          <span>Varsayılan %</span>
+        </button>
+
+        <button
+          type="button"
+          class="share-seg-btn"
+          [class.active]="state.shareUi === 'sole'"
+          (click)="setShareUi('sole')"
+        >
+          <span>Tek Ortak</span>
+        </button>
+
+        <button
+          type="button"
+          class="share-seg-btn"
+          [class.active]="state.shareUi === 'Custom'"
+          (click)="setShareUi('Custom')"
+        >
+          <span>Özel Tutar</span>
+        </button>
+      </div>
+
+      <!-- SOLE PARTNER SELECTION CHIPS -->
+      @if (state.shareUi === 'sole') {
+        <div class="sole-partner-chips">
+          <span class="sole-hint">Harcama kime ait?</span>
+          <div class="sole-grid">
+            @for (partner of partners(); track partner.id) {
+              <button
+                type="button"
+                class="sole-chip"
+                [class.active]="state.solePartnerId === partner.id"
+                (click)="selectSolePartner(partner.id)"
+              >
+                <span>{{ partner.name }}</span>
+                @if (state.solePartnerId === partner.id) {
+                  <span class="sole-check">✓</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- CUSTOM SHARES DRAWER -->
+      @if (state.shareUi === 'Custom') {
+        <app-expense-custom-shares
+          [partners]="partners()"
+          [expectedTotal]="state.amount || 0"
+          [amounts]="customShares"
+          (amountsChange)="customShares = $event; syncPayments()"
+        />
+      }
+    </div>
+
+    <!-- 5. ÖDEME TİPİ & TAKSİT AYARI -->
+    <div class="form-section-card">
+      <div class="section-card-header">
+        <span class="section-card-title">💳 Ödeme Tipi</span>
+      </div>
+
+      <div class="payment-mode-group">
+        <button
+          type="button"
+          class="payment-mode-btn"
+          [class.active]="state.paymentMode === 'Cash'"
+          (click)="setPaymentMode('Cash')"
+        >
+          <span>💵 Peşin</span>
+        </button>
+
+        <button
+          type="button"
+          class="payment-mode-btn"
+          [class.active]="state.paymentMode === 'Installment'"
+          (click)="setPaymentMode('Installment')"
+        >
+          <span>💳 Taksitli</span>
+        </button>
+      </div>
+
+      @if (state.paymentMode === 'Installment') {
+        <div class="installment-stepper-card">
+          <div class="stepper-controls">
+            <button type="button" class="stepper-btn" (click)="stepInstallment(-1)">−</button>
+            <div class="stepper-value">
+              <strong>{{ state.installmentCount }}</strong>
+              <small>Taksit</small>
+            </div>
+            <button type="button" class="stepper-btn" (click)="stepInstallment(1)">+</button>
+          </div>
+
+          @if (preview(); as p) {
+            <div class="installment-preview-pill">
+              <span>Aylık: <strong>{{ p.baseAmount | tryCurrency }}</strong></span>
+              @if (p.finalAmount !== p.baseAmount) {
+                <small>· Son ay: {{ p.finalAmount | tryCurrency }}</small>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- 6. TARİH, DURUM VE NOT -->
+  <div class="form-details-grid">
+    <div class="field-item">
+      <label class="field-label" for="add-occurred-on">📅 Harcama Tarihi</label>
+      <input
+        id="add-occurred-on"
+        class="form-input field-input"
+        type="date"
+        [ngModel]="state.occurredOn"
+        (ngModelChange)="updateState({ name: state.name, amount: state.amount, paymentMode: state.paymentMode, installmentCount: state.installmentCount, occurredOn: $event, categoryId: state.categoryId, shareUi: state.shareUi, solePartnerId: state.solePartnerId, status: state.status, note: state.note })"
+      />
+    </div>
+
+    <div class="field-item">
+      <label class="field-label" for="add-status">📌 Ödeme Durumu</label>
+      <select
+        id="add-status"
+        class="form-select field-input"
+        [ngModel]="state.status"
+        (ngModelChange)="updateState({ name: state.name, amount: state.amount, paymentMode: state.paymentMode, installmentCount: state.installmentCount, occurredOn: state.occurredOn, categoryId: state.categoryId, shareUi: state.shareUi, solePartnerId: state.solePartnerId, status: $event, note: state.note })"
+      >
+        <option value="Paid">✓ Ödendi (Kasa Çıkışı Oldu)</option>
+        <option value="Planned">⏳ Planlandı (Henüz Ödenmedi)</option>
+      </select>
+    </div>
+
+    <div class="field-item span-full">
+      <label class="field-label" for="add-note">📝 İsteğe Bağlı Not</label>
+      <input
+        id="add-note"
+        class="form-input field-input"
+        type="text"
+        placeholder="Fiş no, dekont açıklaması veya detaylar…"
+        [ngModel]="state.note"
+        (ngModelChange)="updateState({ name: state.name, amount: state.amount, paymentMode: state.paymentMode, installmentCount: state.installmentCount, occurredOn: state.occurredOn, categoryId: state.categoryId, shareUi: state.shareUi, solePartnerId: state.solePartnerId, status: state.status, note: $event })"
+      />
+    </div>
+  </div>
+
+  <!-- 7. STICKY THUMB ACTION FOOTER -->
+  <div class="form-sticky-footer">
+    <button type="button" class="btn btn-secondary btn-cancel-modal" (click)="formCancelled.emit()">
+      Vazgeç
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary btn-save-modal"
+      [disabled]="saving()"
+      (click)="submit()"
+    >
+      @if (saving()) {
+        <span>Kaydediliyor…</span>
+      } @else {
+        <span>✨ Gideri Kaydet {{ formattedAmount() ? '· ' + formattedAmount() : '' }}</span>
+      }
+    </button>
+  </div>
+
 </div>

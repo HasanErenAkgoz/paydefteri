@@ -44,6 +44,7 @@ export class DataComponent implements OnInit {
 
   readonly busy = signal(false);
   readonly isExpense = signal(false);
+  readonly activeTab = signal<'report' | 'export' | 'restore' | 'history'>('report');
   readonly partnerNames = signal<string[]>([]);
   readonly planTitle = signal('Plan');
   readonly planDescription = signal('');
@@ -54,6 +55,10 @@ export class DataComponent implements OnInit {
   readonly activity = signal<PlanActivityItemDto[]>([]);
   readonly isOwner = signal(false);
   readonly generatedAtLabel = signal('');
+
+  setTab(tab: 'report' | 'export' | 'restore' | 'history'): void {
+    this.activeTab.set(tab);
+  }
 
   private planId = '';
   private lastExport: PlanExportDto | null = null;

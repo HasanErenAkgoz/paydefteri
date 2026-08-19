@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Planlarım - PayDefteri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-oled: #090d16;
+      --bg-card: #131b2e;
+      --primary: #6366f1;
+      --accent: #8b5cf6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: rgba(99, 102, 241, 0.2);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-oled);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 14px 90px;
+      gap: 14px;
+    }
+
+    .page-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 12px 14px;
+    }
+
+    .stat-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .stat-lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .plan-card {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(19, 27, 46, 0.98));
+      border: 1px solid rgba(129, 140, 248, 0.3);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .plan-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .plan-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(99, 102, 241, 0.25);
+      color: #c7d2fe;
+    }
+
+    .plan-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .plan-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .plan-progress {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .bar-bg {
+      height: 6px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 38.4%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      border-radius: 10px;
+    }
+
+    .btn-open {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-action-outline {
+      width: 100%;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px dashed rgba(99, 102, 241, 0.4);
+      background: rgba(19, 27, 46, 0.5);
+      color: #c7d2fe;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Fixed Bottom Bar */
+    .mobile-bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      height: 68px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: rgba(9, 13, 22, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-color);
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-muted);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .tab-item.active {
+      color: #fff;
+      background: rgba(99, 102, 241, 0.22);
+      box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.35);
+    }
+
+    .tab-icon { font-size: 1.25rem; }
+    .tab-label { font-size: 0.68rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="page-title">📁 Tüm Planlarım</div>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="stat-val">1</div>
+      <div class="stat-lbl">Aktif Plan</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">0</div>
+      <div class="stat-lbl">Bekleyen Davet</div>
+    </div>
+  </div>
+
+  <article class="plan-card">
+    <div class="plan-top">
+      <div>
+        <span class="plan-badge">TAKSİT & GİDER PLANI</span>
+        <h2 class="plan-name">Fuzul Ev Konut Projesi</h2>
+      </div>
+      <span style="font-size: 1.2rem;">🏠</span>
+    </div>
+    <div class="plan-meta">Eren & Yusuf Ortak Ödeme Planı (₺1.070.000)</div>
+    
+    <div>
+      <div class="plan-progress">
+        <span>Ödeme Durumu</span>
+        <span style="color: #34d399;">%38.4 Tamamlandı</span>
+      </div>
+      <div class="bar-bg">
+        <div class="bar-fill"></div>
+      </div>
+    </div>
+
+    <button class="btn-open" onclick="location.href='3_dashboard.html'">Plana Git →</button>
+  </article>
+
+  <button class="btn-action-outline">📄 PDF / Excel Tablosu İçe Aktar</button>
+  <button class="btn-action-outline">➕ Yeni Özel Plan Oluştur</button>
+
+  <nav class="mobile-bottom-bar">
+    <div class="tab-item" onclick="location.href='3_dashboard.html'">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Takip</span>
+    </div>
+    <div class="tab-item" onclick="location.href='5_setup.html'">
+      <span class="tab-icon">⚙️</span>
+      <span class="tab-label">Kurulum</span>
+    </div>
+    <div class="tab-item" onclick="location.href='6_data_reports.html'">
+      <span class="tab-icon">💾</span>
+      <span class="tab-label">Yedek</span>
+    </div>
+    <div class="tab-item active">
+      <span class="tab-icon">📁</span>
+      <span class="tab-label">Planlar</span>
+    </div>
+    <div class="tab-item" onclick="location.href='8_profile.html'">
+      <span class="tab-icon">👤</span>
+      <span class="tab-label">Profil</span>
+    </div>
+  </nav>
+</body>
+</html>

@@ -11,6 +11,8 @@ import { ConfirmHostComponent } from './shared/confirm/confirm-host.component';
 import { AppLifecycleService } from './core/platform/app-lifecycle.service';
 import { ConnectivityService } from './core/platform/connectivity.service';
 
+import { PrivacyService } from './core/services/privacy.service';
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -25,6 +27,7 @@ export class AppComponent implements OnInit {
   readonly auth = inject(AuthService);
   readonly planContext = inject(PlanContextService);
   readonly connectivity = inject(ConnectivityService);
+  readonly privacy = inject(PrivacyService);
 
   private readonly url = toSignal(
     this.router.events.pipe(

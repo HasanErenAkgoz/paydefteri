@@ -1,20 +1,79 @@
-<div class="payer-block">
-  <div class="payer-head">
-    <span>Ödeyen (kasada kim ödedi)</span>
-    @if (sharePartners().length > 1) {
-      <button type="button" class="btn btn-ghost btn-sm" (click)="toggleMode()">{{ singlePayment ? 'Paylara göre' : 'Tek ödeme' }}</button>
+<div class="payer-section">
+  <div class="payer-header">
+    <div class="payer-title-group">
+      <span class="payer-icon">💳</span>
+      <span class="payer-title">Harcamayı Kim Ödedi?</span>
+    </div>
+
+    @if (partners().length > 1) {
+      <button type="button" class="mode-toggle-btn" (click)="toggleMode()">
+        {{ singlePayment ? '🔀 Bölüşümlü Ödendi' : '👤 Tek Kişi Ödedi' }}
+      </button>
     }
   </div>
-  @if (singlePayment || sharePartners().length <= 1) {
-    <select class="form-select" [(ngModel)]="payerId" (ngModelChange)="emitState()">
-      @for (partner of partners(); track partner.id) { <option [value]="partner.id">{{ partner.name }}</option> }
-    </select>
-  } @else {
-    <div class="payer-amounts">
-      @for (partner of sharePartners(); track partner.id) {
-        <label><span>{{ partner.name }}</span><input class="form-input" type="number" min="0" step="0.01" [ngModel]="payments[partner.id]" (ngModelChange)="updatePayment(partner.id, $event)" /></label>
+
+  <!-- SINGLE PAYER: TAPPABLE PARTNER CHIPS -->
+  @if (singlePayment || partners().length <= 1) {
+    <div class="partner-chips-grid">
+      @for (partner of partners(); track partner.id; let idx = $index) {
+        <button
+          type="button"
+          class="partner-chip"
+          [class.active]="payerId === partner.id"
+          (click)="selectPayer(partner.id)"
+        >
+          <span class="chip-avatar" [style.background]="getPartnerColor(partner, idx)">
+            {{ partner.name.charAt(0).toUpperCase() }}
+          </span>
+          <span class="chip-name">{{ partner.name }}</span>
+          @if (payerId === partner.id) {
+            <span class="chip-check">✓</span>
+          }
+        </button>
       }
-      <p class="payer-sum" [class.ok]="matches()" [class.bad]="!matches()">Ödenen toplam: {{ paymentTotal() | tryCurrency }}</p>
+    </div>
+  } @else {
+    <!-- MULTI PAYER: SPLIT PAYMENTS -->
+    <div class="split-payer-card">
+      <div class="split-header">
+        <span class="split-hint">Her ortağın kasada ödediği tutar:</span>
+        <button type="button" class="btn-distribute" (click)="distributeEvenly()">
+          ⚡ Eşit Böl
+        </button>
+      </div>
+
+      <div class="split-inputs-grid">
+        @for (partner of (sharePartners().length ? sharePartners() : partners()); track partner.id; let idx = $index) {
+          <div class="split-input-row">
+            <div class="split-partner-info">
+              <span class="chip-avatar mini" [style.background]="getPartnerColor(partner, idx)">
+                {{ partner.name.charAt(0).toUpperCase() }}
+              </span>
+              <span class="partner-label">{{ partner.name }}</span>
+            </div>
+            <div class="split-input-wrap">
+              <span class="currency-prefix">₺</span>
+              <input
+                class="form-input split-input"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                [ngModel]="payments[partner.id]"
+                (ngModelChange)="updatePayment(partner.id, $event)"
+              />
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="split-footer" [class.ok]="matches()" [class.bad]="!matches()">
+        @if (matches()) {
+          <span>✓ Ödenen toplam: {{ paymentTotal() | tryCurrency }} (Tam uyuştu)</span>
+        } @else {
+          <span>⚠️ Ödenen toplam: {{ paymentTotal() | tryCurrency }} / Hedef: {{ totalAmount() | tryCurrency }}</span>
+        }
+      </div>
     </div>
   }
 </div>

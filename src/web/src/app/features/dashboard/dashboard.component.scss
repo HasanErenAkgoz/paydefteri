@@ -2,6 +2,41 @@
   display: block;
 }
 
+.mobile-info-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-info-pill.warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+}
+
+.mobile-info-pill .info-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.mobile-info-pill code {
+  background: rgba(15, 23, 42, 0.8);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-main);
+}
+
+
 .check-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
@@ -85,24 +120,31 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 14px 14px 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.installment-card:hover {
+  border-color: rgba(99, 102, 241, 0.35);
 }
 
 .installment-card.paid-row {
-  background: rgba(16, 185, 129, 0.04);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(19, 27, 46, 0.95));
+  border-color: rgba(16, 185, 129, 0.25);
 }
 
 .installment-card.upcoming-urgent {
-  background: rgba(245, 158, 11, 0.06);
-  border-left: 3px solid #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(19, 27, 46, 0.95));
+  border-left: 4px solid #f59e0b;
 }
 
 .installment-card--empty {
   text-align: center;
-  padding: 28px 16px;
+  padding: 24px 16px;
   color: var(--text-muted);
 }
 
@@ -110,7 +152,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
 }
 
 .installment-card__meta {
@@ -121,16 +163,16 @@
 .installment-card__index {
   display: inline-block;
   font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+  font-weight: 800;
+  color: var(--primary-light);
+  margin-bottom: 2px;
 }
 
 .installment-card__aside {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
@@ -140,28 +182,69 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .installment-card__partner {
-  padding: 10px;
+  padding: 8px 10px;
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.12);
+  transition: background 0.15s ease;
 }
 
 .installment-card__partner .partner-check-cell {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
+}
+
+.check-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 2px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.check-btn:active {
+  transform: scale(0.92);
+}
+
+.check-btn.checked {
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+}
+
+.check-btn.pending-review {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
 }
 
 .installment-card__foot {
   display: flex;
   justify-content: stretch;
+  margin-top: 4px;
 }
 
 .installment-card__foot .btn {
   width: 100%;
   justify-content: center;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
 }
+

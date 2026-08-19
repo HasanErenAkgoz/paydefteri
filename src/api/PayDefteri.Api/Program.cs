@@ -57,7 +57,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
-    ?? ["http://localhost:4200", "capacitor://localhost", "https://localhost"];
+    ?? ["http://localhost:4200", "http://localhost", "capacitor://localhost", "https://localhost"];
 var authRateLimit = builder.Environment.IsEnvironment("Testing") ? 10_000 : 10;
 var receiptAnalysisRateLimit = builder.Environment.IsEnvironment("Testing") ? 10_000 : 10;
 

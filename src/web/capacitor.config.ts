@@ -5,9 +5,14 @@ const config: CapacitorConfig = {
   appName: 'PayDefteri',
   webDir: 'dist/web/browser',
   server: {
-    androidScheme: 'https',
+    androidScheme: 'http',
+    cleartext: true,
+    allowNavigation: ['167.233.118.211', '167.233.118.211:8890', '*'],
   },
   plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
     SplashScreen: {
       launchAutoHide: false,
       backgroundColor: '#0f172a',

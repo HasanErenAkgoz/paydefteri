@@ -22,83 +22,109 @@
       </div>
     }
 
-    @if (isExpensePlan()) {
-      <div class="card plan-identity-card">
-        <div class="plan-identity-main">
-          <div class="form-group plan-identity-field">
-            <label class="form-label">Plan adı</label>
-            <input
-              class="form-input"
-              type="text"
-              [(ngModel)]="title"
-              placeholder="Ev Ortak Giderleri"
-              [readonly]="!isOwner()"
-            />
-          </div>
-          <div class="form-group plan-identity-field grow">
-            <label class="form-label">Kısa not</label>
-            <input
-              class="form-input"
-              type="text"
-              [(ngModel)]="description"
-              placeholder="Opsiyonel açıklama"
-              [readonly]="!isOwner()"
-            />
-          </div>
-          @if (isOwner()) {
-            <button
-              type="button"
-              class="btn btn-primary plan-identity-save"
-              [disabled]="busy()"
-              (click)="savePlan()"
-            >
-              💾 Kaydet
-            </button>
-          }
-        </div>
-        <div class="plan-identity-actions">
-          <a class="btn btn-secondary btn-sm" [routerLink]="['/plans', planId, 'expenses']">
-            Takip tablosu →
-          </a>
-          <a class="btn btn-secondary btn-sm" routerLink="/plans" [queryParams]="{ manage: '1' }">
-            Tüm planlar
-          </a>
-          <details class="plan-more-details">
-            <summary>Başka plan aç</summary>
-            <div class="plan-more-body">
-              <p class="muted tiny">
-                Mevcut gider planı silinmez. Yeni taksit / şablon ayrı plan olarak açılır.
-              </p>
-              <div class="plan-more-actions">
-                <button
-                  type="button"
-                  class="btn btn-primary btn-sm"
-                  [disabled]="busy()"
-                  (click)="createInstallmentPlan()"
-                >
-                  ✨ Boş taksit planı
-                </button>
-                @for (t of templates(); track t.key) {
-                  @if (t.key !== 'empty') {
-                    <button
-                      type="button"
-                      class="btn btn-secondary btn-sm"
-                      [disabled]="busy()"
-                      (click)="createInstallmentPlan(t.key)"
-                    >
-                      {{ templateIcon(t.key) }} {{ t.title }}
-                    </button>
-                  }
-                }
-              </div>
+    <!-- Tab Navigation Strip -->
+    <div class="setup-tabs-nav" role="tablist" aria-label="Kurulum sekmeleri">
+      <button
+        type="button"
+        class="setup-tab-btn"
+        [class.active]="activeTab() === 'settings'"
+        (click)="setTab('settings')"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'settings'"
+      >
+        <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Plan Ayarları</span>
+      </button>
+
+      <button
+        type="button"
+        class="setup-tab-btn"
+        [class.active]="activeTab() === 'partners'"
+        (click)="setTab('partners')"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'partners'"
+      >
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Ortaklar</span>
+        <span class="tab-count-badge">{{ partnerRows().length }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="setup-tab-btn"
+        [class.active]="activeTab() === 'items'"
+        (click)="setTab('items')"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'items'"
+      >
+        <svg class="svg-icon" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <span>{{ isExpensePlan() ? 'Giderler' : 'Taksitler' }}</span>
+        @if (!isExpensePlan()) {
+          <span class="tab-count-badge">{{ installments().length }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="setup-tab-btn"
+        [class.active]="activeTab() === 'templates'"
+        (click)="setTab('templates')"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'templates'"
+      >
+        <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Şablonlar</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: SETTINGS -->
+    @if (activeTab() === 'settings') {
+      @if (isExpensePlan()) {
+        <div class="card plan-identity-card">
+          <div class="plan-identity-main">
+            <div class="form-group plan-identity-field">
+              <label class="form-label">Plan adı</label>
+              <input
+                class="form-input"
+                type="text"
+                [(ngModel)]="title"
+                placeholder="Ev Ortak Giderleri"
+                [readonly]="!isOwner()"
+              />
             </div>
-          </details>
+            <div class="form-group plan-identity-field grow">
+              <label class="form-label">Kısa not</label>
+              <input
+                class="form-input"
+                type="text"
+                [(ngModel)]="description"
+                placeholder="Opsiyonel açıklama"
+                [readonly]="!isOwner()"
+              />
+            </div>
+            @if (isOwner()) {
+              <button
+                type="button"
+                class="btn btn-primary plan-identity-save"
+                [disabled]="busy()"
+                (click)="savePlan()"
+              >
+                💾 Kaydet
+              </button>
+            }
+          </div>
+          <div class="plan-identity-actions">
+            <a class="btn btn-secondary btn-sm" [routerLink]="['/plans', planId, 'expenses']">
+              Takip tablosu →
+            </a>
+            <a class="btn btn-secondary btn-sm" routerLink="/plans" [queryParams]="{ manage: '1' }">
+              Tüm planlar
+            </a>
+          </div>
         </div>
-      </div>
-    } @else {
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">📌 Plan Ayarları</div>
+      } @else {
+        <div class="card">
+          <div class="card-title">📌 Plan Ayarları</div>
         <div class="form-group">
           <label class="form-label">Plan Adı</label>
           <input class="form-input" type="text" [(ngModel)]="title" [readonly]="!isOwner()" />
@@ -207,9 +233,13 @@
           </button>
         }
       </div>
+      }
+    }
 
+    <!-- TAB 4: TEMPLATES & IMPORT -->
+    @if (activeTab() === 'templates') {
       <div class="card">
-        <div class="card-title">⚡ Yeni plan / şablon</div>
+        <div class="card-title">⚡ Yeni plan / şablon &amp; İçe Aktarma</div>
         <p class="muted" style="margin-bottom: 16px; font-size: 0.8rem">
           Şablon ve boş plan <strong>ayrı bir plan</strong> olarak açılır — mevcut planınız silinmez.
           PDF/Excel yalnızca bu plana yazar. Geçiş için Tüm Planlar menüsünü kullanın.
@@ -399,11 +429,12 @@
           }
         </div>
       </div>
-    </div>
     }
 
-    @if (isExpensePlan()) {
-      @if (expenseBoard(); as b) {
+    <!-- TAB 3: ITEMS (Recurring Expenses/Categories for Expense Plan) -->
+    @if (activeTab() === 'items') {
+      @if (isExpensePlan()) {
+        @if (expenseBoard(); as b) {
         <div class="expense-setup-grid">
           <div class="card">
             <div class="card-title">📅 Tekrarlayan giderler</div>
@@ -557,9 +588,12 @@
         </div>
       }
     }
+  }
 
-    <div class="card">
-      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+    <!-- TAB 2: PARTNERS & STAKEHOLDERS -->
+    @if (activeTab() === 'partners') {
+      <div class="card">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
         <span>👥 Ortaklar ve Varsayılan Pay Oranları</span>
         @if (isOwner()) {
           <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="addPartnerRow()">
@@ -732,64 +766,143 @@
         </div>
       </div>
     </div>
+    }
 
-    @if (!isExpensePlan()) {
-    <div class="card">
-      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center">
-        <span>📋 Taksit / Borç Kalemleri Listesi</span>
-        @if (isOwner()) {
-          <button type="button" class="btn btn-primary btn-sm" (click)="openAddInstallment()">
-            ➕ Yeni Taksit Ekle
-          </button>
-        }
-      </div>
-      <div class="table-wrap table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Taksit Adı</th>
-              <th>Tarih</th>
-              <th>Tutar</th>
-              <th>Paylaşım Tipi</th>
-              @if (isOwner()) {
-                <th style="text-align: right">İşlemler</th>
+    <!-- TAB 3: ITEMS (Installment Items Table for Installment Plan) -->
+    @if (activeTab() === 'items' && !isExpensePlan()) {
+      <div class="card setup-items-card">
+        <div class="setup-items-header">
+          <div class="setup-items-title-group">
+            <h3 class="card-title" style="margin: 0">📋 Taksit / Borç Kalemleri</h3>
+            <div class="setup-items-badges">
+              <span class="setup-badge count-badge">{{ installments().length }} Taksit</span>
+              <span class="setup-badge amount-badge">{{ totalSetupAmount() | tryCurrency }}</span>
+            </div>
+          </div>
+          @if (isOwner()) {
+            <button type="button" class="btn btn-primary btn-sm" (click)="openAddInstallment()">
+              ➕ Yeni Taksit Ekle
+            </button>
+          }
+        </div>
+
+        <!-- Fast Search Filter -->
+        @if (installments().length > 3) {
+          <div class="setup-search-wrap">
+            <div class="setup-search-box">
+              <svg class="svg-icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input
+                type="text"
+                class="form-input search-input"
+                [ngModel]="setupSearch()"
+                (ngModelChange)="setupSearch.set($event)"
+                placeholder="Taksit ara (ad, ay, tutar)..."
+              />
+              @if (setupSearch()) {
+                <button type="button" class="clear-search-btn" (click)="setupSearch.set('')">✕</button>
               }
-            </tr>
-          </thead>
-          <tbody>
-            @for (i of installments(); track i.id; let idx = $index) {
+            </div>
+            @if (setupSearch()) {
+              <span class="setup-search-info">{{ filteredSetupInstallments().length }} taksit</span>
+            }
+          </div>
+        }
+
+        <!-- Mobile Card List View (<768px) -->
+        <div class="setup-inst-cards-list">
+          @for (i of filteredSetupInstallments(); track i.id; let idx = $index) {
+            <div class="setup-inst-card">
+              <div class="inst-card-top">
+                <div class="inst-card-title-wrap">
+                  <span class="inst-idx">#{{ idx + 1 }}</span>
+                  <span class="inst-name" [title]="i.name">{{ i.name }}</span>
+                </div>
+                <div class="inst-amount">{{ i.totalAmount | tryCurrency }}</div>
+              </div>
+              <div class="inst-card-meta">
+                <span class="inst-date">
+                  <svg class="svg-icon tiny-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ formatDateTr(i.dueDate) }}
+                </span>
+                <span class="inst-share-badge">
+                  {{ shareTypeLabel(i.shareType) }}
+                </span>
+              </div>
+              @if (isOwner()) {
+                <div class="inst-card-actions">
+                  <button type="button" class="btn btn-secondary btn-sm edit-btn" (click)="startEditInstallment(i)">
+                    ✏️ Düzenle
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-icon-danger btn-sm delete-btn"
+                    title="Sil"
+                    (click)="deleteInstallment(i)"
+                  >
+                    <app-icon-trash />
+                  </button>
+                </div>
+              }
+            </div>
+          } @empty {
+            <div class="empty-state-box">
+              <p class="muted" style="margin: 0">
+                {{ setupSearch() ? 'Aramanıza uygun taksit bulunamadı.' : 'Henüz taksit yok.' }}
+              </p>
+            </div>
+          }
+        </div>
+
+        <!-- Desktop Table View (>=768px) -->
+        <div class="table-wrap table-responsive setup-desktop-table">
+          <table>
+            <thead>
               <tr>
-                <td>{{ idx + 1 }}</td>
-                <td>{{ i.name }}</td>
-                <td>{{ formatDateTr(i.dueDate) }}</td>
-                <td>{{ i.totalAmount | tryCurrency }}</td>
-                <td>{{ shareTypeLabel(i.shareType) }}</td>
+                <th>#</th>
+                <th>Taksit Adı</th>
+                <th>Tarih</th>
+                <th>Tutar</th>
+                <th>Paylaşım Tipi</th>
                 @if (isOwner()) {
-                  <td class="entity-actions" style="text-align: right">
-                    <button type="button" class="btn btn-ghost btn-sm" (click)="startEditInstallment(i)">
-                      Düzenle
-                    </button>
-                    <button
-                      type="button"
-                      class="btn-icon-danger btn-sm"
-                      title="Sil"
-                      (click)="deleteInstallment(i)"
-                    >
-                      <app-icon-trash />
-                    </button>
-                  </td>
+                  <th style="text-align: right">İşlemler</th>
                 }
               </tr>
-            } @empty {
-              <tr>
-                <td [attr.colspan]="isOwner() ? 6 : 5" class="muted">Henüz taksit yok.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (i of filteredSetupInstallments(); track i.id; let idx = $index) {
+                <tr>
+                  <td><span class="inst-idx">#{{ idx + 1 }}</span></td>
+                  <td><strong>{{ i.name }}</strong></td>
+                  <td>{{ formatDateTr(i.dueDate) }}</td>
+                  <td style="font-weight: 700; color: #34d399">{{ i.totalAmount | tryCurrency }}</td>
+                  <td><span class="inst-share-badge">{{ shareTypeLabel(i.shareType) }}</span></td>
+                  @if (isOwner()) {
+                    <td class="entity-actions" style="text-align: right">
+                      <button type="button" class="btn btn-ghost btn-sm" (click)="startEditInstallment(i)">
+                        Düzenle
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-icon-danger btn-sm"
+                        title="Sil"
+                        (click)="deleteInstallment(i)"
+                      >
+                        <app-icon-trash />
+                      </button>
+                    </td>
+                  }
+                </tr>
+              } @empty {
+                <tr>
+                  <td [attr.colspan]="isOwner() ? 6 : 5" class="muted">
+                    {{ setupSearch() ? 'Aramanıza uygun taksit bulunamadı.' : 'Henüz taksit yok.' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
     }
   }
 </section>

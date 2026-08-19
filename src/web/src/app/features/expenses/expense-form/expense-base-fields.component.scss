@@ -1,1 +1,21 @@
-:host { display: contents; }
+:host {
+  display: contents;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+
+  span {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    letter-spacing: 0.02em;
+  }
+}
+
+.span-2 {
+  grid-column: 1 / -1;
+}

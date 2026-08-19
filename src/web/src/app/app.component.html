@@ -3,115 +3,142 @@
     <div class="offline-banner" role="status">Çevrimdışısınız. Veriler güncel olmayabilir; değişiklik yapmak için bağlantınızı kontrol edin.</div>
   }
   @if (!isAuthRoute()) {
-    <nav class="navbar">
-      <div class="nav-container">
+    <header class="app-header">
+      <div class="header-container">
         <a
           class="brand"
           [routerLink]="planId() ? planHomeLink() : ['/plans']"
           [queryParams]="planId() ? {} : { manage: '1' }"
         >
-          <img class="brand-icon" src="/brand-icon.png" width="42" height="42" alt="" />
+          <img class="brand-icon" src="/brand-icon.png" width="36" height="36" alt="" />
           <div class="brand-text">
             <h1>{{ planContext.planTitle() || 'PayDefteri' }}</h1>
-            <p>{{ planContext.planDescription() || 'Çok Ortaklı Dinamik Finans Takibi' }}</p>
+            <p>{{ planContext.planDescription() || 'Çok Ortaklı Finans Takibi' }}</p>
           </div>
         </a>
 
-        <div class="nav-actions">
+        <div class="header-right-actions">
+          <button
+            type="button"
+            class="privacy-toggle-btn"
+            [class.private]="privacy.isPrivate()"
+            (click)="privacy.toggle()"
+            [title]="privacy.isPrivate() ? 'Gizlilik Modu: Değerleri Göster' : 'Gizlilik Modu: Değerleri Gizle'"
+            [attr.aria-label]="privacy.isPrivate() ? 'Gizlilik modunu kapat' : 'Gizlilik modunu aç'"
+          >
+            <span class="privacy-icon">{{ privacy.isPrivate() ? '🙈' : '👁️' }}</span>
+          </button>
+        </div>
+
+        <!-- Desktop Navigation Tabs (Hidden on Mobile) -->
+        <nav class="desktop-nav" aria-label="Masaüstü menüsü">
           @if (showPlanTabs()) {
-            <div class="nav-tabs" role="navigation" aria-label="Plan menüsü">
+            <div class="nav-tabs">
               @if (isExpensePlan()) {
-                <a
-                  class="nav-tab"
-                  [routerLink]="['/plans', planId(), 'expenses']"
-                  routerLinkActive="active"
-                >
+                <a class="nav-tab" [routerLink]="['/plans', planId(), 'expenses']" routerLinkActive="active">
                   <span aria-hidden="true">📊</span>
-                  <span class="nav-label-full">Takip Tablosu</span>
-                  <span class="nav-label-short">Takip</span>
+                  <span>Takip Tablosu</span>
                 </a>
               } @else {
-                <a
-                  class="nav-tab"
-                  [routerLink]="['/plans', planId(), 'dashboard']"
-                  routerLinkActive="active"
-                >
+                <a class="nav-tab" [routerLink]="['/plans', planId(), 'dashboard']" routerLinkActive="active">
                   <span aria-hidden="true">📊</span>
-                  <span class="nav-label-full">Takip Tablosu</span>
-                  <span class="nav-label-short">Takip</span>
+                  <span>Takip Tablosu</span>
                 </a>
               }
-              <a
-                class="nav-tab"
-                [routerLink]="['/plans', planId(), 'setup']"
-                routerLinkActive="active"
-              >
+              <a class="nav-tab" [routerLink]="['/plans', planId(), 'setup']" routerLinkActive="active">
                 <span aria-hidden="true">⚙️</span>
-                <span class="nav-label-full">Kurulum</span>
-                <span class="nav-label-short">Kurulum</span>
+                <span>Kurulum</span>
               </a>
-              <a
-                class="nav-tab"
-                [routerLink]="['/plans', planId(), 'data']"
-                routerLinkActive="active"
-              >
+              <a class="nav-tab" [routerLink]="['/plans', planId(), 'data']" routerLinkActive="active">
                 <span aria-hidden="true">💾</span>
-                <span class="nav-label-full">Yedek & Rapor</span>
-                <span class="nav-label-short">Yedek</span>
+                <span>Yedek & Rapor</span>
               </a>
-              <a
-                class="nav-tab"
-                routerLink="/plans"
-                [queryParams]="{ manage: '1' }"
-                [class.active]="isPlansManage()"
-              >
+              <a class="nav-tab" routerLink="/plans" [queryParams]="{ manage: '1' }" [class.active]="isPlansManage()">
                 <span aria-hidden="true">📁</span>
-                <span class="nav-label-full">Tüm Planlar</span>
-                <span class="nav-label-short">Planlar</span>
+                <span>Tüm Planlar</span>
               </a>
               <a class="nav-tab" routerLink="/profile" [class.active]="isProfile()">
                 <span aria-hidden="true">👤</span>
-                <span class="nav-label-full">Profil</span>
-                <span class="nav-label-short">Profil</span>
+                <span>Profil</span>
               </a>
               <button type="button" class="nav-tab nav-tab-logout" (click)="logout()">
                 <span aria-hidden="true">🚪</span>
-                <span class="nav-label-full">Çıkış</span>
-                <span class="nav-label-short">Çıkış</span>
+                <span>Çıkış</span>
               </button>
             </div>
           } @else if (auth.isAuthenticated()) {
-            <div class="nav-tabs" role="navigation" aria-label="Hesap menüsü">
-              <a
-                class="nav-tab"
-                routerLink="/plans"
-                [queryParams]="{ manage: '1' }"
-                [class.active]="isPlansManage()"
-              >
+            <div class="nav-tabs">
+              <a class="nav-tab" routerLink="/plans" [queryParams]="{ manage: '1' }" [class.active]="isPlansManage()">
                 <span aria-hidden="true">📁</span>
-                <span class="nav-label-full">Tüm Planlar</span>
-                <span class="nav-label-short">Planlar</span>
+                <span>Tüm Planlar</span>
               </a>
               <a class="nav-tab" routerLink="/profile" [class.active]="isProfile()">
                 <span aria-hidden="true">👤</span>
-                <span class="nav-label-full">Profil</span>
-                <span class="nav-label-short">Profil</span>
+                <span>Profil</span>
               </a>
               <button type="button" class="nav-tab nav-tab-logout" (click)="logout()">
                 <span aria-hidden="true">🚪</span>
-                <span class="nav-label-full">Çıkış</span>
-                <span class="nav-label-short">Çıkış</span>
+                <span>Çıkış</span>
               </button>
             </div>
           }
-        </div>
+        </nav>
       </div>
-    </nav>
+    </header>
   }
 
   <main class="container" [class.auth-container]="isAuthRoute()">
     <router-outlet />
   </main>
+
+  <!-- Mobile Fixed Bottom Navigation Bar (Hidden on Desktop, Visible on Mobile & Native Apps) -->
+  @if (!isAuthRoute() && auth.isAuthenticated()) {
+    <nav class="mobile-bottom-bar" aria-label="Mobil alt menü">
+      @if (showPlanTabs()) {
+        @if (isExpensePlan()) {
+          <a class="mobile-tab" [routerLink]="['/plans', planId(), 'expenses']" routerLinkActive="active">
+            <span class="tab-icon" aria-hidden="true">📊</span>
+            <span class="tab-label">Takip</span>
+          </a>
+        } @else {
+          <a class="mobile-tab" [routerLink]="['/plans', planId(), 'dashboard']" routerLinkActive="active">
+            <span class="tab-icon" aria-hidden="true">📊</span>
+            <span class="tab-label">Takip</span>
+          </a>
+        }
+        <a class="mobile-tab" [routerLink]="['/plans', planId(), 'setup']" routerLinkActive="active">
+          <span class="tab-icon" aria-hidden="true">⚙️</span>
+          <span class="tab-label">Kurulum</span>
+        </a>
+        <a class="mobile-tab" [routerLink]="['/plans', planId(), 'data']" routerLinkActive="active">
+          <span class="tab-icon" aria-hidden="true">💾</span>
+          <span class="tab-label">Yedek</span>
+        </a>
+        <a class="mobile-tab" routerLink="/plans" [queryParams]="{ manage: '1' }" [class.active]="isPlansManage()">
+          <span class="tab-icon" aria-hidden="true">📁</span>
+          <span class="tab-label">Planlar</span>
+        </a>
+        <a class="mobile-tab" routerLink="/profile" [class.active]="isProfile()">
+          <span class="tab-icon" aria-hidden="true">👤</span>
+          <span class="tab-label">Profil</span>
+        </a>
+      } @else {
+        <a class="mobile-tab" routerLink="/plans" [queryParams]="{ manage: '1' }" [class.active]="isPlansManage()">
+          <span class="tab-icon" aria-hidden="true">📁</span>
+          <span class="tab-label">Planlar</span>
+        </a>
+        <a class="mobile-tab" routerLink="/profile" [class.active]="isProfile()">
+          <span class="tab-icon" aria-hidden="true">👤</span>
+          <span class="tab-label">Profil</span>
+        </a>
+        <button type="button" class="mobile-tab" (click)="logout()">
+          <span class="tab-icon" aria-hidden="true">🚪</span>
+          <span class="tab-label">Çıkış</span>
+        </button>
+      }
+    </nav>
+  }
+
   <app-toast-host />
   <app-confirm-host />
 </div>

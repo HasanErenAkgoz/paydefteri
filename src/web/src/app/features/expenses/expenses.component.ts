@@ -28,12 +28,22 @@ import {
 import { ExpensePartnerOption } from './expense-partner-option';
 import { ExpenseListComponent } from './expense-list/expense-list.component';
 
+import { CurrencyTryPipe } from '../../shared/pipes/currency-try.pipe';
+
 type ExpenseFilter = 'all' | 'paid' | 'planned';
 
 @Component({
   selector: 'app-expenses',
   standalone: true,
-  imports: [RouterLink, ExpenseOverviewComponent, ExpenseTransferPanelComponent, ExpenseListControlsComponent, ExpenseListComponent, ExpenseAddFormComponent, ExpenseEditModalComponent],
+  imports: [
+    RouterLink,
+    ExpenseTransferPanelComponent,
+    ExpenseListControlsComponent,
+    ExpenseListComponent,
+    ExpenseAddFormComponent,
+    ExpenseEditModalComponent,
+    CurrencyTryPipe,
+  ],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss',
 })
@@ -57,7 +67,8 @@ export class ExpensesComponent implements OnInit {
   readonly saving = signal(false);
   readonly markingId = signal<string | null>(null);
   readonly filter = signal<ExpenseFilter>('all');
-  readonly showAddForm = signal(true);
+  readonly showAddForm = signal(false);
+  readonly activeTab = signal<'list' | 'summary' | 'transfers'>('list');
   readonly editingExpense = signal<ExpenseDto | null>(null);
   readonly analyzingReceipt = signal(false);
   readonly receiptDraft = signal<ExpenseReceiptDraftDto | null>(null);
@@ -65,11 +76,12 @@ export class ExpensesComponent implements OnInit {
   readonly partnerOptions = computed<ExpensePartnerOption[]>(() => {
     const partners = this.partners();
     if (partners.length) {
-      return partners.map((partner) => ({ id: partner.id, name: partner.name }));
+      return partners.map((partner) => ({ id: partner.id, name: partner.name, color: partner.color }));
     }
     return (this.board()?.balances ?? []).map((balance) => ({
       id: balance.partnerId,
       name: balance.partnerName,
+      color: balance.color,
     }));
   });
 
@@ -138,105 +150,96 @@ export class ExpensesComponent implements OnInit {
     this.plansApi.get(this.planId).subscribe({
       next: (plan) => {
         if (!isExpensePlan(plan)) {
-          void this.router.navigate(['/plans', this.planId, 'dashboard']);
+          void this.router.navigate(['/plans', this.planId]);
           return;
         }
         this.planContext.setPlan(plan.id, plan.title, plan.description, plan.planType);
+        this.loadPartners();
         this.reload();
       },
-      error: () => void this.router.navigate(['/plans'], { queryParams: { manage: '1' } }),
+      error: () => {
+        void this.router.navigate(['/plans'], { queryParams: { manage: '1' } });
+      },
+    });
+  }
+
+  loadPartners(): void {
+    this.partnersApi.list(this.planId).subscribe({
+      next: (partners) => {
+        this.partners.set(partners);
+        this.initTransferPartners(partners);
+      },
+      error: (err) => {
+        this.toast.error(apiErrorMessage(err, 'Ortaklar yüklenemedi.'));
+      },
     });
   }
 
   reload(): void {
     this.loading.set(true);
-    this.partnersApi.list(this.planId).subscribe({
-      next: (partners) => {
-        this.partners.set(partners);
-        this.ensureDefaultPayer(partners[0]?.id);
-      },
-      error: () => {
-        /* board.balances can still supply payer options */
-      },
-    });
     this.expensesApi.board(this.planId).subscribe({
       next: (board) => {
         this.board.set(board);
-        this.planContext.setPlan(
-          board.plan.id,
-          board.plan.title,
-          board.plan.description,
-          board.plan.planType
-        );
-        this.ensureDefaultPayer(board.balances[0]?.partnerId);
-        this.suggestTransferFromBalances(board.balances);
-        this.loadExpensePage();
-        this.loading.set(false);
+        this.loadExpensePage(1);
+        if (!this.partners().length) {
+          this.initTransferPartners(board.balances.map((b) => ({ id: b.partnerId, name: b.partnerName })));
+        }
       },
       error: (err) => {
         this.loading.set(false);
-        this.toast.error(apiErrorMessage(err, 'Giderler yüklenemedi.'));
+        this.toast.error(apiErrorMessage(err, 'Gider tablosu yüklenemedi.'));
+      },
+    });
+  }
+
+  loadExpensePage(page: number): void {
+    const p = Math.max(1, page);
+    this.expensesApi.list(this.planId, p, this.expensePageSize).subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        this.pagedExpenses.set(res.items);
+        this.expensePage.set(res.page);
+        this.expenseTotalCount.set(res.totalCount);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.toast.error(apiErrorMessage(err, 'Gider listesi yüklenemedi.'));
       },
     });
   }
 
   get expensePageCount(): number {
-    return Math.max(1, Math.ceil(this.expenseTotalCount() / this.expensePageSize));
+    const total = this.expenseTotalCount();
+    if (total <= 0) return 1;
+    return Math.max(1, Math.ceil(total / this.expensePageSize));
   }
 
-  changeExpensePage(page: number): void {
-    if (page < 1 || page > this.expensePageCount || page === this.expensePage()) {
+  changeExpensePage(newPage: number): void {
+    if (newPage < 1 || newPage > this.expensePageCount || newPage === this.expensePage()) {
       return;
     }
-    this.expensePage.set(page);
-    this.loadExpensePage();
+    this.loadExpensePage(newPage);
   }
 
-  private loadExpensePage(): void {
-    this.expensesApi.list(this.planId, this.expensePage(), this.expensePageSize).subscribe({
-      next: (result) => {
-        this.pagedExpenses.set(result.items);
-        this.expenseTotalCount.set(result.totalCount);
-      },
-      error: (err) => this.toast.error(apiErrorMessage(err, 'Gider sayfası yüklenemedi.')),
-    });
-  }
-
-  private ensureDefaultPayer(partnerId: string | null | undefined): void {
-    if (!this.fromPartnerId && partnerId) {
-      this.fromPartnerId = partnerId;
+  private initTransferPartners(partners: { id: string; name: string }[]): void {
+    if (partners.length < 2) {
+      return;
     }
-  }
-
-  /** Prefill kimden/kime/tutar from net balances (borçlu → alacaklı). */
-  private suggestTransferFromBalances(
-    balances: { partnerId: string; balance: number }[]
-  ): void {
-    const debtor = [...balances]
-      .filter((b) => Number(b.balance) < -0.005)
-      .sort((a, b) => Number(a.balance) - Number(b.balance))[0];
-    const creditor = [...balances]
-      .filter((b) => Number(b.balance) > 0.005)
-      .sort((a, b) => Number(b.balance) - Number(a.balance))[0];
-
+    const balances = this.board()?.balances ?? [];
+    const debtor = balances.find((b) => b.balance < -0.005);
+    const creditor = balances.find((b) => b.balance > 0.005);
     if (debtor && creditor) {
       this.fromPartnerId = debtor.partnerId;
       this.toPartnerId = creditor.partnerId;
-      if (this.transferAmount == null || !(Number(this.transferAmount) > 0)) {
-        this.transferAmount =
-          Math.round(Math.min(Math.abs(Number(debtor.balance)), Number(creditor.balance)) * 100) /
-          100;
-      }
+      this.transferAmount = Math.min(Math.abs(debtor.balance), creditor.balance);
       return;
     }
-
-    const opts = this.partnerOptions();
-    if (!this.fromPartnerId && opts[0]) {
+    const opts = partners;
+    if (opts.length >= 2) {
       this.fromPartnerId = opts[0].id;
-    }
-    if (!this.toPartnerId && opts[1]) {
       this.toPartnerId = opts[1].id;
-    } else if (!this.toPartnerId && opts[0]) {
+    } else if (opts.length === 1) {
+      this.fromPartnerId = opts[0].id;
       this.toPartnerId = opts[0].id;
     }
   }
@@ -273,27 +276,29 @@ export class ExpensesComponent implements OnInit {
     return balance > 0 ? 'Alacaklı' : 'Borçlu';
   }
 
+  setTab(tab: 'list' | 'summary' | 'transfers'): void {
+    this.activeTab.set(tab);
+  }
+
   setFilter(f: ExpenseFilter): void {
     this.filter.set(f);
   }
 
+  openAddModal(): void {
+    this.showAddForm.set(true);
+  }
+
   toggleAddForm(): void {
-    const next = !this.showAddForm();
-    this.showAddForm.set(next);
-    if (!next) this.receiptDraft.set(null);
-    if (next) {
-      queueMicrotask(() => {
-        document.getElementById('expense-add-form')?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-        });
-      });
+    this.showAddForm.set(!this.showAddForm());
+    if (!this.showAddForm()) {
+      this.receiptDraft.set(null);
     }
   }
 
   closeAddForm(): void {
     this.showAddForm.set(false);
     this.receiptDraft.set(null);
+    this.activeTab.set('list');
   }
 
   showAddFormError(message: string): void {
@@ -333,6 +338,7 @@ export class ExpensesComponent implements OnInit {
         this.saving.set(false);
         this.showAddForm.set(false);
         this.receiptDraft.set(null);
+        this.activeTab.set('list');
         this.toast.success(installmentCount > 1 ? `${installmentCount} taksit eklendi.` : 'Gider eklendi.');
         this.reload();
       },

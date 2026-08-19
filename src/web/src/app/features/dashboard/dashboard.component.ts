@@ -19,8 +19,14 @@ import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmService } from '../../shared/confirm/confirm.service';
 import { MoneyInputDirective } from '../../shared/directives/money-input.directive';
 import { formatDateTr, formatTry, shareTypeToNumber } from '../../shared/utils/format';
+import { CelebrationService } from '../../core/services/celebration.service';
+import { ShareService } from '../../core/services/share.service';
+import { MilestoneBadgeComponent } from '../../shared/components/milestone-badge.component';
+import { HorizonBarComponent, HorizonInstallmentItem } from '../../shared/components/horizon-bar.component';
+import { CategoryDonutComponent, DonutCategory } from '../../shared/components/category-donut.component';
+import { QuickActionFabComponent } from '../../shared/components/quick-action-fab.component';
 
-type StatusFilter = 'all' | 'pending' | 'partial' | 'full';
+type StatusFilter = 'all' | 'unpaid' | 'paid' | 'pending' | 'partial' | 'full';
 type PartnerViewFilter = 'all' | 'mine' | string;
 
 interface PaymentDialogState {
@@ -37,7 +43,17 @@ interface PaymentDialogState {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, CurrencyTryPipe, DecimalPipe, RouterLink, MoneyInputDirective],
+  imports: [
+    FormsModule,
+    CurrencyTryPipe,
+    DecimalPipe,
+    RouterLink,
+    MoneyInputDirective,
+    MilestoneBadgeComponent,
+    HorizonBarComponent,
+    CategoryDonutComponent,
+    QuickActionFabComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -49,6 +65,8 @@ export class DashboardComponent implements OnInit {
   private readonly confirm = inject(ConfirmService);
   private readonly installmentsApi = inject(InstallmentsApi);
   private readonly planContext = inject(PlanContextService);
+  private readonly celebration = inject(CelebrationService);
+  readonly shareService = inject(ShareService);
 
   readonly dashboard = signal<DashboardDto | null>(null);
   readonly loading = signal(true);
@@ -75,6 +93,18 @@ export class DashboardComponent implements OnInit {
   readonly formatDateTr = formatDateTr;
   readonly formatTry = formatTry;
 
+  readonly allInstallmentCount = computed(() => this.dashboard()?.installments.length ?? 0);
+  readonly unpaidInstallmentCount = computed(() => {
+    const data = this.dashboard();
+    if (!data) return 0;
+    return data.installments.filter((i) => String(i.status) !== 'Full' && String(i.status) !== '2').length;
+  });
+  readonly paidInstallmentCount = computed(() => {
+    const data = this.dashboard();
+    if (!data) return 0;
+    return data.installments.filter((i) => String(i.status) === 'Full' || String(i.status) === '2').length;
+  });
+
   readonly filteredInstallments = computed(() => {
     const data = this.dashboard();
     if (!data) {
@@ -85,11 +115,15 @@ export class DashboardComponent implements OnInit {
     const pv = this.partnerView();
     return data.installments.filter((inst) => {
       const status = String(inst.status);
+      const isPaid = status === 'Full' || status === '2';
+      const isUnpaid = !isPaid;
       const matchFilter =
         f === 'all' ||
+        (f === 'unpaid' && isUnpaid) ||
+        (f === 'paid' && isPaid) ||
         (f === 'pending' && (status === 'Pending' || status === '0')) ||
         (f === 'partial' && (status === 'Partial' || status === '1')) ||
-        (f === 'full' && (status === 'Full' || status === '2'));
+        (f === 'full' && isPaid);
       if (!matchFilter) {
         return false;
       }
@@ -203,6 +237,7 @@ export class DashboardComponent implements OnInit {
       next: () => {
         this.saving.set(false);
         this.toast.success('Ödeme onaylandı.');
+        this.celebration.celebrate();
         this.reload();
       },
       error: (err) => {
@@ -210,6 +245,79 @@ export class DashboardComponent implements OnInit {
         this.toast.error(err?.error?.detail ?? 'Onay başarısız.');
       },
     });
+  }
+
+  readonly horizonItems = computed<HorizonInstallmentItem[]>(() => {
+    const d = this.dashboard();
+    if (!d) return [];
+    return d.installments.map((i, idx) => ({
+      id: i.id,
+      name: i.name,
+      installmentNumber: i.sortOrder || idx + 1,
+      dueDate: i.dueDate,
+      amount: i.totalAmount,
+      isPaid: String(i.status) === 'Full' || String(i.status) === '2',
+    }));
+  });
+
+  readonly donutCategories = computed<DonutCategory[]>(() => {
+    const d = this.dashboard();
+    if (!d) return [];
+    const paid = d.metrics.grandPaid || 0;
+    const remaining = d.metrics.grandRemaining || 0;
+    return [
+      { label: 'Ödenen Pay', amount: paid, color: '#10b981' },
+      { label: 'Kalan Borç', amount: remaining, color: '#f59e0b' },
+    ];
+  });
+
+  shareInstallmentWhatsapp(inst: DashboardInstallmentDto, event?: Event): void {
+    if (event) event.stopPropagation();
+    const d = this.dashboard();
+    if (!d) return;
+
+    let shareAmount = inst.totalAmount;
+    if (d.myPartnerId) {
+      const myPay = inst.partnerPayments.find((p) => p.partnerId === d.myPartnerId);
+      if (myPay) {
+        shareAmount = myPay.shareAmount;
+      }
+    } else if (inst.partnerPayments.length > 0) {
+      shareAmount = inst.partnerPayments[0].shareAmount;
+    }
+
+    const instNumber = inst.sortOrder || d.installments.findIndex((x) => x.id === inst.id) + 1;
+
+    this.shareService.shareViaWhatsapp({
+      planTitle: d.title,
+      installmentName: inst.name,
+      installmentNumber: instNumber,
+      dueDate: formatDateTr(inst.dueDate),
+      shareAmount: shareAmount,
+      totalAmount: inst.totalAmount,
+    });
+  }
+
+  onFabAction(actionName: string): void {
+    const d = this.dashboard();
+    if (!d) return;
+
+    if (actionName === 'add-expense') {
+      this.router.navigate(['/plans', this.planId, 'expenses']);
+    } else if (actionName === 'share-whatsapp') {
+      const nextInst = d.installments.find(
+        (i) => String(i.status) !== 'Full' && String(i.status) !== '2'
+      );
+      if (nextInst) {
+        this.shareInstallmentWhatsapp(nextInst);
+      } else {
+        this.toast.info('Tüm taksitler tamamlanmış!');
+      }
+    } else if (actionName === 'settle-up') {
+      void this.settleUp();
+    } else if (actionName === 'export-pdf') {
+      this.router.navigate(['/plans', this.planId, 'data']);
+    }
   }
 
   rejectPayment(inst: DashboardInstallmentDto, pay: PartnerPaymentStatusDto): void {
@@ -559,6 +667,9 @@ export class DashboardComponent implements OnInit {
             this.toast.success(
               pending ? 'Ödeme onay için gönderildi.' : 'Ödeme kaydedildi.'
             );
+            if (d.isPaid && !pending) {
+              this.celebration.celebrate();
+            }
             this.reload();
           },
           error: (err) => {

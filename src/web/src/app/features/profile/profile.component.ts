@@ -25,6 +25,7 @@ export class ProfileComponent implements OnInit {
   readonly revokingSessionId = signal<string | null>(null);
   readonly mobileSessions = signal<MobileSessionDto[]>([]);
   readonly isMobileApp = this.auth.isMobileApp;
+  readonly activeTab = signal<'account' | 'security' | 'sessions'>('account');
 
   readonly email = signal('');
   readonly savedName = signal('');
@@ -33,6 +34,9 @@ export class ProfileComponent implements OnInit {
   currentPassword = '';
   newPassword = '';
   confirmPassword = '';
+
+  readonly showCurrentPassword = signal(false);
+  readonly showNewPassword = signal(false);
 
   readonly initials = computed(() => {
     const name = this.savedName().trim();
@@ -46,6 +50,33 @@ export class ProfileComponent implements OnInit {
     const mail = this.email();
     return mail ? mail.slice(0, 2).toUpperCase() : 'PD';
   });
+
+  get hasMinLength(): boolean {
+    return this.newPassword.length >= 10;
+  }
+
+  get hasLetter(): boolean {
+    return /[A-Za-z]/.test(this.newPassword);
+  }
+
+  get hasNumber(): boolean {
+    return /\d/.test(this.newPassword);
+  }
+
+  get passwordsMatch(): boolean {
+    return !!this.newPassword && this.newPassword === this.confirmPassword;
+  }
+
+  get passwordStrengthScore(): number {
+    if (!this.newPassword) return 0;
+    let score = 0;
+    if (this.newPassword.length >= 8) score += 1;
+    if (this.newPassword.length >= 12) score += 1;
+    if (/[A-Z]/.test(this.newPassword) && /[a-z]/.test(this.newPassword)) score += 1;
+    if (/\d/.test(this.newPassword)) score += 1;
+    if (/[^A-Za-z0-9]/.test(this.newPassword)) score += 1;
+    return Math.min(score, 4);
+  }
 
   ngOnInit(): void {
     this.auth.me().subscribe({

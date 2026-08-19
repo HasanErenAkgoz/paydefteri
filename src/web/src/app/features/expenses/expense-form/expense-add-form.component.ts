@@ -1,4 +1,5 @@
 import { Component, OnChanges, SimpleChanges, inject, input, output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import {
   ExpenseCategoryDto,
   ExpenseReceiptDraftDto,
@@ -6,17 +7,23 @@ import {
   ShareType,
 } from '../../../core/models/api.models';
 import { ExpensePartnerOption } from '../expense-partner-option';
-import { ExpenseBaseFieldsComponent, ExpenseBaseFieldsState } from './expense-base-fields.component';
+import { ExpenseShareUi, ExpenseBaseFieldsState } from './expense-base-fields.component';
 import { ExpenseCustomSharesComponent } from './expense-custom-shares.component';
 import { ExpenseInstallmentPreviewComponent } from './expense-installment-preview.component';
 import { ExpensePayerInputsComponent, ExpensePayerState } from './expense-payer-inputs.component';
 import { amountsMatchTotal, getInstallmentPreview } from './expense-form-calculations';
 import { CameraService } from '../../../core/platform/camera.service';
+import { CurrencyTryPipe } from '../../../shared/pipes/currency-try.pipe';
 
 @Component({
   selector: 'app-expense-add-form',
   standalone: true,
-  imports: [ExpenseBaseFieldsComponent, ExpenseCustomSharesComponent, ExpenseInstallmentPreviewComponent, ExpensePayerInputsComponent],
+  imports: [
+    FormsModule,
+    CurrencyTryPipe,
+    ExpenseCustomSharesComponent,
+    ExpensePayerInputsComponent,
+  ],
   templateUrl: './expense-add-form.component.html',
   styleUrl: './expense-add-form.component.scss',
 })
@@ -34,7 +41,7 @@ export class ExpenseAddFormComponent implements OnChanges {
 
   state: ExpenseBaseFieldsState = this.defaultState();
   customShares: Record<string, number> = {};
-  payerState: ExpensePayerState = { singlePayment: false, payerId: '', payments: {} };
+  payerState: ExpensePayerState = { singlePayment: true, payerId: '', payments: {} };
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['partners'] && this.partners().length) {
@@ -54,6 +61,35 @@ export class ExpenseAddFormComponent implements OnChanges {
     const shouldSync = next.amount !== this.state.amount || next.shareUi !== this.state.shareUi || next.solePartnerId !== this.state.solePartnerId;
     this.state = next;
     if (shouldSync) this.syncPayments();
+  }
+
+  selectCategory(categoryId: string): void {
+    this.updateState({ ...this.state, categoryId });
+  }
+
+  setPaymentMode(mode: 'Cash' | 'Installment'): void {
+    const installmentCount = mode === 'Installment' ? Math.max(2, this.state.installmentCount || 2) : 1;
+    this.updateState({ ...this.state, paymentMode: mode, installmentCount });
+  }
+
+  stepInstallment(delta: number): void {
+    const current = this.state.installmentCount || 2;
+    const nextCount = Math.min(120, Math.max(2, current + delta));
+    this.updateState({ ...this.state, installmentCount: nextCount });
+  }
+
+  setShareUi(shareUi: ExpenseShareUi): void {
+    this.updateState({ ...this.state, shareUi });
+  }
+
+  selectSolePartner(solePartnerId: string): void {
+    this.updateState({ ...this.state, solePartnerId });
+  }
+
+  formattedAmount(): string {
+    const amt = Number(this.state.amount);
+    if (!amt || amt <= 0) return '';
+    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(amt);
   }
 
   preview(): { count: number; baseAmount: number; finalAmount: number } | null {

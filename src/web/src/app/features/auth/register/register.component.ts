@@ -32,7 +32,7 @@ export class RegisterComponent {
   }
 
   submit(): void {
-    const email = this.email.trim();
+    const email = this.email.trim().toLowerCase();
     const password = this.password;
     const displayName = this.displayName.trim();
     if (!displayName || !email || !password) {
