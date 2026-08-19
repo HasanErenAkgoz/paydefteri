@@ -491,28 +491,53 @@
 /* PASSWORD INPUT WITH EYE */
 .password-input-wrap {
   position: relative;
+  width: 100%;
   display: flex;
   align-items: center;
 
   .hub-input {
-    padding-right: 40px;
+    width: 100%;
+    padding-right: 44px;
   }
 }
 
 .btn-eye {
   position: absolute;
-  right: 8px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   background: transparent;
   border: none;
-  font-size: 0.95rem;
-  cursor: pointer;
-  padding: 6px;
+  border-radius: 8px;
   color: #94a3b8;
-  opacity: 0.8;
-  transition: opacity 0.15s;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+
+  .eye-svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
 
   &:hover {
-    opacity: 1;
+    color: #f1f5f9;
+    background: rgba(148, 163, 184, 0.12);
+
+    .eye-svg {
+      transform: scale(1.08);
+    }
+  }
+
+  &:active {
+    transform: translateY(-50%) scale(0.95);
   }
 }
 

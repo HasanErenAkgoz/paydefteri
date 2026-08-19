@@ -37,6 +37,7 @@ export class ProfileComponent implements OnInit {
 
   readonly showCurrentPassword = signal(false);
   readonly showNewPassword = signal(false);
+  readonly showConfirmPassword = signal(false);
 
   readonly initials = computed(() => {
     const name = this.savedName().trim();
