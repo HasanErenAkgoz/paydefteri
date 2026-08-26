@@ -11,6 +11,9 @@
           <p class="muted">{{ paidTotal() | tryCurrency }} ödendi · {{ plannedTotal() | tryCurrency }} planlandı</p>
         </div>
         <div class="expense-hero-actions">
+          <button type="button" class="btn btn-secondary btn-statement-hero" (click)="openStatementImportModal()">
+            💳 Ekstre İçe Aktar
+          </button>
           <button type="button" class="btn btn-primary btn-add-hero" (click)="openAddModal()">
             ➕ Gider Ekle
           </button>
@@ -65,21 +68,27 @@
         <div class="card track-card">
           <app-expense-list-controls
             [isOwner]="isOwner()"
-            [filter]="filter()"
+            [categories]="b.categories ?? []"
+            [partners]="partnerOptions()"
+            [filterState]="filterState()"
+            [filteredStats]="filteredStats()"
             [page]="expensePage()"
             [pageCount]="expensePageCount"
-            [totalCount]="expenseTotalCount()"
+            [totalCount]="expenseTotalCount"
             [pageSize]="expensePageSize"
-            (filterChange)="setFilter($event)"
+            (filterChange)="setFilterState($event)"
             (pageChange)="changeExpensePage($event)"
+            (resetFilters)="resetAllFilters()"
           />
           <app-expense-list
             [expenses]="sortedExpenses()"
             [partners]="partnerOptions()"
             [markingId]="markingId()"
+            [isFiltered]="filteredStats().filteredCount < filteredStats().totalCount"
             (markPaid)="markPaidFromAction($event)"
             (edit)="openEdit($event)"
             (remove)="removeExpense($event.id, $event.name)"
+            (resetFilters)="resetAllFilters()"
           />
         </div>
       }
@@ -190,5 +199,15 @@
     (save)="saveEditedExpense($event)"
     (cancel)="closeEditModal()"
     (validationError)="showAddFormError($event)"
+  />
+}
+
+@if (showStatementImportModal()) {
+  <app-statement-import-modal
+    [planId]="planId"
+    [categories]="board()?.categories ?? []"
+    [partners]="partnerOptions()"
+    (closed)="closeStatementImportModal()"
+    (imported)="onStatementImported($event)"
   />
 }

@@ -112,6 +112,59 @@ public sealed class ExpensesController : ControllerBase
             ct));
     }
 
+    [HttpPost("analyze-statement")]
+    [EnableRateLimiting("receipt-analysis")]
+    [RequestSizeLimit(15 * 1024 * 1024)]
+    public async Task<ActionResult<CreditCardStatementAnalysisResultDto>> AnalyzeStatement(
+        Guid planId,
+        IFormFile? file,
+        [FromQuery] Guid? defaultPaidByPartnerId,
+        CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Dosya gerekli",
+                Detail = "Lütfen PDF, Excel (.xlsx), CSV veya görsel bir kredi kartı ekstresi seçin.",
+                Status = StatusCodes.Status400BadRequest,
+            });
+        }
+
+        await using var stream = file.OpenReadStream();
+        using var memory = new MemoryStream((int)file.Length);
+        await stream.CopyToAsync(memory, ct);
+
+        return Ok(await _sender.Send(
+            new AnalyzeCreditCardStatementCommand(
+                planId,
+                file.ContentType ?? "application/octet-stream",
+                memory.ToArray(),
+                file.FileName,
+                defaultPaidByPartnerId),
+            ct));
+    }
+
+    [HttpPost("import-statement")]
+    public async Task<ActionResult<ImportStatementExpensesResultDto>> ImportStatement(
+        Guid planId,
+        [FromBody] List<StatementExpenseImportItemDto> items,
+        CancellationToken ct)
+    {
+        if (items is null || items.Count == 0)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "İşlem seçilmedi",
+                Detail = "İçe aktarılacak en az bir işlem seçilmelidir.",
+                Status = StatusCodes.Status400BadRequest,
+            });
+        }
+
+        var result = await _sender.Send(new ImportCreditCardExpensesCommand(planId, items), ct);
+        return Ok(result);
+    }
+
     [HttpPut("{expenseId:guid}")]
     public async Task<ActionResult<ExpenseDto>> Update(
         Guid planId,

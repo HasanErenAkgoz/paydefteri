@@ -16,7 +16,6 @@ import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmService } from '../../shared/confirm/confirm.service';
 import { isExpensePlan } from '../../core/utils/plan-routes';
 import { apiErrorMessage } from '../../shared/utils/api-error';
-import { ExpenseOverviewComponent } from './expense-overview/expense-overview.component';
 import { ExpenseTransferPanelComponent } from './expense-transfer-panel/expense-transfer-panel.component';
 import { ExpenseListControlsComponent } from './expense-list-controls/expense-list-controls.component';
 import { MarkExpensePaidEvent } from './expense-row-actions/expense-row-actions.component';
@@ -27,10 +26,15 @@ import {
 } from './expense-form/expense-edit-modal.component';
 import { ExpensePartnerOption } from './expense-partner-option';
 import { ExpenseListComponent } from './expense-list/expense-list.component';
-
+import { StatementImportModalComponent } from './statement-import/statement-import-modal.component';
 import { CurrencyTryPipe } from '../../shared/pipes/currency-try.pipe';
-
-type ExpenseFilter = 'all' | 'paid' | 'planned';
+import {
+  DEFAULT_EXPENSE_FILTER_STATE,
+  ExpenseFilterState,
+  FilteredExpenseStats,
+  applyExpenseFilters,
+  sortExpenses,
+} from './expense-filter.models';
 
 @Component({
   selector: 'app-expenses',
@@ -42,6 +46,7 @@ type ExpenseFilter = 'all' | 'paid' | 'planned';
     ExpenseListComponent,
     ExpenseAddFormComponent,
     ExpenseEditModalComponent,
+    StatementImportModalComponent,
     CurrencyTryPipe,
   ],
   templateUrl: './expenses.component.html',
@@ -58,21 +63,22 @@ export class ExpensesComponent implements OnInit {
   private readonly confirm = inject(ConfirmService);
 
   readonly board = signal<ExpenseBoardDto | null>(null);
-  readonly pagedExpenses = signal<ExpenseDto[]>([]);
+  readonly filterState = signal<ExpenseFilterState>({ ...DEFAULT_EXPENSE_FILTER_STATE });
   readonly expensePage = signal(1);
-  readonly expenseTotalCount = signal(0);
   readonly expensePageSize = 50;
   readonly partners = signal<PartnerDto[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly markingId = signal<string | null>(null);
-  readonly filter = signal<ExpenseFilter>('all');
   readonly showAddForm = signal(false);
   readonly activeTab = signal<'list' | 'summary' | 'transfers'>('list');
   readonly editingExpense = signal<ExpenseDto | null>(null);
   readonly analyzingReceipt = signal(false);
   readonly receiptDraft = signal<ExpenseReceiptDraftDto | null>(null);
+  readonly showStatementImportModal = signal(false);
+
   readonly isOwner = computed(() => !!this.board()?.isOwner);
+
   readonly partnerOptions = computed<ExpensePartnerOption[]>(() => {
     const partners = this.partners();
     if (partners.length) {
@@ -84,6 +90,52 @@ export class ExpensesComponent implements OnInit {
       color: balance.color,
     }));
   });
+
+  // All expenses from board
+  readonly allExpenses = computed<ExpenseDto[]>(() => this.board()?.expenses ?? []);
+
+  // Filtered and sorted expenses
+  readonly filteredExpenses = computed<ExpenseDto[]>(() => {
+    const raw = this.allExpenses();
+    const categories = this.board()?.categories ?? [];
+    const filtered = applyExpenseFilters(raw, this.filterState(), categories);
+    return sortExpenses(filtered, this.filterState().sortBy);
+  });
+
+  // Filtered statistics
+  readonly filteredStats = computed<FilteredExpenseStats>(() => {
+    const all = this.allExpenses();
+    const filtered = this.filteredExpenses();
+    const paid = filtered.filter((e) => this.isPaid(e));
+    const planned = filtered.filter((e) => !this.isPaid(e));
+
+    return {
+      totalCount: all.length,
+      filteredCount: filtered.length,
+      totalAmount: filtered.reduce((sum, e) => sum + Number(e.totalAmount || 0), 0),
+      paidAmount: paid.reduce((sum, e) => sum + Number(e.totalAmount || 0), 0),
+      plannedAmount: planned.reduce((sum, e) => sum + Number(e.totalAmount || 0), 0),
+    };
+  });
+
+  // Paged slice of filtered expenses
+  readonly sortedExpenses = computed<ExpenseDto[]>(() => {
+    const list = this.filteredExpenses();
+    const page = this.expensePage();
+    const pageSize = this.expensePageSize;
+    const start = (page - 1) * pageSize;
+    return list.slice(start, start + pageSize);
+  });
+
+  get expensePageCount(): number {
+    const total = this.filteredExpenses().length;
+    if (total <= 0) return 1;
+    return Math.max(1, Math.ceil(total / this.expensePageSize));
+  }
+
+  get expenseTotalCount(): number {
+    return this.filteredExpenses().length;
+  }
 
   canManageExpense(expense: ExpenseDto): boolean {
     return expense.canManage;
@@ -102,19 +154,6 @@ export class ExpensesComponent implements OnInit {
   transferAmount: number | null = null;
 
   planId = '';
-
-  readonly sortedExpenses = computed(() => {
-    const list = [...this.pagedExpenses()];
-    list.sort((a, b) => String(b.occurredOn).localeCompare(String(a.occurredOn)));
-    const f = this.filter();
-    if (f === 'paid') {
-      return list.filter((e) => this.isPaid(e));
-    }
-    if (f === 'planned') {
-      return list.filter((e) => !this.isPaid(e));
-    }
-    return list;
-  });
 
   readonly paidTotal = computed(() =>
     (this.board()?.expenses ?? [])
@@ -179,8 +218,8 @@ export class ExpensesComponent implements OnInit {
     this.loading.set(true);
     this.expensesApi.board(this.planId).subscribe({
       next: (board) => {
+        this.loading.set(false);
         this.board.set(board);
-        this.loadExpensePage(1);
         if (!this.partners().length) {
           this.initTransferPartners(board.balances.map((b) => ({ id: b.partnerId, name: b.partnerName })));
         }
@@ -192,33 +231,21 @@ export class ExpensesComponent implements OnInit {
     });
   }
 
-  loadExpensePage(page: number): void {
-    const p = Math.max(1, page);
-    this.expensesApi.list(this.planId, p, this.expensePageSize).subscribe({
-      next: (res) => {
-        this.loading.set(false);
-        this.pagedExpenses.set(res.items);
-        this.expensePage.set(res.page);
-        this.expenseTotalCount.set(res.totalCount);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.toast.error(apiErrorMessage(err, 'Gider listesi yüklenemedi.'));
-      },
-    });
-  }
-
-  get expensePageCount(): number {
-    const total = this.expenseTotalCount();
-    if (total <= 0) return 1;
-    return Math.max(1, Math.ceil(total / this.expensePageSize));
-  }
-
   changeExpensePage(newPage: number): void {
     if (newPage < 1 || newPage > this.expensePageCount || newPage === this.expensePage()) {
       return;
     }
-    this.loadExpensePage(newPage);
+    this.expensePage.set(newPage);
+  }
+
+  setFilterState(newState: ExpenseFilterState): void {
+    this.filterState.set(newState);
+    this.expensePage.set(1);
+  }
+
+  resetAllFilters(): void {
+    this.filterState.set({ ...DEFAULT_EXPENSE_FILTER_STATE });
+    this.expensePage.set(1);
   }
 
   private initTransferPartners(partners: { id: string; name: string }[]): void {
@@ -245,7 +272,7 @@ export class ExpensesComponent implements OnInit {
   }
 
   isPaid(e: ExpenseDto): boolean {
-    return e.status === 'Paid' || e.status === 1;
+    return e.status === 'Paid' || e.status === (1 as unknown as ExpenseDto['status']);
   }
 
   partnerName(id: string | null | undefined): string {
@@ -280,10 +307,6 @@ export class ExpensesComponent implements OnInit {
     this.activeTab.set(tab);
   }
 
-  setFilter(f: ExpenseFilter): void {
-    this.filter.set(f);
-  }
-
   openAddModal(): void {
     this.showAddForm.set(true);
   }
@@ -299,6 +322,18 @@ export class ExpensesComponent implements OnInit {
     this.showAddForm.set(false);
     this.receiptDraft.set(null);
     this.activeTab.set('list');
+  }
+
+  openStatementImportModal(): void {
+    this.showStatementImportModal.set(true);
+  }
+
+  closeStatementImportModal(): void {
+    this.showStatementImportModal.set(false);
+  }
+
+  onStatementImported(_count: number): void {
+    this.reload();
   }
 
   showAddFormError(message: string): void {

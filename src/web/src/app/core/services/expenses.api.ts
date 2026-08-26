@@ -13,6 +13,9 @@ import {
   ExpenseReceiptDraftDto,
   SettlementTransferDto,
   SettlementTransferRequest,
+  CreditCardStatementAnalysisResultDto,
+  StatementExpenseImportItem,
+  ImportStatementExpensesResultDto,
 } from '../models/api.models';
 
 @Injectable({ providedIn: 'root' })
@@ -40,6 +43,34 @@ export class ExpensesApi {
     return this.http.post<ExpenseReceiptDraftDto>(
       `${this.base}/${planId}/expenses/analyze-receipt`,
       formData
+    );
+  }
+
+  analyzeStatement(
+    planId: string,
+    file: File,
+    defaultPaidByPartnerId?: string | null
+  ): Observable<CreditCardStatementAnalysisResultDto> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    const params: Record<string, string> = {};
+    if (defaultPaidByPartnerId) {
+      params['defaultPaidByPartnerId'] = defaultPaidByPartnerId;
+    }
+    return this.http.post<CreditCardStatementAnalysisResultDto>(
+      `${this.base}/${planId}/expenses/analyze-statement`,
+      formData,
+      { params }
+    );
+  }
+
+  importStatementExpenses(
+    planId: string,
+    items: StatementExpenseImportItem[]
+  ): Observable<ImportStatementExpensesResultDto> {
+    return this.http.post<ImportStatementExpensesResultDto>(
+      `${this.base}/${planId}/expenses/import-statement`,
+      items
     );
   }
 

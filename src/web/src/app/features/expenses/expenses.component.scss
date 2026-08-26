@@ -31,6 +31,28 @@ h1 {
   color: #f8fafc;
 }
 
+.expense-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-statement-hero {
+  min-height: 42px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 0.86rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+}
+
 .btn-add-hero {
   min-height: 42px;
   padding: 8px 16px;

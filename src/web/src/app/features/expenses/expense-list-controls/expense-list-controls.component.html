@@ -1,18 +1,449 @@
-<div class="track-head">
-  <div>
-    <div class="card-title">📒 Gider takip tablosu</div>
-    <p class="muted tiny">{{ isOwner() ? 'Planlanan satırda ödeyeni seçip Ödendi yap ile işaretleyin.' : 'Gider ekleyebilir, kendi eklediğiniz satırları düzenleyip ödeme girebilirsiniz.' }}</p>
+<div class="expense-controls-container">
+  <!-- Desktop / Main Header -->
+  <div class="track-head">
+    <div class="track-title-group">
+      <div class="card-title">📒 Gider Takip Defteri</div>
+      <p class="muted tiny">
+        {{ isOwner() ? 'Giderleri filtreleyebilir, planlanan satırlarda ödeme yapabilirsiniz.' : 'Kendi eklediğiniz ve payınız olan giderleri kolayca listeleyin.' }}
+      </p>
+    </div>
+
+    <!-- Mobile Filter Open Button (Visible on mobile screens) -->
+    <div class="mobile-filter-trigger">
+      <button
+        type="button"
+        class="btn btn-secondary btn-filter-sheet"
+        [class.has-active]="hasActiveFilters()"
+        (click)="openMobileFilter()"
+      >
+        <svg class="svg-icon" viewBox="0 0 24 24">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        </svg>
+        <span>Filtrele</span>
+        @if (activeFilterCount() > 0) {
+          <span class="active-badge">{{ activeFilterCount() }}</span>
+        }
+      </button>
+    </div>
   </div>
-  <div class="filter-tabs" role="tablist">
-    <button type="button" [class.active]="filter() === 'all'" (click)="filterChange.emit('all')">Tümü</button>
-    <button type="button" [class.active]="filter() === 'paid'" (click)="filterChange.emit('paid')">Ödenen</button>
-    <button type="button" [class.active]="filter() === 'planned'" (click)="filterChange.emit('planned')">Planlanan</button>
+
+  <!-- Primary Desktop & Mobile Search Bar -->
+  <div class="controls-search-row">
+    <div class="search-box-wrapper">
+      <svg class="search-svg" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        type="text"
+        class="expense-search-input"
+        placeholder="Gider adı, kategori veya açıklama ara..."
+        [ngModel]="filterState().search"
+        (ngModelChange)="setSearch($event)"
+        aria-label="Gider ara"
+      />
+      @if (filterState().search) {
+        <button
+          type="button"
+          class="clear-search-btn"
+          (click)="setSearch('')"
+          aria-label="Aramayı temizle"
+        >
+          ✕
+        </button>
+      }
+    </div>
+
+    <!-- Quick Chips Strip (Desktop & Mobile Swipeable) -->
+    <div class="quick-chips-scroll" role="tablist" aria-label="Hızlı filtreler">
+      <button
+        type="button"
+        class="chip-btn"
+        [class.active]="filterState().status === 'all' && filterState().quickTag === 'all' && filterState().period === 'all'"
+        (click)="setStatus('all'); setQuickTag('all')"
+      >
+        Tümü
+      </button>
+      <button
+        type="button"
+        class="chip-btn"
+        [class.active]="filterState().status === 'paid'"
+        (click)="setStatus(filterState().status === 'paid' ? 'all' : 'paid')"
+      >
+        <span class="dot-indicator paid"></span>
+        Ödenenler
+      </button>
+      <button
+        type="button"
+        class="chip-btn"
+        [class.active]="filterState().status === 'planned'"
+        (click)="setStatus(filterState().status === 'planned' ? 'all' : 'planned')"
+      >
+        <span class="dot-indicator planned"></span>
+        Planlananlar
+      </button>
+      <button
+        type="button"
+        class="chip-btn"
+        [class.active]="filterState().period === 'this_month'"
+        (click)="setPeriod(filterState().period === 'this_month' ? 'all' : 'this_month')"
+      >
+        🗓️ Bu Ay
+      </button>
+      <button
+        type="button"
+        class="chip-btn"
+        [class.active]="filterState().quickTag === 'recurring'"
+        (click)="setQuickTag(filterState().quickTag === 'recurring' ? 'all' : 'recurring')"
+      >
+        ↻ Tekrarlayanlar
+      </button>
+    </div>
   </div>
+
+  <!-- Desktop Advanced Filter Dropdowns Toolbar -->
+  <div class="desktop-filter-toolbar">
+    <div class="filter-dropdowns-grid">
+      <!-- 1. Status Dropdown -->
+      <div class="custom-select-wrapper">
+        <svg class="select-prefix-icon" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <select
+          [ngModel]="filterState().status"
+          (ngModelChange)="setStatus($event)"
+          aria-label="Durum Filtresi"
+        >
+          <option value="all">Tüm Durumlar</option>
+          <option value="paid">✅ Ödenenler</option>
+          <option value="planned">⏳ Planlananlar</option>
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+      </div>
+
+      <!-- 2. Category Dropdown -->
+      <div class="custom-select-wrapper">
+        <svg class="select-prefix-icon" viewBox="0 0 24 24">
+          <path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18" />
+        </svg>
+        <select
+          [ngModel]="filterState().categoryId"
+          (ngModelChange)="setCategory($event)"
+          aria-label="Kategori Filtresi"
+        >
+          <option value="all">Tüm Kategoriler</option>
+          @for (cat of categories(); track cat.id) {
+            <option [value]="cat.id">🏷️ {{ cat.name }}</option>
+          }
+          <option value="uncategorized">📁 Kategorisiz</option>
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+      </div>
+
+      <!-- 3. Partner Dropdown -->
+      <div class="custom-select-wrapper">
+        <svg class="select-prefix-icon" viewBox="0 0 24 24">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <select
+          [ngModel]="filterState().partnerId"
+          (ngModelChange)="setPartner($event)"
+          aria-label="Ortak Filtresi"
+        >
+          <option value="all">Tüm Ortaklar</option>
+          @for (p of partners(); track p.id) {
+            <option [value]="p.id">👤 {{ p.name }}</option>
+          }
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+      </div>
+
+      <!-- 4. Period / Date Dropdown -->
+      <div class="custom-select-wrapper">
+        <svg class="select-prefix-icon" viewBox="0 0 24 24">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        <select
+          [ngModel]="filterState().period"
+          (ngModelChange)="setPeriod($event)"
+          aria-label="Dönem Filtresi"
+        >
+          <option value="all">Tüm Zamanlar</option>
+          <option value="this_month">📅 Bu Ay</option>
+          <option value="last_month">📅 Geçen Ay</option>
+          <option value="last_30_days">⏳ Son 30 Gün</option>
+          <option value="last_3_months">📊 Son 3 Ay</option>
+          <option value="this_year">🗓️ Bu Yıl</option>
+          <option value="custom">🔍 Özel Tarih Aralığı</option>
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+      </div>
+
+      <!-- 5. Sort Dropdown -->
+      <div class="custom-select-wrapper">
+        <svg class="select-prefix-icon" viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <polyline points="19 12 12 19 5 12" />
+        </svg>
+        <select
+          [ngModel]="filterState().sortBy"
+          (ngModelChange)="setSortBy($event)"
+          aria-label="Sıralama"
+        >
+          <option value="date_desc">Tarih (En Yeni)</option>
+          <option value="date_asc">Tarih (En Eski)</option>
+          <option value="amount_desc">Tutar (En Yüksek)</option>
+          <option value="amount_asc">Tutar (En Düşük)</option>
+          <option value="name_asc">İsim (A-Z)</option>
+        </select>
+        <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+      </div>
+    </div>
+
+    <!-- Custom Date Range Row (Revealed when period === 'custom') -->
+    @if (filterState().period === 'custom') {
+      <div class="custom-date-range-row">
+        <div class="date-input-group">
+          <label for="start-date-filter">Başlangıç:</label>
+          <input
+            id="start-date-filter"
+            type="date"
+            class="custom-date-field"
+            [ngModel]="filterState().customStartDate"
+            (ngModelChange)="updateFilter('customStartDate', $event)"
+          />
+        </div>
+        <div class="date-input-group">
+          <label for="end-date-filter">Bitiş:</label>
+          <input
+            id="end-date-filter"
+            type="date"
+            class="custom-date-field"
+            [ngModel]="filterState().customEndDate"
+            (ngModelChange)="updateFilter('customEndDate', $event)"
+          />
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Live Filter Statistics & Reset Banner -->
+  @if (hasActiveFilters()) {
+    <div class="active-filter-bar">
+      <div class="filter-stat-badges">
+        <span class="stat-badge count">
+          🎯 Gösterilen: <strong>{{ filteredStats()?.filteredCount ?? totalCount() }}</strong> / {{ totalCount() }}
+        </span>
+        @if (filteredStats(); as stats) {
+          <span class="stat-badge total">
+            Toplam: <strong>{{ stats.totalAmount | tryCurrency }}</strong>
+          </span>
+          <span class="stat-badge paid">
+            Ödenen: <strong>{{ stats.paidAmount | tryCurrency }}</strong>
+          </span>
+          @if (stats.plannedAmount > 0) {
+            <span class="stat-badge planned">
+              Planlanan: <strong>{{ stats.plannedAmount | tryCurrency }}</strong>
+            </span>
+          }
+        }
+      </div>
+
+      <button type="button" class="btn-clear-all" (click)="onResetFilters()">
+        <span>Filtreleri Temizle</span>
+        <span class="clear-icon">✕</span>
+      </button>
+    </div>
+  }
+
+  <!-- Pagination Controls -->
+  @if (totalCount() > pageSize()) {
+    <div class="pagination" aria-label="Gider sayfaları">
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        [disabled]="page() <= 1"
+        (click)="pageChange.emit(page() - 1)"
+      >
+        Önceki
+      </button>
+      <span class="muted">
+        Sayfa {{ page() }} / {{ pageCount() }} · {{ totalCount() }} gider
+      </span>
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        [disabled]="page() >= pageCount()"
+        (click)="pageChange.emit(page() + 1)"
+      >
+        Sonraki
+      </button>
+    </div>
+  }
 </div>
-@if (totalCount() > pageSize()) {
-  <div class="pagination" aria-label="Gider sayfaları">
-    <button type="button" class="btn btn-secondary btn-sm" [disabled]="page() === 1" (click)="pageChange.emit(page() - 1)">Önceki</button>
-    <span class="muted">Sayfa {{ page() }} / {{ pageCount() }} · {{ totalCount() }} gider</span>
-    <button type="button" class="btn btn-secondary btn-sm" [disabled]="page() === pageCount()" (click)="pageChange.emit(page() + 1)">Sonraki</button>
+
+<!-- MOBILE BOTTOM SHEET FILTER MODAL -->
+@if (mobileFilterOpen()) {
+  <div class="mobile-filter-backdrop active" (click)="closeMobileFilter()">
+    <div
+      class="mobile-filter-sheet"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mobile-filter-sheet-title"
+    >
+      <div class="mobile-sheet-handle"></div>
+
+      <div class="sheet-header">
+        <div class="sheet-title-group">
+          <h3 id="mobile-filter-sheet-title">Gider Filtrele &amp; Sırala</h3>
+          <p class="muted">Giderleri durum, kategori, ortak ve tarihe göre filtreleyin.</p>
+        </div>
+        <button type="button" class="close-sheet-btn" (click)="closeMobileFilter()" aria-label="Kapat">✕</button>
+      </div>
+
+      <div class="sheet-body">
+        <!-- 1. Durum Seçimi -->
+        <div class="filter-section">
+          <label class="section-label">Ödeme Durumu</label>
+          <div class="segmented-pill-group">
+            <button
+              type="button"
+              class="segment-btn"
+              [class.active]="tempMobileFilter().status === 'all'"
+              (click)="updateTempMobileFilter('status', 'all')"
+            >
+              Tümü
+            </button>
+            <button
+              type="button"
+              class="segment-btn"
+              [class.active]="tempMobileFilter().status === 'paid'"
+              (click)="updateTempMobileFilter('status', 'paid')"
+            >
+              ✅ Ödenen
+            </button>
+            <button
+              type="button"
+              class="segment-btn"
+              [class.active]="tempMobileFilter().status === 'planned'"
+              (click)="updateTempMobileFilter('status', 'planned')"
+            >
+              ⏳ Planlanan
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Kategori Seçimi -->
+        <div class="filter-section">
+          <label class="section-label">Kategori</label>
+          <div class="custom-select-wrapper sheet-select">
+            <select
+              [ngModel]="tempMobileFilter().categoryId"
+              (ngModelChange)="updateTempMobileFilter('categoryId', $event)"
+            >
+              <option value="all">Tüm Kategoriler</option>
+              @for (cat of categories(); track cat.id) {
+                <option [value]="cat.id">🏷️ {{ cat.name }}</option>
+              }
+              <option value="uncategorized">📁 Kategorisiz</option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+          </div>
+        </div>
+
+        <!-- 3. Ortak Seçimi -->
+        <div class="filter-section">
+          <label class="section-label">Ortak / Paydaş</label>
+          <div class="custom-select-wrapper sheet-select">
+            <select
+              [ngModel]="tempMobileFilter().partnerId"
+              (ngModelChange)="updateTempMobileFilter('partnerId', $event)"
+            >
+              <option value="all">Tüm Ortaklar</option>
+              @for (p of partners(); track p.id) {
+                <option [value]="p.id">👤 {{ p.name }}</option>
+              }
+            </select>
+            <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+          </div>
+        </div>
+
+        <!-- 4. Tarih & Dönem -->
+        <div class="filter-section">
+          <label class="section-label">Tarih &amp; Dönem</label>
+          <div class="custom-select-wrapper sheet-select">
+            <select
+              [ngModel]="tempMobileFilter().period"
+              (ngModelChange)="updateTempMobileFilter('period', $event)"
+            >
+              <option value="all">Tüm Zamanlar</option>
+              <option value="this_month">📅 Bu Ay</option>
+              <option value="last_month">📅 Geçen Ay</option>
+              <option value="last_30_days">⏳ Son 30 Gün</option>
+              <option value="last_3_months">📊 Son 3 Ay</option>
+              <option value="this_year">🗓️ Bu Yıl</option>
+              <option value="custom">🔍 Özel Tarih Aralığı</option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+          </div>
+
+          @if (tempMobileFilter().period === 'custom') {
+            <div class="mobile-custom-date-grid">
+              <div class="date-field-group">
+                <label>Başlangıç</label>
+                <input
+                  type="date"
+                  class="custom-date-field"
+                  [ngModel]="tempMobileFilter().customStartDate"
+                  (ngModelChange)="updateTempMobileFilter('customStartDate', $event)"
+                />
+              </div>
+              <div class="date-field-group">
+                <label>Bitiş</label>
+                <input
+                  type="date"
+                  class="custom-date-field"
+                  [ngModel]="tempMobileFilter().customEndDate"
+                  (ngModelChange)="updateTempMobileFilter('customEndDate', $event)"
+                />
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- 5. Sıralama -->
+        <div class="filter-section">
+          <label class="section-label">Sıralama Düzeni</label>
+          <div class="custom-select-wrapper sheet-select">
+            <select
+              [ngModel]="tempMobileFilter().sortBy"
+              (ngModelChange)="updateTempMobileFilter('sortBy', $event)"
+            >
+              <option value="date_desc">Tarih (En Yeni)</option>
+              <option value="date_asc">Tarih (En Eski)</option>
+              <option value="amount_desc">Tutar (En Yüksek)</option>
+              <option value="amount_asc">Tutar (En Düşük)</option>
+              <option value="name_asc">İsim (A-Z)</option>
+            </select>
+            <svg class="select-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-footer">
+        <button type="button" class="btn btn-secondary btn-sheet-reset" (click)="resetMobileFilter()">
+          Sıfırla
+        </button>
+        <button type="button" class="btn btn-primary btn-sheet-apply" (click)="applyMobileFilter()">
+          Filtreleri Uygula
+        </button>
+      </div>
+    </div>
   </div>
 }

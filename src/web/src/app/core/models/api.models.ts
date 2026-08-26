@@ -495,3 +495,57 @@ export interface PlanActivityItemDto {
   actorDisplayName: string;
   createdAtUtc: string;
 }
+
+export interface StatementSummaryDto {
+  bankName: string | null;
+  cardLastDigits: string | null;
+  statementPeriod: string | null;
+  dueDate: string | null;
+  totalDebt: number | null;
+  minimumPayment: number | null;
+}
+
+export interface StatementTransactionItemDto {
+  tempId: string;
+  occurredOn: string;
+  description: string;
+  amount: number;
+  isIncomeOrRefund: boolean;
+  installmentCurrent: number | null;
+  installmentTotal: number | null;
+  suggestedCategoryId: string | null;
+  suggestedCategoryName: string | null;
+  merchantName: string | null;
+  confidence: number;
+  note: string | null;
+  isPossibleDuplicate: boolean;
+  existingExpenseId: string | null;
+  existingExpenseName: string | null;
+}
+
+export interface CreditCardStatementAnalysisResultDto {
+  summary: StatementSummaryDto;
+  transactions: StatementTransactionItemDto[];
+  warnings: string[];
+}
+
+export interface StatementExpenseImportItem {
+  name: string;
+  occurredOn: string;
+  totalAmount: number;
+  shareType: ShareType;
+  status: ExpenseStatus;
+  paidByPartnerId: string | null;
+  categoryId: string | null;
+  note?: string;
+  customShares?: CustomShareDto[];
+  payments?: ExpensePaymentDto[];
+  installmentCount?: number;
+  createRemainingInstallments?: boolean;
+}
+
+export interface ImportStatementExpensesResultDto {
+  importedCount: number;
+  totalAmount: number;
+  expenseIds: string[];
+}

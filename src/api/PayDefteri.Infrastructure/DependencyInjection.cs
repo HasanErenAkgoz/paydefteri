@@ -114,6 +114,7 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(45);
         });
         services.AddScoped<IExpenseReceiptAnalyzer, FallbackExpenseReceiptAnalyzer>();
+        services.AddScoped<ICreditCardStatementAnalyzer, GeminiCreditCardStatementAnalyzer>();
         services.Configure<ReceiptStorageOptions>(configuration.GetSection(ReceiptStorageOptions.SectionName));
         services.AddSingleton<IReceiptStorage, LocalReceiptStorage>();
         services.AddSingleton<IPlanDocumentParser, PlanDocumentParser>();

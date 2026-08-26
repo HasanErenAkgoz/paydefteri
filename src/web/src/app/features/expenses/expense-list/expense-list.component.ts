@@ -20,13 +20,17 @@ export class ExpenseListComponent {
   readonly expenses = input.required<ExpenseDto[]>();
   readonly partners = input.required<ExpensePartnerOption[]>();
   readonly markingId = input<string | null>(null);
+  readonly isFiltered = input<boolean>(false);
+
   readonly markPaid = output<MarkExpensePaidEvent>();
   readonly edit = output<ExpenseDto>();
   readonly remove = output<ExpenseDto>();
+  readonly resetFilters = output<void>();
+
   readonly formatDateTr = formatDateTr;
 
   isPaid(expense: ExpenseDto): boolean {
-    return expense.status === 'Paid' || expense.status === 1;
+    return expense.status === 'Paid' || expense.status === (1 as unknown as ExpenseDto['status']);
   }
 
   visibleShareLines(expense: ExpenseDto): ExpenseShareLineDto[] {
