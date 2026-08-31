@@ -10,9 +10,10 @@ import { BalancesComponent } from './balances.component';
 
 describe('BalancesComponent', () => {
   let fixture: ComponentFixture<BalancesComponent>;
-  let currentPlan = { id: 'plan-1', title: 'Ev Plani', description: '', planType: 'Installment' };
+  let currentPlan: { id: string; title: string; description: string; planType: string };
 
   beforeEach(async () => {
+    currentPlan = { id: 'plan-1', title: 'Ev Plani', description: '', planType: 'Installment' };
     await TestBed.configureTestingModule({
       imports: [BalancesComponent],
       providers: [

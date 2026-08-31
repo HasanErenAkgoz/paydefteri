@@ -42,10 +42,15 @@
         <div class="history-heading"><h2>Ekstrelerim</h2><span>{{ statements().length }}</span></div>
         <div class="history-list">
           @for (statement of statements(); track statement.id) {
-            <button type="button" class="history-item" [class.active]="selected()?.id === statement.id" (click)="openStatement(statement.id)">
-              <span><strong>{{ statement.periodStart | date:'MMMM y' }}</strong><small>{{ statement.sourceKind }}</small></span>
-              <b>{{ statementTotal(statement) }}</b>
-            </button>
+            <article class="history-entry" [class.active]="selected()?.id === statement.id">
+              <button type="button" class="history-item" [class.active]="selected()?.id === statement.id" (click)="openStatement(statement.id)">
+                <span><strong>{{ statement.periodStart | date:'MMMM y' }}</strong><small>{{ statement.sourceKind }} · {{ statement.transactionCount }} işlem</small></span>
+                <b>{{ statementTotal(statement) }}</b>
+              </button>
+              <button type="button" class="history-delete" [disabled]="deletingStatementId() === statement.id" [attr.aria-label]="statement.sourceFileName + ' ekstresini sil'" [title]="statement.sourceFileName + ' ekstresini sil'" (click)="removeStatement(statement)">
+                {{ deletingStatementId() === statement.id ? '…' : '⌫' }}
+              </button>
+            </article>
           }
         </div>
       </aside>
@@ -54,8 +59,17 @@
         @if (selected(); as statement) {
           <div class="statement-title-row">
             <div><p class="eyebrow">{{ statement.sourceFileName }}</p><h2>{{ statement.periodStart | date:'MMMM y' }}</h2></div>
-            <button type="button" class="btn btn-ghost btn-sm" (click)="removeStatement(statement)">Sil</button>
+            <button type="button" class="btn btn-ghost btn-sm statement-delete" [disabled]="deletingStatementId() === statement.id" (click)="removeStatement(statement)">{{ deletingStatementId() === statement.id ? 'Siliniyor…' : 'Ekstreyi sil' }}</button>
           </div>
+
+          <section class="spending-pulse" aria-label="Ekstre özeti">
+            <div class="pulse-orbit" aria-hidden="true"><span></span></div>
+            <div class="pulse-copy"><span>Ekstre nabzı</span><strong>{{ purchases().length }} harcama kaydı</strong><small>{{ statement.periodStart | date:'d MMMM' }} – {{ statement.periodEnd | date:'d MMMM y' }}</small></div>
+            <div class="pulse-total"><span>Bu dönem</span><strong>{{ statementTotal(statement) }}</strong></div>
+            @if (leadingCategory(); as category) {
+              <div class="pulse-category"><span>En yoğun alan</span><strong>{{ category.categoryCode }}</strong><small>%{{ category.percentage | number:'1.0-0' }} pay</small></div>
+            }
+          </section>
 
           @if (statement.warnings.length) {
             <div class="warning-box">@for (warning of statement.warnings; track warning) { <p>⚠️ {{ warning }}</p> }</div>

@@ -33,3 +33,57 @@ describe('SpendingAnalysisComponent accessibility', () => {
     expect(hint?.textContent).toContain('15 MB');
   });
 });
+
+describe('SpendingAnalysisComponent statement history', () => {
+  let fixture: ComponentFixture<SpendingAnalysisComponent>;
+  let deleteStatement: jasmine.Spy;
+  const statement = {
+    id: 'statement-1',
+    sourceFileName: 'haziran-ekstresi.pdf',
+    sourceKind: 'PDF',
+    periodStart: '2026-06-01',
+    periodEnd: '2026-06-30',
+    totals: [{ currency: 'TRY', spending: 1250, refunds: 0, net: 1250 }],
+    transactions: [],
+    warnings: [],
+    createdAtUtc: '2026-06-30T00:00:00Z',
+  };
+
+  beforeEach(async () => {
+    deleteStatement = jasmine.createSpy('deleteStatement').and.returnValue(of(void 0));
+    await TestBed.configureTestingModule({
+      imports: [SpendingAnalysisComponent],
+      providers: [
+        {
+          provide: SpendingAnalysisApi,
+          useValue: {
+            listStatements: () => of([{ ...statement, transactionCount: 0 }]),
+            getStatement: () => of(statement),
+            getDashboard: () => of({ statementId: statement.id, currencies: [] }),
+            getPatterns: () => of({ statementId: statement.id, previousStatementComparison: null, recurringCandidates: [], smallFrequentClusters: [], activity: [], positiveFindings: [] }),
+            getBudgetStatus: () => of({ statementId: statement.id, categories: [] }),
+            deleteStatement,
+          },
+        },
+        { provide: ToastService, useValue: { error: () => undefined, success: () => undefined } },
+        { provide: ConfirmService, useValue: { ask: () => Promise.resolve(true) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SpendingAnalysisComponent);
+    fixture.detectChanges();
+  });
+
+  it('offers a separately labelled delete action for every statement in history', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const deleteButton = host.querySelector<HTMLButtonElement>('.history-delete');
+
+    expect(deleteButton?.getAttribute('aria-label')).toContain('haziran-ekstresi.pdf');
+  });
+
+  it('deletes the selected statement after confirmation', async () => {
+    await fixture.componentInstance.removeStatement(statement);
+
+    expect(deleteStatement).toHaveBeenCalledWith(statement.id);
+  });
+});

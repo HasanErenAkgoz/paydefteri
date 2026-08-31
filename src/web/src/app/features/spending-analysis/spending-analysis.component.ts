@@ -45,6 +45,7 @@ export class SpendingAnalysisComponent implements OnInit {
   readonly coach = signal<SpendingCoachResponse | null>(null);
   readonly coachQuestion = signal('');
   readonly coachLoading = signal(false);
+  readonly deletingStatementId = signal<string | null>(null);
   readonly suggestedQuestions = [
     'En büyük 5 işlem hangisi?',
     'Hafta sonu ne kadar harcadım?',
@@ -81,6 +82,7 @@ export class SpendingAnalysisComponent implements OnInit {
       left.currency.localeCompare(right.currency) || right.percentage - left.percentage
     );
   });
+  readonly leadingCategory = computed(() => this.categoryMetrics()[0] ?? null);
 
   ngOnInit(): void {
     this.loadStatements();
@@ -272,6 +274,7 @@ export class SpendingAnalysisComponent implements OnInit {
   }
 
   async removeStatement(statement: Pick<SpendingStatementListItem, 'id'>): Promise<void> {
+    if (this.deletingStatementId()) return;
     const approved = await this.confirm.ask({
       title: 'Ekstre analizini sil',
       message: 'Normalize edilmiş işlemler ve bu ekstreye ait analiz kalıcı olarak silinsin mi?',
@@ -279,13 +282,18 @@ export class SpendingAnalysisComponent implements OnInit {
       danger: true,
     });
     if (!approved) return;
+    this.deletingStatementId.set(statement.id);
     this.api.deleteStatement(statement.id).subscribe({
       next: () => {
-        this.selected.set(null);
+        if (this.selected()?.id === statement.id) this.selected.set(null);
+        this.deletingStatementId.set(null);
         this.toast.success('Ekstre analizi silindi.');
         this.loadStatements();
       },
-      error: (error) => this.toast.error(apiErrorMessage(error, 'Ekstre silinemedi.')),
+      error: (error) => {
+        this.deletingStatementId.set(null);
+        this.toast.error(apiErrorMessage(error, 'Ekstre silinemedi.'));
+      },
     });
   }
 
