@@ -17,13 +17,13 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.profileSignal() !== null);
   readonly isMobileApp = this.mobileSession.enabled;
 
-  login(email: string, password: string): Observable<UserProfileDto> {
+  login(email: string, password: string, rememberMe = false): Observable<UserProfileDto> {
     if (this.mobileSession.enabled) {
       return this.mobileSession.login(email, password).pipe(
         tap((result) => this.profileSignal.set(result.user)),
         map((result) => result.user),
         catchError(() =>
-          this.http.post<LoginResult>(`${environment.apiUrl}/auth/login`, { email, password }).pipe(
+          this.http.post<LoginResult>(`${environment.apiUrl}/auth/login`, { email, password, rememberMe }).pipe(
             switchMap((res) => {
               if (res?.accessToken) {
                 return this.mobileSession
@@ -49,7 +49,7 @@ export class AuthService {
     }
 
     return this.http
-      .post(`${environment.apiUrl}/auth/login`, { email, password })
+      .post(`${environment.apiUrl}/auth/login`, { email, password, rememberMe })
       .pipe(switchMap(() => this.me()));
   }
 

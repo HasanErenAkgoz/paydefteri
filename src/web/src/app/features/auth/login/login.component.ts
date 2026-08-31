@@ -66,7 +66,7 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading.set(true);
-    this.auth.login(email, password).subscribe({
+    this.auth.login(email, password, this.rememberMe).subscribe({
       next: () => {
         this.loading.set(false);
         void this.router.navigateByUrl('/home');

@@ -35,6 +35,27 @@ public sealed class AuthPositiveNegativeTests
     }
 
     [Fact]
+    public async Task Positive_Login_with_remember_me_keeps_the_browser_session_for_30_days()
+    {
+        var email = $"remember_{Guid.NewGuid():N}@example.com";
+        (await _api.PostAsync<object>("/api/auth/register", new
+        {
+            email,
+            password = "Secret123!",
+            displayName = "Hatırlanan Kullanıcı",
+        })).Response.EnsureSuccessStatusCode();
+
+        var (_, login) = await _api.PostAsync<TestClient.LoginDto>("/api/auth/login", new
+        {
+            email,
+            password = "Secret123!",
+            rememberMe = true,
+        });
+
+        login!.ExpiresAt.Should().BeAfter(DateTime.UtcNow.AddDays(29));
+    }
+
+    [Fact]
     public async Task Positive_Register_then_authenticated_xsrf_token_allows_cookie_write_request()
     {
         var email = $"cookie_{Guid.NewGuid():N}@example.com";

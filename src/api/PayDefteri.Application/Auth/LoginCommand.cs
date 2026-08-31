@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace PayDefteri.Application.Auth;
 
-public sealed record LoginCommand(string Email, string Password) : IRequest<LoginResult>;
+public sealed record LoginCommand(string Email, string Password, bool RememberMe = false) : IRequest<LoginResult>;
 
 public sealed record LoginResult(string AccessToken, DateTime ExpiresAt);
 
@@ -52,7 +52,8 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRes
             userId,
             resolvedEmail,
             displayName ?? string.Empty,
-            isSuperAdmin);
+            isSuperAdmin,
+            request.RememberMe);
         _logger.LogInformation(
             "Login succeeded for {Email} (userId={UserId}, displayName={DisplayName}, superAdmin={IsSuperAdmin})",
             resolvedEmail,

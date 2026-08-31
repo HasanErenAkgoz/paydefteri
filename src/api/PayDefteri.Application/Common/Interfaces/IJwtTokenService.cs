@@ -6,5 +6,6 @@ public interface IJwtTokenService
         string userId,
         string email,
         string displayName,
-        bool isSuperAdmin = false);
+        bool isSuperAdmin = false,
+        bool rememberMe = false);
 }

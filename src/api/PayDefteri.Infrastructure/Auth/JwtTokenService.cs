@@ -14,6 +14,7 @@ public sealed class JwtOptions
     public string Audience { get; set; } = "PayDefteri";
     public string Key { get; set; } = string.Empty;
     public int ExpiryMinutes { get; set; } = 30;
+    public int RememberMeDays { get; set; } = 30;
 }
 
 public sealed class JwtTokenService : IJwtTokenService
@@ -29,9 +30,13 @@ public sealed class JwtTokenService : IJwtTokenService
         string userId,
         string email,
         string displayName,
-        bool isSuperAdmin = false)
+        bool isSuperAdmin = false,
+        bool rememberMe = false)
     {
-        var expires = DateTime.UtcNow.AddMinutes(_options.ExpiryMinutes);
+        var lifetime = rememberMe
+            ? TimeSpan.FromDays(Math.Clamp(_options.RememberMeDays, 1, 90))
+            : TimeSpan.FromMinutes(_options.ExpiryMinutes);
+        var expires = DateTime.UtcNow.Add(lifetime);
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, userId),
