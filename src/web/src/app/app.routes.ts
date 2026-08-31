@@ -99,6 +99,15 @@ export const routes: Routes = [
     data: { seo: noindexSeo('Profil | PayDefteri') },
   },
   {
+    path: 'spending-analysis',
+    loadComponent: () =>
+      import('./features/spending-analysis/spending-analysis.component').then(
+        (m) => m.SpendingAnalysisComponent
+      ),
+    canActivate: [authGuard],
+    data: { seo: noindexSeo('Harcama Analizi | PayDefteri') },
+  },
+  {
     path: 'plans',
     loadComponent: () =>
       import('./features/plans/plan-list.component').then((m) => m.PlanListComponent),

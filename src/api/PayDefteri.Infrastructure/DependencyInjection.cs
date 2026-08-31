@@ -114,10 +114,17 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(45);
         });
         services.AddScoped<IExpenseReceiptAnalyzer, FallbackExpenseReceiptAnalyzer>();
+        services.AddHttpClient<ISpendingCoachProvider, GeminiSpendingCoachProvider>((serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<GeminiOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+            client.Timeout = TimeSpan.FromSeconds(20);
+        });
         services.AddScoped<ICreditCardStatementAnalyzer, GeminiCreditCardStatementAnalyzer>();
         services.Configure<ReceiptStorageOptions>(configuration.GetSection(ReceiptStorageOptions.SectionName));
         services.AddSingleton<IReceiptStorage, LocalReceiptStorage>();
         services.AddSingleton<IPlanDocumentParser, PlanDocumentParser>();
+        services.AddSingleton<ISpendingStatementParser, SpendingStatementParser>();
 
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.Configure<AppOptions>(configuration.GetSection(AppOptions.SectionName));

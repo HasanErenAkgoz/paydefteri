@@ -1,9 +1,11 @@
 using PayDefteri.Application.Common.Interfaces;
+using PayDefteri.Application.Common.Exceptions;
 using PayDefteri.Domain.Common;
 using PayDefteri.Domain.Entities;
 using PayDefteri.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace PayDefteri.Infrastructure.Persistence;
 
@@ -30,6 +32,10 @@ public class AppDbContext : IdentityDbContext<AppUser>, IAppDbContext
     public DbSet<PaymentReminderLog> PaymentReminderLogs => Set<PaymentReminderLog>();
     public DbSet<PlanActivityLog> PlanActivityLogs => Set<PlanActivityLog>();
     public DbSet<MobileRefreshSession> MobileRefreshSessions => Set<MobileRefreshSession>();
+    public DbSet<SpendingStatement> SpendingStatements => Set<SpendingStatement>();
+    public DbSet<SpendingTransaction> SpendingTransactions => Set<SpendingTransaction>();
+    public DbSet<SpendingMerchantPreference> SpendingMerchantPreferences => Set<SpendingMerchantPreference>();
+    public DbSet<SpendingCategoryBudget> SpendingCategoryBudgets => Set<SpendingCategoryBudget>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -37,7 +43,7 @@ public class AppDbContext : IdentityDbContext<AppUser>, IAppDbContext
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         foreach (var entry in ChangeTracker.Entries<AuditableEntity>())
         {
@@ -51,7 +57,19 @@ public class AppDbContext : IdentityDbContext<AppUser>, IAppDbContext
             }
         }
 
-        return base.SaveChangesAsync(cancellationToken);
+        try
+        {
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (
+            exception.InnerException is PostgresException
+            {
+                SqlState: PostgresErrorCodes.UniqueViolation,
+                ConstraintName: "IX_spending_statements_OwnerUserId_SourceHash",
+            })
+        {
+            throw new ConflictException("Bu ekstre daha önce yüklenmiş.");
+        }
     }
 
     public async Task<bool> TryClaimMobileRefreshSessionAsync(

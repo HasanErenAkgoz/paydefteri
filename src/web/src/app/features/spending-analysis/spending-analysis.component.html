@@ -1,0 +1,224 @@
+<section class="analysis-page">
+  <header class="analysis-header">
+    <div>
+      <p class="eyebrow">Kişisel finans görünümü</p>
+      <h1>Harcama Analizi</h1>
+      <p class="muted">Ekstreni yükle, paranı nereye harcadığını güvenli ve anlaşılır biçimde gör.</p>
+    </div>
+    <label class="btn btn-primary upload-button" [class.disabled]="uploading()">
+      {{ uploading() ? 'Analiz ediliyor…' : 'Ekstre yükle' }}
+      <input type="file" accept=".csv,.xlsx,.pdf" hidden [disabled]="uploading()" (change)="onFileInput($event)">
+    </label>
+  </header>
+
+  <div class="privacy-note" role="note">
+    <span aria-hidden="true">🛡️</span>
+    <div><strong>Dosyan saklanmaz.</strong><span> Yalnızca normalize edilmiş işlem bilgileri tutulur. İsteğe bağlı AI koçu ancak sen başlattığında çalışır ve dış sağlayıcıya kart, ham işlem açıklaması veya işyeri adı göndermez.</span></div>
+  </div>
+
+  @if (loading()) {
+    <div class="card empty-state"><p>Ekstre geçmişin yükleniyor…</p></div>
+  } @else if (!statements().length && !selected()) {
+    <div class="card empty-state">
+      <div class="empty-icon" aria-hidden="true">📄</div>
+      <h2>İlk ekstreni analiz et</h2>
+      <p>CSV, XLSX veya metin içeren PDF ekstreni sürükleyebilir ya da dosya seçebilirsin.</p>
+      <label
+        class="drop-zone"
+        [class.active]="dragActive()"
+        (dragover)="$event.preventDefault(); dragActive.set(true)"
+        (dragleave)="dragActive.set(false)"
+        (drop)="onDrop($event)"
+      >
+        <strong>{{ uploading() ? 'İşlemler okunuyor…' : 'Dosyayı buraya bırak' }}</strong>
+        <span>veya bilgisayarından seç · en fazla 15 MB</span>
+        <input type="file" accept=".csv,.xlsx,.pdf" hidden [disabled]="uploading()" (change)="onFileInput($event)">
+      </label>
+    </div>
+  } @else {
+    <div class="analysis-workspace">
+      <aside class="history-panel" aria-label="Ekstre geçmişi">
+        <div class="history-heading"><h2>Ekstrelerim</h2><span>{{ statements().length }}</span></div>
+        <div class="history-list">
+          @for (statement of statements(); track statement.id) {
+            <button type="button" class="history-item" [class.active]="selected()?.id === statement.id" (click)="openStatement(statement.id)">
+              <span><strong>{{ statement.periodStart | date:'MMMM y' }}</strong><small>{{ statement.sourceKind }}</small></span>
+              <b>{{ statementTotal(statement) }}</b>
+            </button>
+          }
+        </div>
+      </aside>
+
+      <main class="dashboard-panel">
+        @if (selected(); as statement) {
+          <div class="statement-title-row">
+            <div><p class="eyebrow">{{ statement.sourceFileName }}</p><h2>{{ statement.periodStart | date:'MMMM y' }}</h2></div>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeStatement(statement)">Sil</button>
+          </div>
+
+          @if (statement.warnings.length) {
+            <div class="warning-box">@for (warning of statement.warnings; track warning) { <p>⚠️ {{ warning }}</p> }</div>
+          }
+
+          <div class="metric-grid">
+            <article class="metric-card primary"><span>Toplam harcama</span><strong>{{ statementTotal(statement) }}</strong><small>İade ve iptaller hariç</small></article>
+            <article class="metric-card"><span>Toplam işlem</span><strong>{{ purchases().length }}</strong><small>harcama</small></article>
+            <article class="metric-card"><span>En büyük harcama</span><strong class="metric-summary">{{ largestPurchasesSummary() }}</strong><small>Her para birimi ayrı hesaplanır</small></article>
+            <article class="metric-card"><span>En yüksek kategori</span><strong class="metric-summary">{{ topCategoriesSummary() }}</strong><small>Her para birimi ayrı hesaplanır</small></article>
+          </div>
+
+          <section class="card category-section">
+            <div class="section-heading"><div><h3>Harcamalarım</h3><p>Kategori dağılımı</p></div></div>
+            <div class="category-bars">
+              @for (metric of categoryMetrics(); track metric.categoryCode + metric.currency) {
+                <button type="button" class="category-row" (click)="categoryFilter.set(metric.categoryCode)">
+                  <span class="category-name">{{ metric.categoryCode }}</span>
+                  <span class="bar-track"><span class="bar-fill" [style.width.%]="metric.percentage"></span></span>
+                  <strong>{{ money(metric.amount, metric.currency) }}</strong><small>%{{ metric.percentage | number:'1.0-1' }}</small>
+                </button>
+              } @empty { <p class="muted">Kategori verisi henüz oluşmadı.</p> }
+            </div>
+          </section>
+
+          @if (dashboard(); as metrics) {
+            <section class="card trend-section">
+              <div class="section-heading"><div><h3>Günlük harcama</h3><p>Ekstre dönemi içindeki gerçek işlemler</p></div></div>
+              @for (currency of metrics.currencies; track currency.currency) {
+                <div class="currency-summary">
+                  <span><strong>{{ currency.currency }}</strong> · günlük ortalama {{ money(currency.dailyAverage, currency.currency) }}</span>
+                  <span>Zorunlu harcama oranı %{{ currency.necessityRatio | number:'1.0-1' }}</span>
+                </div>
+                <div class="daily-chart" [attr.aria-label]="currency.currency + ' günlük harcama grafiği'">
+                  @for (day of currency.dailySeries; track day.date) {
+                    <div class="daily-column" [title]="(day.date | date:'dd MMM') + ' · ' + money(day.amount, currency.currency)">
+                      <span class="daily-bar" [style.height.%]="day.amount / maxDailyAmount(currency) * 100"></span>
+                      <small>{{ day.date | date:'dd' }}</small>
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          }
+
+          @if (patterns(); as insight) {
+            <section class="insight-grid">
+              <article class="card insight-card">
+                <span class="insight-icon" aria-hidden="true">📈</span>
+                <h3>Önceki ekstreye göre</h3>
+                @if (insight.previousStatementComparison?.currencies?.length) {
+                  @for (comparison of insight.previousStatementComparison?.currencies ?? []; track comparison.currency) {
+                    <p><strong>{{ comparison.currency }}</strong> harcaman
+                      @if (comparison.changeAmount > 0) { {{ money(comparison.changeAmount, comparison.currency) }} arttı. }
+                      @else { {{ money(-comparison.changeAmount, comparison.currency) }} azaldı. }
+                    </p>
+                  }
+                } @else { <p class="muted">Karşılaştırma için önceki bir ekstre daha yükleyebilirsin.</p> }
+              </article>
+              <article class="card insight-card">
+                <span class="insight-icon" aria-hidden="true">🔁</span>
+                <h3>Tekrarlayan işyeri adayları</h3>
+                @for (item of insight.recurringCandidates.slice(0, 5); track item.merchantName + item.currency) {
+                  <p><strong>{{ item.merchantName }}</strong> · {{ money(item.totalAmount, item.currency) }}</p>
+                } @empty { <p class="muted">Tekrarlayan bir ödeme adayı bulunmadı.</p> }
+              </article>
+              <article class="card insight-card">
+                <span class="insight-icon" aria-hidden="true">☕</span>
+                <h3>Küçük ama sık</h3>
+                @for (item of insight.smallFrequentClusters.slice(0, 5); track item.merchantName + item.currency) {
+                  <p><strong>{{ item.merchantName }}</strong> · {{ item.transactionCount }} işlem · {{ money(item.totalAmount, item.currency) }}</p>
+                } @empty { <p class="muted">Dikkat çeken küçük ve sık harcama bulunmadı.</p> }
+              </article>
+              <article class="card insight-card positive">
+                <span class="insight-icon" aria-hidden="true">✅</span>
+                <h3>Bu ay iyi yaptıkların</h3>
+                @for (finding of insight.positiveFindings; track finding) { <p>{{ finding }}</p> }
+                @empty { <p class="muted">Olumlu karşılaştırmalar, yeterli geçmiş oluşunca burada görünecek.</p> }
+              </article>
+            </section>
+          }
+
+          <section class="card coach-section" aria-labelledby="coach-title">
+            <div class="coach-heading">
+              <div>
+                <p class="eyebrow">Ekstre verilerine dayalı</p>
+                <h3 id="coach-title">AI Finans Koçu</h3>
+              </div>
+              <span class="coach-badge">{{ coach()?.aiGenerated ? 'AI destekli' : coach() ? 'Doğrulanmış analiz' : 'İsteğe bağlı' }}</span>
+            </div>
+
+            @if (coachLoading() && !coach()) {
+              <p class="muted coach-loading">Ekstren yorumlanıyor…</p>
+            } @else if (coach(); as response) {
+              <div class="coach-answer" aria-live="polite">
+                <p>{{ response.answer }}</p>
+                @if (response.insights.length || response.recommendations.length) {
+                  <ul>
+                    @for (insight of response.insights; track insight) { <li>{{ insight }}</li> }
+                    @for (recommendation of response.recommendations; track recommendation) { <li>{{ recommendation }}</li> }
+                  </ul>
+                }
+              </div>
+            } @else {
+              <div class="coach-consent">
+                <p>Koçu başlattığında yalnızca ekstre dönemi ve kategori bazlı sayısal özetler AI sağlayıcısına gönderilir. Kart bilgileri, ham açıklamalar ve işyeri adları gönderilmez.</p>
+                <button type="button" class="btn btn-primary btn-sm" (click)="loadCoach(statement.id)">Koçu çalıştır</button>
+              </div>
+            }
+
+            <div class="suggested-questions" aria-label="Önerilen sorular">
+              @for (question of suggestedQuestions; track question) {
+                <button type="button" [disabled]="coachLoading()" (click)="askCoach(question)">{{ question }}</button>
+              }
+            </div>
+            <form class="coach-form" (submit)="$event.preventDefault(); askCoach()">
+              <label class="sr-only" for="coach-question">Ekstren hakkında soru sor</label>
+              <input id="coach-question" maxlength="500" placeholder="Örn. Market toplamım ne kadar?" [ngModel]="coachQuestion()" (ngModelChange)="coachQuestion.set($event)" name="coachQuestion">
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="coachLoading() || !coachQuestion().trim()">{{ coachLoading() ? 'Yanıtlanıyor…' : 'Sor' }}</button>
+            </form>
+            <small class="coach-disclaimer">{{ coach()?.disclaimer || 'Yanıtlar yalnızca yüklediğiniz ekstre verilerine dayanır; finansal tavsiye değildir.' }}</small>
+          </section>
+
+          <section class="card budget-section">
+            <div class="section-heading"><div><h3>Aylık bütçe</h3><p>Kategori bazında kendine esnek bir hedef belirle.</p></div></div>
+            <div class="budget-form">
+              <select [ngModel]="budgetCategory()" (ngModelChange)="budgetCategory.set($event)" aria-label="Bütçe kategorisi">@for (category of categories; track category) { <option [value]="category">{{ category }}</option> }</select>
+              <select [ngModel]="budgetCurrency()" (ngModelChange)="budgetCurrency.set($event)" aria-label="Bütçe para birimi">@for (currency of availableCurrencies(); track currency) { <option [value]="currency">{{ currency }}</option> }</select>
+              <input type="number" min="1" step="100" placeholder="Aylık hedef" [ngModel]="budgetAmount()" (ngModelChange)="budgetAmount.set($event)" aria-label="Aylık bütçe tutarı">
+              <button type="button" class="btn btn-primary btn-sm" [disabled]="savingBudget()" (click)="saveBudget()">{{ savingBudget() ? 'Kaydediliyor…' : 'Bütçeyi kaydet' }}</button>
+            </div>
+            <div class="budget-list">
+              @for (budget of budgetStatus()?.categories ?? []; track budget.category + budget.currency) {
+                <article class="budget-row">
+                  <div><strong>{{ budget.category }}</strong><span>{{ money(budget.spent, budget.currency) }} / {{ money(budget.budget, budget.currency) }}</span></div>
+                  <div class="budget-progress" role="progressbar" [attr.aria-valuenow]="budget.spent" [attr.aria-valuemax]="budget.budget"><span [style.width.%]="Math.min(100, budget.spent / budget.budget * 100)"></span></div>
+                  <div class="budget-score"><b>{{ budget.healthScore }}/100</b><small>Harcama skoru*</small></div>
+                  <p>{{ budget.explanation }}</p>
+                </article>
+              } @empty { <p class="muted budget-empty">Henüz bütçe belirlemedin. İlk hedefini yukarıdan ekleyebilirsin.</p> }
+            </div>
+            <small class="score-disclaimer">* Bu skor yalnızca bütçe ve mevcut harcama hızına dayalı açıklanabilir bir göstergedir; finansal sağlık değerlendirmesi değildir.</small>
+          </section>
+
+          <section class="card transactions-section">
+            <div class="section-heading">
+              <div><h3>İşlemler</h3><p>Kategoriyi değiştirdiğinde sonraki analizlerde hatırlanır.</p></div>
+              <select [ngModel]="categoryFilter()" (ngModelChange)="categoryFilter.set($event)" aria-label="Kategori filtresi">
+                <option value="all">Tüm kategoriler</option>@for (category of categories; track category) { <option [value]="category">{{ category }}</option> }
+              </select>
+            </div>
+            <div class="transaction-list">
+              @for (transaction of filteredTransactions(); track transaction.id) {
+                <article class="transaction-row" [class.refund]="transaction.isRefund">
+                  <div class="transaction-date"><strong>{{ transaction.occurredOn | date:'dd' }}</strong><span>{{ transaction.occurredOn | date:'MMM' }}</span></div>
+                  <div class="transaction-info"><strong>{{ transaction.merchantName || transaction.description }}</strong><span>{{ transaction.description }} @if (transaction.installmentTotal) { · {{ transaction.installmentCurrent }}/{{ transaction.installmentTotal }} taksit }</span></div>
+                  <select [ngModel]="transaction.category" (ngModelChange)="changeCategory(transaction.id, $event)" aria-label="İşlem kategorisi">@for (category of categories; track category) { <option [value]="category">{{ category }}</option> }</select>
+                  <b>{{ transaction.isRefund ? '−' : '' }}{{ money(transaction.amount, transaction.currency) }}</b>
+                </article>
+              } @empty { <p class="muted">Bu filtrede işlem bulunamadı.</p> }
+            </div>
+          </section>
+        }
+      </main>
+    </div>
+  }
+</section>

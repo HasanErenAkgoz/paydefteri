@@ -22,6 +22,10 @@ public interface IAppDbContext
     DbSet<PaymentReminderLog> PaymentReminderLogs { get; }
     DbSet<PlanActivityLog> PlanActivityLogs { get; }
     DbSet<MobileRefreshSession> MobileRefreshSessions { get; }
+    DbSet<SpendingStatement> SpendingStatements { get; }
+    DbSet<SpendingTransaction> SpendingTransactions { get; }
+    DbSet<SpendingMerchantPreference> SpendingMerchantPreferences { get; }
+    DbSet<SpendingCategoryBudget> SpendingCategoryBudgets { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task<bool> TryClaimMobileRefreshSessionAsync(

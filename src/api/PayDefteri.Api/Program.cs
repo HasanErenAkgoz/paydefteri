@@ -60,6 +60,7 @@ var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>
     ?? ["http://localhost:4200", "http://localhost", "capacitor://localhost", "https://localhost"];
 var authRateLimit = builder.Environment.IsEnvironment("Testing") ? 10_000 : 10;
 var receiptAnalysisRateLimit = builder.Environment.IsEnvironment("Testing") ? 10_000 : 10;
+var spendingCoachRateLimit = builder.Environment.IsEnvironment("Testing") ? 10_000 : 20;
 
 builder.Services.AddCors(options =>
 {
@@ -89,6 +90,18 @@ builder.Services.AddRateLimiter(options =>
             _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = receiptAnalysisRateLimit,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+    options.AddPolicy("spending-coach", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = spendingCoachRateLimit,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
                 AutoReplenishment = true,
@@ -123,8 +136,8 @@ if (!app.Environment.IsEnvironment("Testing"))
 }
 
 app.UseCors();
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.Use(async (context, next) =>
 {
     var isUnsafeApiRequest = context.Request.Path.StartsWithSegments("/api")

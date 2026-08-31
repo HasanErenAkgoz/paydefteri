@@ -1,0 +1,53 @@
+<div class="modal-overlay active" (click)="closed.emit()">
+  <section class="statement-modal" role="dialog" aria-modal="true" aria-labelledby="statement-import-title" (click)="$event.stopPropagation()">
+    <header>
+      <div>
+        <p class="eyebrow">💳 Kredi kartı ekstresi</p>
+        <h2 id="statement-import-title">Ekstreyi içe aktar</h2>
+        <p>PDF, Excel, CSV veya görsel ekstreyi inceleyip sadece istediğiniz harcamaları ekleyin.</p>
+      </div>
+      <button type="button" class="close" aria-label="Kapat" (click)="closed.emit()">×</button>
+    </header>
+
+    @if (!analysis()) {
+      <div class="upload-area">
+        <input #statementFile type="file" accept=".pdf,.xlsx,.csv,image/jpeg,image/png,image/webp" (change)="onFileSelected($event)" hidden>
+        <button type="button" class="file-picker" (click)="statementFile.click()">
+          <strong>{{ file()?.name ?? 'Ekstre dosyası seç' }}</strong>
+          <span>PDF, XLSX, CSV, JPEG, PNG veya WebP · en fazla 15 MB</span>
+        </button>
+        <label>
+          Ödemeyi yapan ortak (zorunlu)
+          <select [ngModel]="defaultPayerId()" (ngModelChange)="defaultPayerId.set($event || null)">
+            <option value="">Ortak seçin</option>
+            @for (partner of partners(); track partner.id) { <option [value]="partner.id">{{ partner.name }}</option> }
+          </select>
+        </label>
+      </div>
+      <footer><button type="button" class="btn btn-primary" [disabled]="!file() || analyzing()" (click)="analyze()">{{ analyzing() ? 'Analiz ediliyor…' : 'Ekstreyi analiz et' }}</button></footer>
+    } @else {
+      <div class="analysis-summary">
+        <strong>{{ analysis()?.summary?.bankName ?? 'Ekstre' }}</strong>
+        <span>{{ analysis()?.summary?.statementPeriod ?? 'İşlemleri gözden geçirin' }}</span>
+      </div>
+      @if (analysis()?.warnings?.length) { <div class="warnings">@for (warning of analysis()?.warnings ?? []; track warning) { <p>⚠️ {{ warning }}</p> }</div> }
+      <div class="selection-bar">
+        <label><input type="checkbox" [checked]="selectedCount() === rows().length && rows().length > 0" (change)="toggleAll($any($event.target).checked)"> Tümünü seç</label>
+        <strong>{{ selectedCount() }} işlem · {{ selectedTotal() | number:'1.2-2' }} ₺</strong>
+      </div>
+      <div class="transaction-list">
+        @for (row of rows(); track row.tempId; let index = $index) {
+          <article class="transaction" [class.duplicate]="row.isPossibleDuplicate">
+            <input type="checkbox" [checked]="row.selected" (change)="updateRow(index, { selected: $any($event.target).checked })" [attr.aria-label]="row.description + ' seç'">
+            <div class="transaction-main"><strong>{{ row.merchantName || row.description }}</strong><span>{{ row.occurredOn | date:'d MMM y' }} @if (row.isPossibleDuplicate) { · Olası tekrar: {{ row.existingExpenseName }} }</span></div>
+            <select [ngModel]="row.categoryId ?? ''" (ngModelChange)="updateRow(index, { categoryId: $event || null })" aria-label="Kategori">
+              <option value="">Kategorisiz</option>@for (category of categories(); track category.id) { <option [value]="category.id">{{ category.name }}</option> }
+            </select>
+            <b>{{ row.amount | number:'1.2-2' }} ₺</b>
+          </article>
+        } @empty { <p class="muted">Ekstrede içe aktarılabilir harcama bulunamadı.</p> }
+      </div>
+      <footer><button type="button" class="btn btn-secondary" [disabled]="importing()" (click)="analysis.set(null)">Yeni dosya</button><button type="button" class="btn btn-primary" [disabled]="!selectedCount() || importing()" (click)="importSelected()">{{ importing() ? 'Ekleniyor…' : selectedCount() + ' harcamayı ekle' }}</button></footer>
+    }
+  </section>
+</div>

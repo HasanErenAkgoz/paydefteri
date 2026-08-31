@@ -60,6 +60,11 @@ export class AppComponent implements OnInit {
     return path === '/profile';
   });
 
+  readonly isSpendingAnalysis = computed(() => {
+    const path = (this.url() ?? '').split('?')[0];
+    return path === '/spending-analysis';
+  });
+
   readonly showPlanTabs = computed(() => !!this.planId() && this.auth.isAuthenticated());
 
   readonly isExpensePlan = computed(() => isExpensePlan(this.planContext.planType()));
