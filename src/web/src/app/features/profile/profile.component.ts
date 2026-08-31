@@ -39,6 +39,8 @@ export class ProfileComponent implements OnInit {
   readonly showNewPassword = signal(false);
   readonly showConfirmPassword = signal(false);
 
+  private readonly tabs: Array<'account' | 'security' | 'sessions'> = ['account', 'security', 'sessions'];
+
   readonly initials = computed(() => {
     const name = this.savedName().trim();
     if (name) {
@@ -95,6 +97,28 @@ export class ProfileComponent implements OnInit {
         this.toast.error(apiErrorMessage(err, 'Profil yüklenemedi.'));
       },
     });
+  }
+
+  onTabKeydown(event: KeyboardEvent, current: 'account' | 'security' | 'sessions'): void {
+    const currentIndex = this.tabs.indexOf(current);
+    let nextIndex = currentIndex;
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % this.tabs.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + this.tabs.length) % this.tabs.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = this.tabs.length - 1;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    const nextTab = this.tabs[nextIndex]!;
+    this.activeTab.set(nextTab);
+    queueMicrotask(() => document.getElementById(`profile-tab-${nextTab}`)?.focus());
   }
 
   saveProfile(): void {

@@ -11,6 +11,9 @@
           <p class="muted">{{ paidTotal() | tryCurrency }} ödendi · {{ plannedTotal() | tryCurrency }} planlandı</p>
         </div>
         <div class="expense-hero-actions">
+          <a class="btn btn-secondary btn-statement-hero" [routerLink]="['/plans', planId, 'balances']">
+            ⚖️ Bakiyeler
+          </a>
           <button type="button" class="btn btn-secondary btn-statement-hero" (click)="openStatementImportModal()">
             💳 Ekstre İçe Aktar
           </button>
@@ -20,7 +23,7 @@
         </div>
       </header>
 
-      <!-- Segmented Navigation: 3 Focused Tabs -->
+      <!-- Segmented Navigation -->
       <div class="expense-tabs-nav" role="tablist" aria-label="Gider sekmeleri">
         <button
           type="button"
@@ -44,22 +47,7 @@
           [attr.aria-selected]="activeTab() === 'summary'"
         >
           <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          <span>Özet &amp; Bakiyeler</span>
-        </button>
-
-        <button
-          type="button"
-          class="expense-tab-btn"
-          [class.active]="activeTab() === 'transfers'"
-          (click)="setTab('transfers')"
-          role="tab"
-          [attr.aria-selected]="activeTab() === 'transfers'"
-        >
-          <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          <span>Mahsup &amp; Transfer</span>
-          @if (b.transfers?.length) {
-            <span class="tab-badge">{{ b.transfers.length }}</span>
-          }
+          <span>Özet</span>
         </button>
       </div>
 
@@ -93,7 +81,7 @@
         </div>
       }
 
-      <!-- TAB 2: ÖZET & BAKİYELER -->
+      <!-- TAB 2: ÖZET -->
       @if (activeTab() === 'summary') {
         <div class="card">
           <div class="card-title">📊 Harcama &amp; Bakiye Durumu</div>
@@ -120,41 +108,14 @@
             </div>
           </div>
 
-          <div class="balance-section-title" style="margin: 18px 0 8px; font-weight: 700; font-size: 0.9rem">
-            <span>👥 Ortaklar &amp; Net Bakiye</span>
-          </div>
-
-          <div class="balance-grid">
-            @for (row of b.balances; track row.partnerId) {
-              <div class="balance-card" [class.is-credit]="row.balance > 0.005" [class.is-debt]="row.balance < -0.005">
-                <span class="dot" [style.background]="row.color"></span>
-                <div>
-                  <strong>{{ row.partnerName }}</strong>
-                  <small>{{ balanceHint(row.balance) }}</small>
-                </div>
-                <b>{{ row.balance | tryCurrency }}</b>
-              </div>
-            } @empty {
-              <p class="muted">Net bakiye için Kurulum’dan en az 2 ortak ekleyin.</p>
-            }
+          <div class="expense-balance-link">
+            <div>
+              <strong>👥 Ortak bakiyeleri</strong>
+              <p class="muted small">Net durum ve transfer geçmişi ayrı Bakiye ekranında yer alır.</p>
+            </div>
+            <a class="btn btn-secondary btn-sm" [routerLink]="['/plans', planId, 'balances']">İncele →</a>
           </div>
         </div>
-      }
-
-      <!-- TAB 3: MAHSUP & TRANSFER -->
-      @if (activeTab() === 'transfers') {
-        <app-expense-transfer-panel
-          [partners]="partnerOptions()"
-          [transfers]="b.transfers"
-          [isOwner]="isOwner()"
-          [hasOpenBalance]="hasOpenBalance()"
-          [saving]="saving()"
-          [initialFromPartnerId]="fromPartnerId"
-          [initialToPartnerId]="toPartnerId"
-          [initialAmount]="transferAmount"
-          (add)="addTransfer($event)"
-          (remove)="removeTransfer($event)"
-        />
       }
 
       <p class="muted setup-hint">

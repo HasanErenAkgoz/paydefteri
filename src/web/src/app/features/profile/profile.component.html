@@ -34,8 +34,12 @@
             class="settings-nav-item"
             [class.active]="activeTab() === 'account'"
             (click)="activeTab.set('account')"
+            (keydown)="onTabKeydown($event, 'account')"
+            id="profile-tab-account"
             role="tab"
             [attr.aria-selected]="activeTab() === 'account'"
+            aria-controls="profile-panel-account"
+            [attr.tabindex]="activeTab() === 'account' ? 0 : -1"
           >
             <span class="nav-icon">👤</span>
             <div class="nav-text">
@@ -49,8 +53,12 @@
             class="settings-nav-item"
             [class.active]="activeTab() === 'security'"
             (click)="activeTab.set('security')"
+            (keydown)="onTabKeydown($event, 'security')"
+            id="profile-tab-security"
             role="tab"
             [attr.aria-selected]="activeTab() === 'security'"
+            aria-controls="profile-panel-security"
+            [attr.tabindex]="activeTab() === 'security' ? 0 : -1"
           >
             <span class="nav-icon">🔐</span>
             <div class="nav-text">
@@ -64,8 +72,12 @@
             class="settings-nav-item"
             [class.active]="activeTab() === 'sessions'"
             (click)="activeTab.set('sessions')"
+            (keydown)="onTabKeydown($event, 'sessions')"
+            id="profile-tab-sessions"
             role="tab"
             [attr.aria-selected]="activeTab() === 'sessions'"
+            aria-controls="profile-panel-sessions"
+            [attr.tabindex]="activeTab() === 'sessions' ? 0 : -1"
           >
             <span class="nav-icon">📱</span>
             <div class="nav-text">
@@ -88,7 +100,7 @@
       <main class="settings-content-pane">
         <!-- TAB 1: ACCOUNT DETAILS -->
         @if (activeTab() === 'account') {
-          <div class="pane-card" role="tabpanel">
+          <div id="profile-panel-account" class="pane-card" role="tabpanel" aria-labelledby="profile-tab-account">
             <header class="pane-header">
               <div>
                 <h2 class="pane-title">Hesap Bilgileri</h2>
@@ -163,7 +175,7 @@
 
         <!-- TAB 2: PASSWORD & SECURITY -->
         @if (activeTab() === 'security') {
-          <div class="pane-card" role="tabpanel">
+          <div id="profile-panel-security" class="pane-card" role="tabpanel" aria-labelledby="profile-tab-security">
             <header class="pane-header">
               <div>
                 <h2 class="pane-title">Şifre & Güvenlik</h2>
@@ -344,7 +356,7 @@
 
         <!-- TAB 3: SESSIONS & LOGOUT -->
         @if (activeTab() === 'sessions') {
-          <div class="pane-card" role="tabpanel">
+          <div id="profile-panel-sessions" class="pane-card" role="tabpanel" aria-labelledby="profile-tab-sessions">
             <header class="pane-header">
               <div>
                 <h2 class="pane-title">Cihazlar & Oturum Yönetimi</h2>

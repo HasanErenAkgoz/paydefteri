@@ -6,7 +6,6 @@ import {
   ExpenseReceiptDraftDto,
   ExpenseRequest,
   PartnerDto,
-  SettlementTransferRequest,
 } from '../../core/models/api.models';
 import { ExpensesApi } from '../../core/services/expenses.api';
 import { PartnersApi } from '../../core/services/partners.api';
@@ -16,7 +15,6 @@ import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmService } from '../../shared/confirm/confirm.service';
 import { isExpensePlan } from '../../core/utils/plan-routes';
 import { apiErrorMessage } from '../../shared/utils/api-error';
-import { ExpenseTransferPanelComponent } from './expense-transfer-panel/expense-transfer-panel.component';
 import { ExpenseListControlsComponent } from './expense-list-controls/expense-list-controls.component';
 import { MarkExpensePaidEvent } from './expense-row-actions/expense-row-actions.component';
 import { ExpenseAddFormComponent } from './expense-form/expense-add-form.component';
@@ -41,7 +39,6 @@ import {
   standalone: true,
   imports: [
     RouterLink,
-    ExpenseTransferPanelComponent,
     ExpenseListControlsComponent,
     ExpenseListComponent,
     ExpenseAddFormComponent,
@@ -71,7 +68,7 @@ export class ExpensesComponent implements OnInit {
   readonly saving = signal(false);
   readonly markingId = signal<string | null>(null);
   readonly showAddForm = signal(false);
-  readonly activeTab = signal<'list' | 'summary' | 'transfers'>('list');
+  readonly activeTab = signal<'list' | 'summary'>('list');
   readonly editingExpense = signal<ExpenseDto | null>(null);
   readonly analyzingReceipt = signal(false);
   readonly receiptDraft = signal<ExpenseReceiptDraftDto | null>(null);
@@ -141,18 +138,6 @@ export class ExpensesComponent implements OnInit {
     return expense.canManage;
   }
 
-  private ensureOwnerAction(): boolean {
-    if (this.isOwner()) {
-      return true;
-    }
-    this.toast.error('Bu değişikliği yalnızca planı kuran kişi yapabilir.');
-    return false;
-  }
-
-  fromPartnerId = '';
-  toPartnerId = '';
-  transferAmount: number | null = null;
-
   planId = '';
 
   readonly paidTotal = computed(() =>
@@ -173,11 +158,6 @@ export class ExpensesComponent implements OnInit {
 
   readonly plannedCount = computed(
     () => (this.board()?.expenses ?? []).filter((e) => !this.isPaid(e)).length
-  );
-
-  /** True when someone owes someone else — transfer is the natural next step. */
-  readonly hasOpenBalance = computed(() =>
-    (this.board()?.balances ?? []).some((b) => Math.abs(Number(b.balance) || 0) > 0.005)
   );
 
   ngOnInit(): void {
@@ -206,7 +186,6 @@ export class ExpensesComponent implements OnInit {
     this.partnersApi.list(this.planId).subscribe({
       next: (partners) => {
         this.partners.set(partners);
-        this.initTransferPartners(partners);
       },
       error: (err) => {
         this.toast.error(apiErrorMessage(err, 'Ortaklar yüklenemedi.'));
@@ -220,9 +199,6 @@ export class ExpensesComponent implements OnInit {
       next: (board) => {
         this.loading.set(false);
         this.board.set(board);
-        if (!this.partners().length) {
-          this.initTransferPartners(board.balances.map((b) => ({ id: b.partnerId, name: b.partnerName })));
-        }
       },
       error: (err) => {
         this.loading.set(false);
@@ -246,29 +222,6 @@ export class ExpensesComponent implements OnInit {
   resetAllFilters(): void {
     this.filterState.set({ ...DEFAULT_EXPENSE_FILTER_STATE });
     this.expensePage.set(1);
-  }
-
-  private initTransferPartners(partners: { id: string; name: string }[]): void {
-    if (partners.length < 2) {
-      return;
-    }
-    const balances = this.board()?.balances ?? [];
-    const debtor = balances.find((b) => b.balance < -0.005);
-    const creditor = balances.find((b) => b.balance > 0.005);
-    if (debtor && creditor) {
-      this.fromPartnerId = debtor.partnerId;
-      this.toPartnerId = creditor.partnerId;
-      this.transferAmount = Math.min(Math.abs(debtor.balance), creditor.balance);
-      return;
-    }
-    const opts = partners;
-    if (opts.length >= 2) {
-      this.fromPartnerId = opts[0].id;
-      this.toPartnerId = opts[1].id;
-    } else if (opts.length === 1) {
-      this.fromPartnerId = opts[0].id;
-      this.toPartnerId = opts[0].id;
-    }
   }
 
   isPaid(e: ExpenseDto): boolean {
@@ -296,14 +249,7 @@ export class ExpensesComponent implements OnInit {
     );
   }
 
-  balanceHint(balance: number): string {
-    if (Math.abs(balance) < 0.005) {
-      return 'Dengede';
-    }
-    return balance > 0 ? 'Alacaklı' : 'Borçlu';
-  }
-
-  setTab(tab: 'list' | 'summary' | 'transfers'): void {
+  setTab(tab: 'list' | 'summary'): void {
     this.activeTab.set(tab);
   }
 
@@ -381,64 +327,6 @@ export class ExpensesComponent implements OnInit {
         this.saving.set(false);
         this.toast.error(apiErrorMessage(err, 'Gider eklenemedi.'));
       },
-    });
-  }
-
-  addTransfer(request: SettlementTransferRequest): void {
-    if (!this.ensureOwnerAction()) {
-      return;
-    }
-    const amount = Number(request.amount);
-    const fromPartnerId = request.fromPartnerId;
-    const toPartnerId = request.toPartnerId;
-    if (!(amount > 0) || !fromPartnerId || !toPartnerId) {
-      this.toast.error('Transfer bilgilerini kontrol edin.');
-      return;
-    }
-    if (fromPartnerId === toPartnerId) {
-      this.toast.error('Kimden ve kime farklı olmalı.');
-      return;
-    }
-    const body: SettlementTransferRequest = {
-      fromPartnerId,
-      toPartnerId,
-      amount,
-      transferredOn: request.transferredOn,
-    };
-    this.saving.set(true);
-    this.expensesApi.createTransfer(this.planId, body).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.transferAmount = null;
-        this.toast.success('Transfer kaydedildi.');
-        this.reload();
-      },
-      error: (err) => {
-        this.saving.set(false);
-        this.toast.error(apiErrorMessage(err, 'Transfer eklenemedi.'));
-      },
-    });
-  }
-
-  async removeTransfer(id: string): Promise<void> {
-    if (!this.ensureOwnerAction()) {
-      return;
-    }
-    if (
-      !(await this.confirm.ask({
-        title: 'Transferi sil',
-        message: 'Bu transfer silinsin mi?',
-        danger: true,
-      }))
-    ) {
-      return;
-    }
-    this.expensesApi.deleteTransfer(this.planId, id).subscribe({
-      next: () => {
-        this.toast.success('Transfer silindi.');
-        this.reload();
-      },
-      error: (err) => this.toast.error(apiErrorMessage(err, 'Silinemedi.')),
     });
   }
 

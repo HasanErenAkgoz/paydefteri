@@ -33,7 +33,7 @@
         [attr.aria-selected]="activeTab() === 'settings'"
       >
         <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span>Plan Ayarları</span>
+        <span>Genel</span>
       </button>
 
       <button
@@ -58,7 +58,7 @@
         [attr.aria-selected]="activeTab() === 'items'"
       >
         <svg class="svg-icon" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        <span>{{ isExpensePlan() ? 'Giderler' : 'Taksitler' }}</span>
+        <span>{{ isExpensePlan() ? 'Gider Ayarları' : 'Taksitler' }}</span>
         @if (!isExpensePlan()) {
           <span class="tab-count-badge">{{ installments().length }}</span>
         }
@@ -73,7 +73,7 @@
         [attr.aria-selected]="activeTab() === 'templates'"
       >
         <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        <span>Şablonlar</span>
+        <span>Araçlar</span>
       </button>
     </div>
 
@@ -117,6 +117,9 @@
             <a class="btn btn-secondary btn-sm" [routerLink]="['/plans', planId, 'expenses']">
               Takip tablosu →
             </a>
+            <button type="button" class="btn btn-primary btn-sm" (click)="setTab('partners')">
+              {{ partnerRows().length === 0 ? '👥 İlk ortağı ekle' : 'Devam: Ortaklar →' }}
+            </button>
             <a class="btn btn-secondary btn-sm" routerLink="/plans" [queryParams]="{ manage: '1' }">
               Tüm planlar
             </a>
@@ -695,11 +698,16 @@
         }
       </div>
 
-      @if (isOwner()) {
-        <button type="button" class="btn btn-primary" [disabled]="busy() || !partnerRows().length" (click)="saveAllPartners()">
-          💾 Ortakları Güncelle & Kaydet
+      <div class="setup-step-actions">
+        @if (isOwner()) {
+          <button type="button" class="btn btn-secondary" [disabled]="busy() || !partnerRows().length" (click)="saveAllPartners()">
+            💾 Ortakları Kaydet
+          </button>
+        }
+        <button type="button" class="btn btn-primary" (click)="setTab('items')">
+          Devam: {{ isExpensePlan() ? 'Gider Ayarları' : 'Taksitler' }} →
         </button>
-      }
+      </div>
     </div>
 
     <div class="card">

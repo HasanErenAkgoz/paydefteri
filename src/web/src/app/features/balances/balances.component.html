@@ -1,0 +1,75 @@
+@if (loading()) {
+  <p class="muted">Bakiyeler yükleniyor…</p>
+} @else {
+  <section class="balances-page view-section active">
+    <a class="back-link" [routerLink]="backLink()">← Takip tablosuna dön</a>
+
+    <header class="balances-hero">
+      <p class="eyebrow">⚖️ Ortak Finans Özeti</p>
+      <h1>Bakiyeler &amp; Mahsuplaşma</h1>
+      <p class="muted">
+        @if (hasOpenBalance()) {
+          Kimin alacaklı, kimin borçlu olduğunu görün ve hesabı şeffaf biçimde kapatın.
+        } @else {
+          Ortaklar arasındaki bakiye şu anda dengede.
+        }
+      </p>
+    </header>
+
+    <section class="card balance-overview" aria-labelledby="balance-overview-title">
+      <div class="card-title-row">
+        <div>
+          <div class="card-title" id="balance-overview-title">Net bakiyeler</div>
+          <p class="muted small">Pozitif tutar alacaklı, negatif tutar borçlu kişiyi gösterir.</p>
+        </div>
+        <span class="balance-status" [class.open]="hasOpenBalance()">
+          {{ hasOpenBalance() ? 'Açık bakiye var' : 'Dengede' }}
+        </span>
+      </div>
+
+      <div class="balance-grid">
+        @for (row of balanceRows(); track row.partnerId) {
+          <article class="balance-card" [class.is-credit]="row.balance > 0.005" [class.is-debt]="row.balance < -0.005">
+            @if ('color' in row) { <span class="dot" [style.background]="row.color"></span> }
+            <div>
+              <strong>{{ row.partnerName }}</strong>
+              <small>{{ balanceHint(row.balance) }}</small>
+            </div>
+            <b>{{ row.balance | tryCurrency }}</b>
+          </article>
+        } @empty {
+          <p class="muted">Bakiye hesaplamak için Kurulum bölümünden en az iki ortak ekleyin.</p>
+        }
+      </div>
+    </section>
+
+    @if (isExpense()) {
+      <app-expense-transfer-panel
+        [partners]="partners()"
+        [transfers]="expenseBoard()?.transfers ?? []"
+        [isOwner]="isOwner()"
+        [hasOpenBalance]="hasOpenBalance()"
+        [saving]="saving()"
+        [initialFromPartnerId]="debtor()?.partnerId ?? ''"
+        [initialToPartnerId]="creditor()?.partnerId ?? ''"
+        [initialAmount]="initialTransferAmount()"
+        (add)="addTransfer($event)"
+        (remove)="removeTransfer($event)"
+      />
+    } @else {
+      <section class="card settlement-action">
+        <div>
+          <div class="card-title">Mahsuplaşmayı tamamla</div>
+          <p class="muted small">Bu işlem ödeme kayıtlarını değiştirmez; yalnızca ortaklar arası iç bakiyeyi sıfırlar.</p>
+        </div>
+        @if (isOwner()) {
+          <button type="button" class="btn btn-primary" [disabled]="saving() || !hasOpenBalance()" (click)="settleInstallmentPlan()">
+            {{ saving() ? 'Kapatılıyor…' : 'Hesabı kapat' }}
+          </button>
+        } @else {
+          <p class="muted small">Hesabı kapatma yetkisi plan sahibindedir.</p>
+        }
+      </section>
+    }
+  </section>
+}

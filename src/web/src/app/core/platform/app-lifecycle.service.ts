@@ -6,6 +6,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { Router } from '@angular/router';
 import { PlatformService } from './platform.service';
 import { ToastService } from '../../shared/toast/toast.service';
+import { MobileSessionService } from '../services/mobile-session.service';
 
 const EXIT_CONFIRMATION_WINDOW_MS = 2_000;
 
@@ -14,6 +15,7 @@ export class AppLifecycleService {
   private readonly platform = inject(PlatformService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly mobileSession = inject(MobileSessionService);
   private initialized = false;
   private lastExitRequestAt = 0;
 
@@ -31,6 +33,11 @@ export class AppLifecycleService {
 
     await App.addListener('appUrlOpen', (event) => this.openDeepLink(event));
     await App.addListener('backButton', ({ canGoBack }) => this.handleBackButton(canGoBack));
+    await App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        this.mobileSession.restoreSession().subscribe();
+      }
+    });
     await Keyboard.addListener('keyboardWillShow', () => document.body.classList.add('keyboard-open'));
     await Keyboard.addListener('keyboardWillHide', () => document.body.classList.remove('keyboard-open'));
 

@@ -45,6 +45,10 @@
                   <span>Takip Tablosu</span>
                 </a>
               }
+              <a class="nav-tab" [routerLink]="['/plans', planId(), 'balances']" routerLinkActive="active">
+                <span aria-hidden="true">⚖️</span>
+                <span>Bakiyeler</span>
+              </a>
               <a class="nav-tab" [routerLink]="['/plans', planId(), 'setup']" routerLinkActive="active">
                 <span aria-hidden="true">⚙️</span>
                 <span>Kurulum</span>
@@ -53,6 +57,7 @@
                 <span aria-hidden="true">💾</span>
                 <span>Yedek & Rapor</span>
               </a>
+              <span class="nav-divider" aria-hidden="true"></span>
               <a class="nav-tab" routerLink="/spending-analysis" [class.active]="isSpendingAnalysis()">
                 <span aria-hidden="true">💳</span>
                 <span>Harcama Analizi</span>
@@ -114,9 +119,9 @@
             <span class="tab-label">Takip</span>
           </a>
         }
-        <a class="mobile-tab" [routerLink]="['/plans', planId(), 'setup']" routerLinkActive="active">
-          <span class="tab-icon" aria-hidden="true">⚙️</span>
-          <span class="tab-label">Kurulum</span>
+        <a class="mobile-tab" [routerLink]="['/plans', planId(), 'balances']" routerLinkActive="active">
+          <span class="tab-icon" aria-hidden="true">⚖️</span>
+          <span class="tab-label">Bakiye</span>
         </a>
         <a class="mobile-tab" routerLink="/spending-analysis" [class.active]="isSpendingAnalysis()">
           <span class="tab-icon" aria-hidden="true">💳</span>

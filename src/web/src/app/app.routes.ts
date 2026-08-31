@@ -129,6 +129,13 @@ export const routes: Routes = [
     data: { seo: noindexSeo('Gider Takip Tablosu | PayDefteri') },
   },
   {
+    path: 'plans/:id/balances',
+    loadComponent: () =>
+      import('./features/balances/balances.component').then((m) => m.BalancesComponent),
+    canActivate: [authGuard],
+    data: { seo: noindexSeo('Bakiyeler ve Mahsuplaşma | PayDefteri') },
+  },
+  {
     path: 'plans/:id/setup',
     loadComponent: () =>
       import('./features/setup/setup.component').then((m) => m.SetupComponent),

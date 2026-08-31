@@ -7,7 +7,7 @@
     </div>
     <label class="btn btn-primary upload-button" [class.disabled]="uploading()">
       {{ uploading() ? 'Analiz ediliyor…' : 'Ekstre yükle' }}
-      <input type="file" accept=".csv,.xlsx,.pdf" hidden [disabled]="uploading()" (change)="onFileInput($event)">
+      <input type="file" accept=".csv,.xlsx,.pdf" hidden aria-label="Ekstre dosyası seç" [disabled]="uploading()" (change)="onFileInput($event)">
     </label>
   </header>
 
@@ -26,13 +26,14 @@
       <label
         class="drop-zone"
         [class.active]="dragActive()"
+        aria-describedby="statement-upload-hint"
         (dragover)="$event.preventDefault(); dragActive.set(true)"
         (dragleave)="dragActive.set(false)"
         (drop)="onDrop($event)"
       >
         <strong>{{ uploading() ? 'İşlemler okunuyor…' : 'Dosyayı buraya bırak' }}</strong>
-        <span>veya bilgisayarından seç · en fazla 15 MB</span>
-        <input type="file" accept=".csv,.xlsx,.pdf" hidden [disabled]="uploading()" (change)="onFileInput($event)">
+        <span id="statement-upload-hint">veya bilgisayarından seç · en fazla 15 MB</span>
+        <input type="file" accept=".csv,.xlsx,.pdf" hidden aria-label="Ekstre dosyası seç" aria-describedby="statement-upload-hint" [disabled]="uploading()" (change)="onFileInput($event)">
       </label>
     </div>
   } @else {

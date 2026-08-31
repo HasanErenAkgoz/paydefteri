@@ -1,4 +1,4 @@
-import { HttpBackend, HttpClient } from '@angular/common/http';
+import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { App } from '@capacitor/app';
 import { SecureStorage } from '@aparajita/capacitor-secure-storage';
@@ -78,6 +78,21 @@ export class MobileSessionService {
     return accessToken ? of(accessToken) : this.refreshAccessToken();
   }
 
+  /**
+   * Rehydrate a native session after the app returns to the foreground.
+   * A temporary network failure must never erase a valid refresh token.
+   */
+  restoreSession(): Observable<boolean> {
+    if (!this.enabled || this.accessToken) {
+      return of(!!this.accessToken);
+    }
+
+    return this.refreshAccessToken().pipe(
+      map(() => true),
+      catchError(() => of(false))
+    );
+  }
+
   refreshAccessToken(): Observable<string> {
     if (this.refreshRequest) {
       return this.refreshRequest;
@@ -94,7 +109,9 @@ export class MobileSessionService {
       switchMap((result) => this.accept(result)),
       map((result) => result.accessToken),
       catchError((error) =>
-        from(this.clear()).pipe(switchMap(() => throwError(() => error)))
+        this.shouldClearAfterRefreshFailure(error)
+          ? from(this.clear()).pipe(switchMap(() => throwError(() => error)))
+          : throwError(() => error)
       ),
       finalize(() => (this.refreshRequest = null)),
       shareReplay({ bufferSize: 1, refCount: false })
@@ -151,6 +168,16 @@ export class MobileSessionService {
       localStorage.setItem(REFRESH_TOKEN_KEY, result.refreshToken);
       localStorage.setItem(SESSION_ID_KEY, result.sessionId);
     }
+  }
+
+  private shouldClearAfterRefreshFailure(error: unknown): boolean {
+    if (!(error instanceof HttpErrorResponse)) {
+      return false;
+    }
+
+    // 400 is a malformed/revoked refresh request; 401/403 mean the session is no longer valid.
+    // Status 0 (offline), timeouts, and 5xx errors are transient and must preserve the session.
+    return error.status === 400 || error.status === 401 || error.status === 403;
   }
 
   private async readRefreshToken(): Promise<string | null> {

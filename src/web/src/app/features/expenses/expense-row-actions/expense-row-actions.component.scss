@@ -1,5 +1,7 @@
-:host { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-end; }
-:host { display: flex; align-items: flex-end; justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
+:host { display: flex; align-items: flex-end; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.expense-payment-actions,
+.expense-management-actions { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 6px; }
+.expense-payment-actions + .expense-management-actions { margin-left: 8px; padding-left: 12px; border-left: 1px solid rgba(148, 163, 184, 0.28); }
 .mark-payer { width: auto; min-width: 110px; max-width: 140px; padding: 6px 8px; font-size: .8rem; min-height: 36px; }
 .payer-amounts { display: flex; gap: 6px; flex-wrap: wrap; }.payer-amounts label { display: flex; flex-direction: column; gap: 2px; font-size: .72rem; }.payer-amounts input { width: 88px; padding: 4px; }
 
@@ -9,7 +11,19 @@
     justify-content: stretch;
   }
 
-  :host > .btn,
+  .expense-payment-actions,
+  .expense-management-actions {
+    width: 100%;
+  }
+
+  .expense-payment-actions + .expense-management-actions {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .expense-payment-actions > .btn,
+  .expense-management-actions > .btn,
   .mark-payer {
     flex: 1 1 132px;
     max-width: none;

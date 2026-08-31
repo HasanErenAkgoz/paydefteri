@@ -1,0 +1,100 @@
+.balances-page {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.back-link {
+  display: inline-flex;
+  margin-bottom: 18px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.balances-hero {
+  margin-bottom: 20px;
+}
+
+.balances-hero h1 {
+  margin: 4px 0 8px;
+}
+
+.card-title-row,
+.settlement-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.balance-status {
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(52, 211, 153, 0.14);
+  color: #34d399;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.balance-status.open {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fbbf24;
+}
+
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.balance-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.balance-card > div {
+  display: grid;
+  min-width: 0;
+}
+
+.balance-card small {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.balance-card b {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.balance-card.is-credit b { color: #34d399; }
+.balance-card.is-debt b { color: #fbbf24; }
+
+.dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.settlement-action {
+  margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .card-title-row,
+  .settlement-action {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .balance-grid { grid-template-columns: 1fr; }
+  .settlement-action .btn { width: 100%; justify-content: center; }
+}

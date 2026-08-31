@@ -27,6 +27,7 @@
       display: none;
     }
   }
+
 }
 
 .setup-tab-btn {
@@ -131,6 +132,23 @@
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.setup-step-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+@media (max-width: 639px) {
+  .setup-step-actions .btn {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
 }
 
 .plan-more-details {

@@ -2,6 +2,36 @@
   display: block;
 }
 
+.dashboard-focus {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(210px, 0.55fr);
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 22px 24px;
+  border: 1px solid rgba(129, 140, 248, 0.34);
+  border-radius: 18px;
+  background: linear-gradient(112deg, rgba(67, 56, 202, 0.24), rgba(15, 23, 42, 0.92) 58%), var(--bg-card);
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.24);
+}
+
+.dashboard-focus__eyebrow { margin: 0 0 5px; color: #c4b5fd; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.dashboard-focus h2 { margin: 0; color: var(--text-main); font-size: 1rem; }
+.dashboard-focus__title { margin: 10px 0 3px; color: #f8fafc; font-size: clamp(1.2rem, 2vw, 1.55rem); font-weight: 800; letter-spacing: -0.02em; }
+.dashboard-focus__description { max-width: 60ch; margin: 0; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
+.dashboard-focus__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.dashboard-focus__progress { display: grid; gap: 8px; padding: 15px; border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 14px; background: rgba(2, 6, 23, 0.28); }
+.dashboard-focus__progress > span, .dashboard-focus__progress small { color: var(--text-muted); font-size: 0.76rem; }
+.dashboard-focus__progress strong { color: #f8fafc; font-size: 1.65rem; letter-spacing: -0.04em; }
+.dashboard-focus__track { height: 8px; overflow: hidden; border-radius: 999px; background: rgba(148, 163, 184, 0.18); }
+.dashboard-focus__track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #34d399, #818cf8); }
+.dashboard-focus__duplicate, :host .carousel-dots { display: none !important; }
+
+@media (max-width: 640px) {
+  .dashboard-focus { grid-template-columns: 1fr; gap: 16px; padding: 18px; border-radius: 16px; }
+  .dashboard-focus__actions .btn { flex: 1 1 100%; justify-content: center; }
+}
+
 .mobile-info-pill {
   display: flex;
   align-items: center;
@@ -247,4 +277,3 @@
   font-size: 0.82rem;
   font-weight: 600;
 }
-

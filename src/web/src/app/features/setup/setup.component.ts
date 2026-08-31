@@ -211,6 +211,7 @@ export class SetupComponent implements OnInit {
     });
   }
 
+
   reload(): void {
     this.loading.set(true);
     this.plan.set(null);

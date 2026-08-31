@@ -33,6 +33,25 @@
       </div>
     }
 
+    <section class="dashboard-focus" data-testid="dashboard-focus" aria-labelledby="dashboard-focus-title">
+      <div class="dashboard-focus__main">
+        <p class="dashboard-focus__eyebrow">Öncelikli işlem</p>
+        <h2 id="dashboard-focus-title">Bugünün finans odağı</h2>
+        <p class="dashboard-focus__title">{{ upcomingTitle() }}</p>
+        <p class="dashboard-focus__description">{{ upcomingSub() }}</p>
+        <div class="dashboard-focus__actions">
+          <button type="button" class="btn btn-success btn-sm" data-testid="focus-calendar-action" (click)="exportIcs()">Takvime ekle</button>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="setFilter('unpaid')">Açık taksitleri gör</button>
+        </div>
+      </div>
+      <div class="dashboard-focus__progress" data-testid="focus-progress" aria-label="Plan ödeme ilerlemesi">
+        <span>Plan ilerlemesi</span>
+        <strong>%{{ d.metrics.paidPercent | number: '1.0-1' }}</strong>
+        <div class="dashboard-focus__track" aria-hidden="true"><span [style.width.%]="d.metrics.paidPercent"></span></div>
+        <small>{{ completedCount() }} / {{ d.installments.length }} taksit tamamlandı</small>
+      </div>
+    </section>
+
     <div class="highlights-grid">
       @if (d.myMetrics; as mine) {
         <div class="highlight-card">
@@ -115,22 +134,17 @@
           </div>
         </div>
         <div style="margin-top: 12px; display: flex; gap: 8px">
-          @if (d.isOwner) {
-            <button
-              type="button"
-              class="btn btn-primary btn-sm"
-              style="flex: 1; justify-content: center"
-              [disabled]="saving() || !settlementHasDebt()"
-              [title]="settlementHasDebt() ? 'İç mahsup bakiyesini sıfırla' : 'Sıfırlanacak iç borç yok'"
-              (click)="settleUp()"
-            >
-              ✅ Hesabı Kapat / Sıfırla
-            </button>
-          }
+          <a
+            class="btn btn-secondary btn-sm"
+            style="flex: 1; justify-content: center"
+            [routerLink]="['/plans', d.planId, 'balances']"
+          >
+            Bakiyeleri incele →
+          </a>
         </div>
       </div>
 
-      <div class="highlight-card alert-card">
+      <div class="highlight-card alert-card dashboard-focus__duplicate">
         <div>
           <div class="card-header-sm">
             <span class="card-title-sm">
@@ -287,6 +301,8 @@
           <svg class="search-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input
             type="text"
+            name="installmentSearch"
+            aria-label="Taksit ara"
             placeholder="Taksit adı veya tarih ara..."
             [ngModel]="search()"
             (ngModelChange)="search.set($event)"
@@ -301,7 +317,7 @@
           <!-- Status Dropdown -->
           <div class="custom-select-wrapper" title="Ödeme Durumu">
             <svg class="select-prefix-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <select [ngModel]="filter()" (ngModelChange)="setFilter($event)">
+            <select name="installmentStatus" aria-label="Ödeme durumu filtresi" [ngModel]="filter()" (ngModelChange)="setFilter($event)">
               <option value="all">Tüm Taksitler ({{ allInstallmentCount() }})</option>
               <option value="unpaid">⏳ Ödenmemişler ({{ unpaidInstallmentCount() }})</option>
               <option value="paid">✅ Ödenenler ({{ paidInstallmentCount() }})</option>
@@ -312,7 +328,7 @@
           <!-- Partner Dropdown -->
           <div class="custom-select-wrapper" title="Ortak Filtresi">
             <svg class="select-prefix-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <select [ngModel]="partnerView()" (ngModelChange)="setPartnerView($event)">
+            <select name="installmentPartner" aria-label="Ortak filtresi" [ngModel]="partnerView()" (ngModelChange)="setPartnerView($event)">
               <option value="all">Tüm Ortaklar</option>
               @if (d.myPartnerId) {
                 <option value="mine">👤 Sadece Benim Payım</option>
