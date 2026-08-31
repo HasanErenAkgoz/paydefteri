@@ -71,6 +71,51 @@
             }
           </section>
 
+          <section class="card coach-section" aria-labelledby="coach-title">
+            <div class="coach-heading">
+              <div class="coach-heading-copy">
+                <span class="coach-mark" aria-hidden="true">✦</span>
+                <div>
+                  <p class="eyebrow">Ekstrene özel içgörüler</p>
+                  <h3 id="coach-title">AI Finans Koçu</h3>
+                  <p class="coach-intro">Harcama alışkanlıklarını özetle, merak ettiğini doğrudan sor.</p>
+                </div>
+              </div>
+              <span class="coach-badge">{{ coach()?.aiGenerated ? 'AI destekli' : coach() ? 'Analiz hazır' : 'Yeni' }}</span>
+            </div>
+
+            @if (coachLoading() && !coach()) {
+              <p class="muted coach-loading">Ekstren yorumlanıyor…</p>
+            } @else if (coach(); as response) {
+              <div class="coach-answer" aria-live="polite">
+                <p>{{ response.answer }}</p>
+                @if (response.insights.length || response.recommendations.length) {
+                  <ul>
+                    @for (insight of response.insights; track insight) { <li>{{ insight }}</li> }
+                    @for (recommendation of response.recommendations; track recommendation) { <li>{{ recommendation }}</li> }
+                  </ul>
+                }
+              </div>
+            } @else {
+              <div class="coach-consent">
+                <p>Yalnızca ekstre dönemi ve kategori bazlı sayısal özetler AI sağlayıcısına gönderilir. Kart bilgileri, ham açıklamalar ve işyeri adları gönderilmez.</p>
+                <button type="button" class="btn btn-primary btn-sm coach-primary-action" (click)="loadCoach(statement.id)">✦ Koçu çalıştır</button>
+              </div>
+            }
+
+            <div class="suggested-questions" aria-label="Önerilen sorular">
+              @for (question of suggestedQuestions; track question) {
+                <button type="button" [disabled]="coachLoading()" (click)="askCoach(question)">{{ question }}</button>
+              }
+            </div>
+            <form class="coach-form" (submit)="$event.preventDefault(); askCoach()">
+              <label class="sr-only" for="coach-question">Ekstren hakkında soru sor</label>
+              <input id="coach-question" maxlength="500" placeholder="Örn. Market toplamım ne kadar?" [ngModel]="coachQuestion()" (ngModelChange)="coachQuestion.set($event)" name="coachQuestion">
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="coachLoading() || !coachQuestion().trim()">{{ coachLoading() ? 'Yanıtlanıyor…' : 'Sor' }}</button>
+            </form>
+            <small class="coach-disclaimer">{{ coach()?.disclaimer || 'Yanıtlar yalnızca yüklediğiniz ekstre verilerine dayanır; finansal tavsiye değildir.' }}</small>
+          </section>
+
           @if (statement.warnings.length) {
             <div class="warning-box">@for (warning of statement.warnings; track warning) { <p>⚠️ {{ warning }}</p> }</div>
           }
@@ -151,47 +196,6 @@
               </article>
             </section>
           }
-
-          <section class="card coach-section" aria-labelledby="coach-title">
-            <div class="coach-heading">
-              <div>
-                <p class="eyebrow">Ekstre verilerine dayalı</p>
-                <h3 id="coach-title">AI Finans Koçu</h3>
-              </div>
-              <span class="coach-badge">{{ coach()?.aiGenerated ? 'AI destekli' : coach() ? 'Doğrulanmış analiz' : 'İsteğe bağlı' }}</span>
-            </div>
-
-            @if (coachLoading() && !coach()) {
-              <p class="muted coach-loading">Ekstren yorumlanıyor…</p>
-            } @else if (coach(); as response) {
-              <div class="coach-answer" aria-live="polite">
-                <p>{{ response.answer }}</p>
-                @if (response.insights.length || response.recommendations.length) {
-                  <ul>
-                    @for (insight of response.insights; track insight) { <li>{{ insight }}</li> }
-                    @for (recommendation of response.recommendations; track recommendation) { <li>{{ recommendation }}</li> }
-                  </ul>
-                }
-              </div>
-            } @else {
-              <div class="coach-consent">
-                <p>Koçu başlattığında yalnızca ekstre dönemi ve kategori bazlı sayısal özetler AI sağlayıcısına gönderilir. Kart bilgileri, ham açıklamalar ve işyeri adları gönderilmez.</p>
-                <button type="button" class="btn btn-primary btn-sm" (click)="loadCoach(statement.id)">Koçu çalıştır</button>
-              </div>
-            }
-
-            <div class="suggested-questions" aria-label="Önerilen sorular">
-              @for (question of suggestedQuestions; track question) {
-                <button type="button" [disabled]="coachLoading()" (click)="askCoach(question)">{{ question }}</button>
-              }
-            </div>
-            <form class="coach-form" (submit)="$event.preventDefault(); askCoach()">
-              <label class="sr-only" for="coach-question">Ekstren hakkında soru sor</label>
-              <input id="coach-question" maxlength="500" placeholder="Örn. Market toplamım ne kadar?" [ngModel]="coachQuestion()" (ngModelChange)="coachQuestion.set($event)" name="coachQuestion">
-              <button type="submit" class="btn btn-primary btn-sm" [disabled]="coachLoading() || !coachQuestion().trim()">{{ coachLoading() ? 'Yanıtlanıyor…' : 'Sor' }}</button>
-            </form>
-            <small class="coach-disclaimer">{{ coach()?.disclaimer || 'Yanıtlar yalnızca yüklediğiniz ekstre verilerine dayanır; finansal tavsiye değildir.' }}</small>
-          </section>
 
           <section class="card budget-section">
             <div class="section-heading"><div><h3>Aylık bütçe</h3><p>Kategori bazında kendine esnek bir hedef belirle.</p></div></div>

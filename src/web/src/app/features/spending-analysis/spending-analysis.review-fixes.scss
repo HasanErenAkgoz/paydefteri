@@ -20,6 +20,59 @@
   }
 }
 
+.coach-section {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 14px;
+  border-color: rgba(129, 140, 248, 0.52);
+  background:
+    radial-gradient(circle at 92% 10%, rgba(45, 212, 191, 0.16), transparent 28%),
+    linear-gradient(120deg, rgba(67, 56, 202, 0.28), rgba(15, 23, 42, 0.96) 57%);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+}
+
+.coach-heading-copy {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.coach-mark {
+  display: grid;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(94, 234, 212, 0.44);
+  border-radius: 10px;
+  color: #99f6e4;
+  background: rgba(13, 148, 136, 0.16);
+  box-shadow: 0 0 20px rgba(45, 212, 191, 0.16);
+}
+
+.coach-intro {
+  margin: 4px 0 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.coach-primary-action {
+  min-height: 40px;
+  padding-inline: 15px;
+  box-shadow: 0 8px 18px rgba(99, 102, 241, 0.28);
+}
+
+.coach-section .coach-consent {
+  background: rgba(2, 6, 23, 0.22);
+}
+
+.coach-section .coach-badge {
+  border-color: rgba(94, 234, 212, 0.32);
+  color: #99f6e4;
+  background: rgba(13, 148, 136, 0.18);
+}
+
 .history-entry {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 34px;
@@ -150,6 +203,18 @@
     grid-column: 2;
     padding-left: 0;
     border-left: 0;
+  }
+
+  .coach-heading {
+    gap: 8px;
+  }
+
+  .coach-heading-copy {
+    gap: 9px;
+  }
+
+  .coach-badge {
+    padding: 4px 7px;
   }
 }
 

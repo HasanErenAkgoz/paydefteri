@@ -86,4 +86,11 @@ describe('SpendingAnalysisComponent statement history', () => {
 
     expect(deleteStatement).toHaveBeenCalledWith(statement.id);
   });
+
+  it('places the AI coach directly after the statement pulse for early discovery', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('.spending-pulse + .coach-section')).not.toBeNull();
+    expect(host.querySelector('.coach-primary-action')?.textContent).toContain('Koçu çalıştır');
+  });
 });
