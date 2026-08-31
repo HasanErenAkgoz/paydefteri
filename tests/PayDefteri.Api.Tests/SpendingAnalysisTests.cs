@@ -11,6 +11,8 @@ using PayDefteri.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
+using PayDefteri.Infrastructure.Services;
 
 namespace PayDefteri.Api.Tests;
 
@@ -35,6 +37,57 @@ public sealed class SpendingStatementParserTests
         result.Transactions.Should().OnlyContain(x =>
             !x.Description.Contains("4111", StringComparison.Ordinal)
             && !x.Description.Contains("123", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Csv_parser_accepts_akbank_style_headers_and_parenthesized_refunds()
+    {
+        const string csv = "İşlem Tarihi;Dönem İçi İşlemler;Borç Tutarı (TL);Kalan Borç / Taksit\n"
+            + "10/06/2026;TRENDYOL YEMEK;514,99;\n"
+            + "10/06/2026;TRENDYOL YEMEK - iade;204,17(-);\n";
+        var parser = new SpendingStatementParser();
+
+        var result = await parser.ParseAsync(
+            Encoding.UTF8.GetBytes(csv),
+            "akbank-ekstre.csv",
+            "text/csv");
+
+        result.Transactions.Should().HaveCount(2);
+        result.Transactions[0].Amount.Should().Be(514.99m);
+        result.Transactions[1].Amount.Should().Be(204.17m);
+        result.Transactions[1].IsRefund.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Pdf_parser_uses_private_document_analysis_fallback_when_embedded_text_is_unreadable()
+    {
+        var handler = new StatementAnalysisHandler("""
+            {"steps":[{"type":"model_output","content":[{"type":"text","text":"{\"transactions\":[{\"occurredOn\":\"2026-06-10\",\"description\":\"TRENDYOL YEMEK\",\"amount\":514.99,\"isRefund\":false,\"currency\":\"TRY\"}],\"warnings\":[]}"}]}]}
+            """);
+        var parser = new SpendingStatementParser(
+            new HttpClient(handler) { BaseAddress = new Uri("https://example.test/") },
+            Options.Create(new GeminiOptions { ApiKey = "test-key", StatementModel = "gemini-test" }));
+
+        var result = await parser.ParseAsync("%PDF- unreadable statement"u8.ToArray(), "akbank-ekstre.pdf", "application/pdf");
+
+        result.Transactions.Should().ContainSingle();
+        result.Transactions[0].Description.Should().Be("TRENDYOL YEMEK");
+        handler.RequestBody.Should().Contain("\"type\":\"document\"");
+        handler.RequestBody.Should().Contain("\"store\":false");
+    }
+
+    private sealed class StatementAnalysisHandler(string response) : HttpMessageHandler
+    {
+        public string RequestBody { get; private set; } = string.Empty;
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestBody = await request.Content!.ReadAsStringAsync(cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(response, Encoding.UTF8, "application/json"),
+            };
+        }
     }
 }
 

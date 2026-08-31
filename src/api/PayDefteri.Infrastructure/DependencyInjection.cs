@@ -124,7 +124,12 @@ public static class DependencyInjection
         services.Configure<ReceiptStorageOptions>(configuration.GetSection(ReceiptStorageOptions.SectionName));
         services.AddSingleton<IReceiptStorage, LocalReceiptStorage>();
         services.AddSingleton<IPlanDocumentParser, PlanDocumentParser>();
-        services.AddSingleton<ISpendingStatementParser, SpendingStatementParser>();
+        services.AddHttpClient<ISpendingStatementParser, SpendingStatementParser>((serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<GeminiOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+            client.Timeout = TimeSpan.FromSeconds(90);
+        });
 
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.Configure<AppOptions>(configuration.GetSection(AppOptions.SectionName));

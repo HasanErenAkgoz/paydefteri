@@ -11,6 +11,7 @@ public sealed class GeminiOptions
     public const string SectionName = "Gemini";
     public string ApiKey { get; set; } = string.Empty;
     public string ReceiptModel { get; set; } = "gemini-3.1-flash-lite";
+    public string StatementModel { get; set; } = "gemini-3.1-flash-lite";
     public string CoachModel { get; set; } = "gemini-3.1-flash-lite";
     public string BaseUrl { get; set; } = "https://generativelanguage.googleapis.com/v1beta/";
 }
