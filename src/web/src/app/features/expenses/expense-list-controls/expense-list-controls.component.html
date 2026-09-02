@@ -8,50 +8,52 @@
       </p>
     </div>
 
-    <!-- Mobile Filter Open Button (Visible on mobile screens) -->
-    <div class="mobile-filter-trigger">
-      <button
-        type="button"
-        class="btn btn-secondary btn-filter-sheet"
-        [class.has-active]="hasActiveFilters()"
-        (click)="openMobileFilter()"
-      >
-        <svg class="svg-icon" viewBox="0 0 24 24">
-          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-        </svg>
-        <span>Filtrele</span>
-        @if (activeFilterCount() > 0) {
-          <span class="active-badge">{{ activeFilterCount() }}</span>
-        }
-      </button>
-    </div>
   </div>
 
-  <!-- Primary Desktop & Mobile Search Bar -->
+  <!-- Search is the first task; mobile filters sit beside it rather than above it. -->
   <div class="controls-search-row">
-    <div class="search-box-wrapper">
-      <svg class="search-svg" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </svg>
-      <input
-        type="text"
-        class="expense-search-input"
-        placeholder="Gider adı, kategori veya açıklama ara..."
-        [ngModel]="filterState().search"
-        (ngModelChange)="setSearch($event)"
-        aria-label="Gider ara"
-      />
-      @if (filterState().search) {
+    <div class="mobile-search-toolbar">
+      <div class="search-box-wrapper">
+        <svg class="search-svg" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          class="expense-search-input"
+          placeholder="Gider adı, kategori veya açıklama ara..."
+          [ngModel]="filterState().search"
+          (ngModelChange)="setSearch($event)"
+          aria-label="Gider ara"
+        />
+        @if (filterState().search) {
+          <button
+            type="button"
+            class="clear-search-btn"
+            (click)="setSearch('')"
+            aria-label="Aramayı temizle"
+          >
+            ✕
+          </button>
+        }
+      </div>
+
+      <div class="mobile-filter-trigger">
         <button
           type="button"
-          class="clear-search-btn"
-          (click)="setSearch('')"
-          aria-label="Aramayı temizle"
+          class="btn btn-secondary btn-filter-sheet"
+          [class.has-active]="hasActiveFilters()"
+          (click)="openMobileFilter()"
         >
-          ✕
+          <svg class="svg-icon" viewBox="0 0 24 24">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+          <span>Filtre</span>
+          @if (activeFilterCount() > 0) {
+            <span class="active-badge">{{ activeFilterCount() }}</span>
+          }
         </button>
-      }
+      </div>
     </div>
 
     <!-- Quick Chips Strip (Desktop & Mobile Swipeable) -->

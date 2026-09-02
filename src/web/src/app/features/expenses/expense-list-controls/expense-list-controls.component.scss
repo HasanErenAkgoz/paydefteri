@@ -40,6 +40,10 @@
   display: none;
 }
 
+.mobile-search-toolbar {
+  display: contents;
+}
+
 .btn-filter-sheet {
   display: inline-flex;
   align-items: center;
@@ -589,6 +593,26 @@
 
   .mobile-filter-trigger {
     display: block;
+    flex: 0 0 auto;
+  }
+
+  .mobile-search-toolbar {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .mobile-search-toolbar .search-box-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .btn-filter-sheet {
+    min-height: 42px;
+    height: 100%;
+    padding: 7px 10px;
+    border-radius: 10px;
   }
 
   .desktop-filter-toolbar {
