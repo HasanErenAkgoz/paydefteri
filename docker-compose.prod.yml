@@ -38,6 +38,7 @@ services:
       MobileSession__RefreshTokenDays: ${MOBILE_REFRESH_TOKEN_DAYS:-30}
       Gemini__ApiKey: ${GEMINI_API_KEY:-}
       Gemini__ReceiptModel: ${GEMINI_RECEIPT_MODEL:-gemini-3.1-flash-lite}
+      Gemini__StatementModel: ${GEMINI_STATEMENT_MODEL:-gemini-3.1-flash-lite}
       OpenAI__ApiKey: ${OPENAI_API_KEY:-}
       OpenAI__ReceiptModel: ${OPENAI_RECEIPT_MODEL:-gpt-5.6-luna}
       App__PublicWebUrl: ${PUBLIC_WEB_URL:?set PUBLIC_WEB_URL}

@@ -76,6 +76,23 @@ public sealed class SpendingStatementParserTests
         handler.RequestBody.Should().Contain("\"store\":false");
     }
 
+    [Fact]
+    public async Task Image_statement_uses_the_image_media_type_for_document_analysis()
+    {
+        var handler = new StatementAnalysisHandler("""
+            {"steps":[{"type":"model_output","content":[{"type":"text","text":"{\"transactions\":[{\"occurredOn\":\"2026-06-10\",\"description\":\"MARKET\",\"amount\":100,\"isRefund\":false,\"currency\":\"TRY\"}],\"warnings\":[]}"}]}]}
+            """);
+        var parser = new SpendingStatementParser(
+            new HttpClient(handler) { BaseAddress = new Uri("https://example.test/") },
+            Options.Create(new GeminiOptions { ApiKey = "test-key", StatementModel = "gemini-test" }));
+
+        var result = await parser.ParseAsync([0xFF, 0xD8, 0xFF], "ekstre.jpg", "image/jpeg");
+
+        result.Transactions.Should().ContainSingle();
+        handler.RequestBody.Should().Contain("\"type\":\"image\"");
+        handler.RequestBody.Should().Contain("\"mime_type\":\"image/jpeg\"");
+    }
+
     private sealed class StatementAnalysisHandler(string response) : HttpMessageHandler
     {
         public string RequestBody { get; private set; } = string.Empty;
@@ -87,6 +104,42 @@ public sealed class SpendingStatementParserTests
             {
                 Content = new StringContent(response, Encoding.UTF8, "application/json"),
             };
+        }
+    }
+}
+
+public sealed class CreditCardStatementAnalyzerTests
+{
+    [Fact]
+    public async Task Legacy_import_flow_uses_the_shared_document_parser_for_pdf_statements()
+    {
+        var parser = new StubStatementParser(new ParsedSpendingStatement(
+            "PDF",
+            [new ParsedSpendingTransaction(new DateOnly(2026, 8, 1), "MARKET", "MARKET", 125m, false, "TRY", "Market", null, null)],
+            ["Belge analizi kullanıldı."]));
+        var analyzer = new GeminiCreditCardStatementAnalyzer(parser);
+
+        var result = await analyzer.AnalyzeAsync(new CreditCardStatementAnalysisInput(
+            "application/pdf",
+            [1, 2, 3],
+            "ekstre.pdf",
+            ["Market"],
+            "test-user"));
+
+        parser.FileName.Should().Be("ekstre.pdf");
+        result.Transactions.Should().ContainSingle();
+        result.Transactions[0].CategoryName.Should().Be("Market");
+        result.Warnings.Should().Contain("Belge analizi kullanıldı.");
+    }
+
+    private sealed class StubStatementParser(ParsedSpendingStatement result) : ISpendingStatementParser
+    {
+        public string? FileName { get; private set; }
+
+        public Task<ParsedSpendingStatement> ParseAsync(byte[] content, string fileName, string contentType, CancellationToken cancellationToken = default)
+        {
+            FileName = fileName;
+            return Task.FromResult(result);
         }
     }
 }

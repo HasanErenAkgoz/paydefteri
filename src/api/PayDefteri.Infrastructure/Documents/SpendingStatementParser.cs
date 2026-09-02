@@ -52,7 +52,7 @@ public sealed partial class SpendingStatementParser : ISpendingStatementParser
                 ".csv" => ReadCsv(stream, cancellationToken),
                 ".xlsx" => ReadWorkbook(stream, cancellationToken),
                 ".pdf" => ReadPdf(stream, cancellationToken),
-                _ => throw new InvalidDataException("Desteklenen ekstre biçimleri CSV, XLSX ve PDF'dir."),
+                _ => throw new InvalidDataException("Bu ekstre biçimi belge analiziyle okunmalıdır."),
             };
         }
         catch (Exception) when (CanUseDocumentAnalysis(extension) && !cancellationToken.IsCancellationRequested)
@@ -77,7 +77,7 @@ public sealed partial class SpendingStatementParser : ISpendingStatementParser
     }
 
     private bool CanUseDocumentAnalysis(string extension) =>
-        (extension is ".pdf" or ".xlsx")
+        (extension is ".pdf" or ".xlsx" or ".jpg" or ".jpeg" or ".png" or ".webp")
         && _httpClient is not null
         && !string.IsNullOrWhiteSpace(_gemini?.ApiKey);
 
@@ -109,12 +109,7 @@ public sealed partial class SpendingStatementParser : ISpendingStatementParser
             input = new object[]
             {
                 new { type = "text", text = prompt },
-                new
-                {
-                    type = "document",
-                    data = Convert.ToBase64String(content),
-                    mime_type = string.IsNullOrWhiteSpace(contentType) ? MimeTypeFor(extension) : contentType,
-                },
+                CreateMediaInput(content, contentType, extension),
             },
             response_format = new
             {
@@ -209,9 +204,26 @@ public sealed partial class SpendingStatementParser : ISpendingStatementParser
         }
     }
 
-    private static string MimeTypeFor(string extension) => extension == ".pdf"
-        ? "application/pdf"
-        : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static object CreateMediaInput(byte[] content, string contentType, string extension) => new
+    {
+        type = IsImage(extension) ? "image" : "document",
+        data = Convert.ToBase64String(content),
+        mime_type = string.IsNullOrWhiteSpace(contentType) || contentType == "application/octet-stream"
+            ? MimeTypeFor(extension)
+            : contentType,
+    };
+
+    private static bool IsImage(string extension) => extension is ".jpg" or ".jpeg" or ".png" or ".webp";
+
+    private static string MimeTypeFor(string extension) => extension switch
+    {
+        ".pdf" => "application/pdf",
+        ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".jpg" or ".jpeg" => "image/jpeg",
+        ".png" => "image/png",
+        ".webp" => "image/webp",
+        _ => "application/octet-stream",
+    };
 
     private sealed record DocumentAnalysisResult(
         List<DocumentAnalysisTransaction>? Transactions,
