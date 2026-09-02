@@ -1,31 +1,32 @@
 <div class="expense-form-container">
 
-  <!-- 1. AI RECEIPT SCANNER HEADER BAR -->
-  <div class="receipt-scan-bar">
-    <div class="receipt-bar-left">
-      <span class="scan-icon">⚡</span>
-      <span class="scan-text">Fiş veya faturadan otomatik doldur</span>
+  <!-- Keep receipt capture discoverable without turning the form into a scanner dashboard. -->
+  <section class="receipt-capture" aria-labelledby="receipt-capture-title">
+    <div class="receipt-capture-copy">
+      <p class="receipt-capture-kicker">Fiş veya fatura</p>
+      <h4 id="receipt-capture-title">Fotoğraftan otomatik doldur</h4>
+      <p>Alanları formda kontrol ederek kaydedebilirsiniz.</p>
     </div>
-    <div class="receipt-bar-actions">
+    <div class="receipt-capture-actions">
       @if (camera.isNative) {
         <button type="button" class="btn-scan-action" [disabled]="analyzingReceipt()" (click)="captureNativeReceipt()">
-          {{ analyzingReceipt() ? '⏳ Taranıyor…' : '📸 Kamera' }}
+          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '📸 Kamera ile çek' }}
         </button>
         <button type="button" class="btn-scan-action" [disabled]="analyzingReceipt()" (click)="selectNativeReceipt()">
-          {{ analyzingReceipt() ? '⏳ Taranıyor…' : '🖼️ Fotoğraf' }}
+          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '🖼️ Fotoğraf seç' }}
         </button>
       } @else {
         <label class="btn-scan-action" [class.disabled]="analyzingReceipt()">
-          {{ analyzingReceipt() ? '⏳ Taranıyor…' : '📸 Kamera' }}
+          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '📸 Kamera ile çek' }}
           <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" [disabled]="analyzingReceipt()" (change)="selectReceipt($event)" (cancel)="$event.stopPropagation()" />
         </label>
         <label class="btn-scan-action" [class.disabled]="analyzingReceipt()">
-          {{ analyzingReceipt() ? '⏳ Taranıyor…' : '🖼️ Fotoğraf' }}
+          {{ analyzingReceipt() ? 'Analiz ediliyor…' : '🖼️ Fotoğraf seç' }}
           <input type="file" accept="image/jpeg,image/png,image/webp" [disabled]="analyzingReceipt()" (change)="selectReceipt($event)" (cancel)="$event.stopPropagation()" />
         </label>
       }
     </div>
-  </div>
+  </section>
 
   @if (receiptDraft()) {
     <div class="receipt-alert-badge" [class.warning]="receiptDraft()!.lowConfidenceFields.length > 0">

@@ -567,6 +567,26 @@
 
 /* RESPONSIVE QUERIES */
 @media (max-width: 768px) {
+  :host {
+    margin-bottom: 10px;
+  }
+
+  .track-head {
+    align-items: center;
+  }
+
+  .track-title-group {
+    flex: 1 1 auto;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .tiny {
+    display: none;
+  }
+
   .mobile-filter-trigger {
     display: block;
   }

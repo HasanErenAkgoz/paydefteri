@@ -9,43 +9,57 @@
   padding-bottom: 2px;
 }
 
-/* 1. AI RECEIPT SCANNER BAR */
-.receipt-scan-bar {
+/* 1. RECEIPT CAPTURE */
+.receipt-capture {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: rgba(16, 185, 129, 0.07);
-  border: 1px dashed rgba(16, 185, 129, 0.3);
-  border-radius: 12px;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 12px 14px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.24);
+  border-radius: 14px;
 
   @media (max-width: 500px) {
     flex-direction: column;
     align-items: stretch;
-    gap: 6px;
+    gap: 10px;
   }
 }
 
-.receipt-bar-left {
+.receipt-capture-copy {
+  h4,
+  p {
+    margin: 0;
+  }
+
+  h4 {
+    color: #ecfdf5;
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+
+  > p:last-child {
+    margin-top: 2px;
+    color: #a7b6ca;
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+}
+
+.receipt-capture-kicker {
+  margin-bottom: 3px !important;
+  color: #6ee7b7;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.receipt-capture-actions {
   display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.scan-icon {
-  font-size: 0.95rem;
-}
-
-.scan-text {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #a7f3d0;
-}
-
-.receipt-bar-actions {
-  display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
 
   @media (max-width: 500px) {
     display: grid;
@@ -57,15 +71,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-height: 30px;
-  padding: 4px 10px;
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  border-radius: 8px;
+  gap: 5px;
+  min-height: 38px;
+  padding: 7px 12px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(52, 211, 153, 0.38);
+  border-radius: 10px;
   color: #e2e8f0;
   font-family: inherit;
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -76,7 +90,7 @@
   }
 
   &:hover {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(16, 185, 129, 0.16);
     border-color: #10b981;
     color: #ffffff;
   }

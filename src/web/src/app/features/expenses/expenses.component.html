@@ -11,19 +11,19 @@
           <p class="muted">{{ paidTotal() | tryCurrency }} ödendi · {{ plannedTotal() | tryCurrency }} planlandı</p>
         </div>
         <div class="expense-hero-actions">
+          <button type="button" class="btn btn-primary btn-add-hero" (click)="openAddModal()">
+            ➕ Gider Ekle
+          </button>
           <a class="btn btn-secondary btn-statement-hero" [routerLink]="['/plans', planId, 'balances']">
             ⚖️ Bakiyeler
           </a>
           <button type="button" class="btn btn-secondary btn-statement-hero" (click)="openStatementImportModal()">
-            💳 Ekstre İçe Aktar
-          </button>
-          <button type="button" class="btn btn-primary btn-add-hero" (click)="openAddModal()">
-            ➕ Gider Ekle
+            💳 Ekstre Aktar
           </button>
         </div>
       </header>
 
-      <!-- Segmented Navigation -->
+      <!-- Keep this as a simple page switcher rather than another card layer. -->
       <div class="expense-tabs-nav" role="tablist" aria-label="Gider sekmeleri">
         <button
           type="button"
