@@ -51,6 +51,7 @@ export class SpendingAnalysisComponent implements OnInit {
     'Hafta sonu ne kadar harcadım?',
     'Önceki ekstreye göre nasıl değişti?',
     'Tekrarlayan ödemelerim neler?',
+    'Bana bütçe önerisi ver',
   ];
   private readonly activeStatementRequest = signal<string | null>(null);
 
