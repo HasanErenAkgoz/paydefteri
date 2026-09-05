@@ -87,10 +87,14 @@ describe('SpendingAnalysisComponent statement history', () => {
     expect(deleteStatement).toHaveBeenCalledWith(statement.id);
   });
 
-  it('places the AI coach directly after the statement pulse for early discovery', () => {
+  it('shows the headline spending metrics before the AI coach, and the coach right after them', () => {
     const host = fixture.nativeElement as HTMLElement;
 
-    expect(host.querySelector('.spending-pulse + .coach-section')).not.toBeNull();
+    // Sıra bilinçli: önce ekstre nabzı, sonra "Toplam harcama" dahil metrik kartları,
+    // hemen ardından AI koçu. Koç yine kıvrımın üstünde kalıyor ama rakamlar önce geliyor.
+    expect(host.querySelector('.spending-pulse + .metric-grid')).not.toBeNull();
+    expect(host.querySelector('.metric-grid + .coach-section')).not.toBeNull();
+    expect(host.querySelector('.metric-card.primary')?.textContent).toContain('Toplam harcama');
     expect(host.querySelector('.coach-primary-action')?.textContent).toContain('Koçu çalıştır');
   });
 });

@@ -104,7 +104,9 @@ public sealed class SpendingCoachQueryHandler :
                 BuildFacts(context),
                 request.Question),
             fallback,
-            ct);
+            ct,
+            "AI koçu şu anda yanıt veremiyor. Şunları doğrudan sorabilirsiniz: en büyük işlemler, "
+                + "mağaza veya kategori toplamı, hafta sonu harcaması, önceki ay karşılaştırması ya da düzenli ödemeler.");
     }
 
     private async Task<CoachContext> LoadContext(Guid statementId, CancellationToken ct)
@@ -132,7 +134,8 @@ public sealed class SpendingCoachQueryHandler :
     private async Task<SpendingCoachResponseDto> TryProvider(
         SpendingCoachProviderRequest request,
         SpendingCoachResponseDto fallback,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? unavailableAnswer = null)
     {
         try
         {
@@ -141,6 +144,12 @@ public sealed class SpendingCoachQueryHandler :
             var cited = generated.EvidenceKeys.Distinct().ToList();
             return Response(generated.Answer, generated.Insights, generated.Recommendations,
                 request.Evidence, cited, true);
+        }
+        // Sağlayıcı yapılandırılmamış veya erişilemiyorsa, kullanıcıya "sorunuz
+        // yanıtlanamadı" demek yanıltıcı olur; sebebi ayrıca belirtilir.
+        catch (ExternalServiceUnavailableException) when (!ct.IsCancellationRequested)
+        {
+            return unavailableAnswer is null ? fallback : fallback with { Answer = unavailableAnswer };
         }
         catch (Exception) when (!ct.IsCancellationRequested)
         {

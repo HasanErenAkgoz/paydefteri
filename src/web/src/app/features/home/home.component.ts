@@ -1,11 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { switchMap } from 'rxjs';
 import { PlanContextService } from '../../core/services/plan-context.service';
 import { PlansApi } from '../../core/services/plans.api';
 import { planHomeCommands } from '../../core/utils/plan-routes';
 
-/** Giriş sonrası: plan varsa ana ekranına, yoksa boş plan + Kurulum. */
+/** Giriş sonrası: plan varsa ana ekranına, yoksa plan listesindeki şablon/boş duruma. */
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -34,31 +33,16 @@ export class HomeComponent implements OnInit {
           return;
         }
 
-        this.bootstrapEmptyPlan();
+        // İlk kullanım: hesabı boş bir "Yeni Özel Plan" ile kirletmek yerine
+        // plan listesindeki hazır şablon / boş durum ekranına yönlendir.
+        // manage=1 doğrudan veriliyor ki plan listesi boş hesapta kendini
+        // ?manage=1'e yeniden yönlendirmek zorunda kalmasın (fazladan tur + istek).
+        this.planContext.clear();
+        void this.router.navigate(['/plans'], { queryParams: { manage: '1' } });
       },
       error: (err) => {
         this.message.set(err?.error?.detail ?? 'Planlar yüklenemedi.');
       },
     });
-  }
-
-  private bootstrapEmptyPlan(): void {
-    this.message.set('Plan hazırlanıyor…');
-    this.plansApi
-      .create({
-        title: 'Yeni Özel Plan',
-        description: 'Özel takip planı',
-        planType: 'Installment',
-      })
-      .pipe(switchMap((plan) => this.plansApi.seed(plan.id, 'empty')))
-      .subscribe({
-        next: (plan) => {
-          this.planContext.setPlan(plan.id, plan.title, plan.description, plan.planType);
-          void this.router.navigate(['/plans', plan.id, 'setup']);
-        },
-        error: (err) => {
-          this.message.set(err?.error?.detail ?? 'Plan oluşturulamadı.');
-        },
-      });
   }
 }

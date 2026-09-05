@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
@@ -30,6 +31,7 @@ export class PlanListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly plans = signal<PlanDto[]>([]);
   readonly archivedPlans = signal<PlanDto[]>([]);
@@ -78,14 +80,20 @@ export class PlanListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // Keep last planId so navbar tabs stay available while managing plans.
-    const manage = this.route.snapshot.queryParamMap.get('manage') === '1';
-    this.manageMode.set(manage);
     this.templatesApi.list().subscribe({
       next: (list) => this.templates.set(list.filter((t) => t.key !== 'empty')),
       error: () => this.templates.set([]),
     });
-    this.reload(manage);
+
+    // queryParamMap'i dinliyoruz, snapshot'ı değil: aynı rotaya ?manage=1 ile
+    // yönlendirildiğinde Angular bileşeni yeniden oluşturmaz, dolayısıyla snapshot
+    // okunsaydı manageMode false kalır ve reload() sonsuz "Yükleniyor…" bırakırdı.
+    // Keep last planId so navbar tabs stay available while managing plans.
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const manage = params.get('manage') === '1';
+      this.manageMode.set(manage);
+      this.reload(manage);
+    });
   }
 
   backToDashboard(): void {
