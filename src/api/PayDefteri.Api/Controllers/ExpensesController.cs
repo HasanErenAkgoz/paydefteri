@@ -114,7 +114,10 @@ public sealed class ExpensesController : ControllerBase
 
     [HttpPost("analyze-statement")]
     [EnableRateLimiting("receipt-analysis")]
-    [RequestSizeLimit(15 * 1024 * 1024)]
+    // Doğrulayıcı sınırı 15 MB (CreditCardStatementCommands.MaxFileSize); istek sınırı
+    // multipart ek yükünü karşılamak için 1 MB üstte tutulur, yoksa tam 15 MB'lık bir
+    // dosya doğrulayıcıya hiç ulaşmadan reddedilir.
+    [RequestSizeLimit(16 * 1024 * 1024)]
     public async Task<ActionResult<CreditCardStatementAnalysisResultDto>> AnalyzeStatement(
         Guid planId,
         IFormFile? file,
