@@ -26,14 +26,16 @@
 
 
   <!-- Segmented Tabs Navigation: Horizontal Scroll Strip -->
-  <div class="plans-tabs-nav" role="tablist" aria-label="Plan sekmeleri">
+  <div class="plans-tabs-nav" role="tablist" aria-label="Plan sekmeleri" appTabList>
     <button
       type="button"
       class="plans-tab-btn"
       [class.active]="activeTab() === 'my-plans'"
       (click)="setTab('my-plans')"
+      id="plans-tab-my-plans"
       role="tab"
       [attr.aria-selected]="activeTab() === 'my-plans'"
+      aria-controls="plans-panel-my-plans"
     >
       <svg class="svg-icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
       <span>Planlarım</span>
@@ -47,8 +49,10 @@
       class="plans-tab-btn"
       [class.active]="activeTab() === 'templates'"
       (click)="setTab('templates')"
+      id="plans-tab-templates"
       role="tab"
       [attr.aria-selected]="activeTab() === 'templates'"
+      aria-controls="plans-panel-templates"
     >
       <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
       <span>💡 Hazır Şablonlar</span>
@@ -59,8 +63,10 @@
       class="plans-tab-btn"
       [class.active]="activeTab() === 'import'"
       (click)="setTab('import')"
+      id="plans-tab-import"
       role="tab"
       [attr.aria-selected]="activeTab() === 'import'"
+      aria-controls="plans-panel-import"
     >
       <svg class="svg-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       <span>📄 Belgeden Aktar</span>
@@ -71,8 +77,10 @@
       class="plans-tab-btn"
       [class.active]="activeTab() === 'blank'"
       (click)="setTab('blank')"
+      id="plans-tab-blank"
       role="tab"
       [attr.aria-selected]="activeTab() === 'blank'"
+      aria-controls="plans-panel-blank"
     >
       <svg class="svg-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span>✨ Sıfırdan Aç</span>
@@ -84,8 +92,10 @@
         class="plans-tab-btn plans-tab-btn--warn"
         [class.active]="activeTab() === 'invites'"
         (click)="setTab('invites')"
+        id="plans-tab-invites"
         role="tab"
         [attr.aria-selected]="activeTab() === 'invites'"
+        aria-controls="plans-panel-invites"
       >
         <svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         <span>Davetler</span>
@@ -99,8 +109,10 @@
         class="plans-tab-btn"
         [class.active]="activeTab() === 'archived'"
         (click)="setTab('archived')"
+        id="plans-tab-archived"
         role="tab"
         [attr.aria-selected]="activeTab() === 'archived'"
+        aria-controls="plans-panel-archived"
       >
         <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
         <span>Arşiv</span>
@@ -111,7 +123,7 @@
 
   <!-- TAB 1: MY PLANS -->
   @if (activeTab() === 'my-plans') {
-    <div class="card">
+    <div class="card" id="plans-panel-my-plans" role="tabpanel" aria-labelledby="plans-tab-my-plans">
       <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
         <span>📁 Mevcut Planlar</span>
         @if (!loading()) {
@@ -216,7 +228,7 @@
 
   <!-- TAB 2: HAZIR ŞABLONLAR -->
   @if (activeTab() === 'templates') {
-    <div class="card">
+    <div class="card" id="plans-panel-templates" role="tabpanel" aria-labelledby="plans-tab-templates">
       <div class="card-title">💡 Hazır Şablonlar &amp; Örnek Senaryolar</div>
       <p class="muted" style="font-size: 0.85rem; margin-bottom: 16px">
         Tek tıkla hazır verilerle açabileceğiniz tasarruf ve gider planları:
@@ -336,7 +348,7 @@
 
   <!-- TAB 3: BELGEDEN AKTAR -->
   @if (activeTab() === 'import') {
-    <div class="card">
+    <div class="card" id="plans-panel-import" role="tabpanel" aria-labelledby="plans-tab-import">
       <div class="card-title">📄 Belgeden / Tablodan Plan Oluştur</div>
       <p class="muted" style="font-size: 0.85rem; margin-bottom: 16px">
         Fuzul, Eminevim veya banka ödeme planı PDF/Excel dosyanızı yükleyin:
@@ -365,7 +377,7 @@
 
   <!-- TAB 4: SIFIRDAN AÇ -->
   @if (activeTab() === 'blank') {
-    <div class="card">
+    <div class="card" id="plans-panel-blank" role="tabpanel" aria-labelledby="plans-tab-blank">
       <div class="card-title">✨ Sıfırdan Yeni Plan Aç</div>
       <p class="muted" style="font-size: 0.85rem; margin-bottom: 16px">
         İhtiyacınıza uygun boş bir defter oluşturun:
@@ -444,7 +456,7 @@
 
   <!-- TAB 5: PENDING INVITES -->
   @if (activeTab() === 'invites' && pendingInvites().length) {
-    <div class="card invites-card">
+    <div class="card invites-card" id="plans-panel-invites" role="tabpanel" aria-labelledby="plans-tab-invites">
       <div class="card-title">📨 Bekleyen Davetler ({{ pendingInvites().length }})</div>
       <p class="muted" style="font-size: 0.85rem; margin-bottom: 14px">
         Size gönderilen plan ortaklığı davetlerini buradan onaylayabilirsiniz.
@@ -472,7 +484,7 @@
 
   <!-- TAB 6: ARCHIVED PLANS -->
   @if (activeTab() === 'archived' && archivedPlans().length) {
-    <div class="card">
+    <div class="card" id="plans-panel-archived" role="tabpanel" aria-labelledby="plans-tab-archived">
       <div class="card-title" style="display: flex; justify-content: space-between; align-items: center">
         <span>🗄️ Arşivlenen Planlar ({{ archivedPlans().length }})</span>
       </div>
@@ -530,11 +542,11 @@
             </div>
             <div class="preview-kpi">
               <span class="preview-kpi-label">Kalem Sayısı</span>
-              <span class="preview-kpi-val">{{ pt.installmentCount || pt.installments?.length || 0 }} Adet</span>
+              <span class="preview-kpi-val">{{ pt.installmentCount || pt.installments.length }} Adet</span>
             </div>
             <div class="preview-kpi">
               <span class="preview-kpi-label">Ortak Sayısı</span>
-              <span class="preview-kpi-val">{{ pt.partnerCount || pt.partners?.length || 0 }} Kişi</span>
+              <span class="preview-kpi-val">{{ pt.partnerCount || pt.partners.length }} Kişi</span>
             </div>
           </div>
 

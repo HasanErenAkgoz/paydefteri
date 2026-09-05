@@ -22,6 +22,7 @@ import {
   downloadIcs,
 } from '../../shared/utils/export-files';
 import { ToastService } from '../../shared/toast/toast.service';
+import { TabListDirective } from '../../shared/directives/tab-list.directive';
 import { formatDateTr } from '../../shared/utils/format';
 import { CurrencyTryPipe } from '../../shared/pipes/currency-try.pipe';
 import { environment } from '../../../environments/environment';
@@ -29,7 +30,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-data',
   standalone: true,
-  imports: [CurrencyTryPipe, DecimalPipe, DatePipe],
+  imports: [CurrencyTryPipe, DecimalPipe, DatePipe, TabListDirective],
   templateUrl: './data.component.html',
   styleUrl: './data.component.scss',
 })

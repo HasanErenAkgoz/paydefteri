@@ -14,6 +14,7 @@ import { PlansApi } from '../../core/services/plans.api';
 import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmService } from '../../shared/confirm/confirm.service';
 import { FocusTrapDirective } from '../../shared/directives/focus-trap.directive';
+import { TabListDirective } from '../../shared/directives/tab-list.directive';
 import { isExpensePlan } from '../../core/utils/plan-routes';
 import { apiErrorMessage } from '../../shared/utils/api-error';
 import { ExpenseListControlsComponent } from './expense-list-controls/expense-list-controls.component';
@@ -47,6 +48,7 @@ import {
     StatementImportModalComponent,
     CurrencyTryPipe,
     FocusTrapDirective,
+    TabListDirective,
   ],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss',

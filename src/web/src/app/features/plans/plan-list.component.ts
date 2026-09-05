@@ -15,11 +15,12 @@ import { formatDateTr } from '../../shared/utils/format';
 import { IconTrashComponent } from '../../shared/icons/icon-trash.component';
 import { CurrencyTryPipe } from '../../shared/pipes/currency-try.pipe';
 import { FocusTrapDirective } from '../../shared/directives/focus-trap.directive';
+import { TabListDirective } from '../../shared/directives/tab-list.directive';
 
 @Component({
   selector: 'app-plan-list',
   standalone: true,
-  imports: [FormsModule, RouterLink, IconTrashComponent, CurrencyTryPipe, FocusTrapDirective],
+  imports: [FormsModule, RouterLink, IconTrashComponent, CurrencyTryPipe, FocusTrapDirective, TabListDirective],
   templateUrl: './plan-list.component.html',
   styleUrl: './plan-list.component.scss',
 })

@@ -80,6 +80,32 @@ test.describe('İlk kullanım akışı (yeni hesap)', () => {
   });
 });
 
+test.describe('Erişilebilirlik (herkese açık ekranlar)', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('giriş ekranındaki dokunma hedefleri en az 44x44 px', async ({ page }) => {
+    await page.goto('/login');
+    // Yerleşim oturmadan ölçüm alınırsa kutu boyutları geçici değerler döndürüp
+    // testi kararsız yapıyor; önce sayfanın yerleşmesini bekle.
+    await page.waitForLoadState('networkidle');
+
+    const targets = [
+      page.getByRole('button', { name: /Şifreyi (göster|gizle)/ }),
+      page.getByRole('button', { name: /Şifremi unuttum/ }),
+      page.getByRole('link', { name: 'Kayıt ol', exact: true }),
+    ];
+
+    for (const target of targets) {
+      await expect(target.first()).toBeVisible();
+      const box = await target.first().boundingBox();
+      expect(box, 'dokunma hedefi görünür olmalı').not.toBeNull();
+      // WCAG 2.2 Target Size (Minimum): 24px zorunlu, 44px önerilen/AAA hedefi.
+      expect(box!.height, `${await target.first().innerText()} yüksekliği`).toBeGreaterThanOrEqual(44);
+      expect(box!.width, `${await target.first().innerText()} genişliği`).toBeGreaterThanOrEqual(44);
+    }
+  });
+});
+
 test.describe('Oturum içi ekranlar (paylaşılan hesap)', () => {
   test.use({ storageState: SHARED_AUTH_STATE });
 
@@ -109,9 +135,11 @@ test.describe('Oturum içi ekranlar (paylaşılan hesap)', () => {
     await expect(modal).toBeHidden({ timeout: 15_000 });
     // Masaüstü tablosu ve mobil kart listesi aynı anda DOM'da; kırılıma göre biri
     // gizli. Bu yüzden "ilk eşleşme" değil, "görünür eşleşme" aranıyor.
+    // Üç kırılım paralel koşarken dev sunucusu yavaşlıyor; kayıt sonrası liste
+    // tazelenmesi 15 sn'yi aşabiliyor. Gerçek bir kırılma 30 sn'de de görünür.
     await expect(
       page.getByText(expenseName).filter({ visible: true }).first()
-    ).toBeVisible({ timeout: 15_000 });
+    ).toBeVisible({ timeout: 30_000 });
   });
 
   test('ekstre önizleme: CSV yüklenir ve analiz sonucu render olur', async ({ page }, testInfo) => {

@@ -25,12 +25,13 @@
   </header>
 
   <!-- Tab Navigation Strip -->
-  <div class="data-tabs-nav no-print" role="tablist" aria-label="Yedek ve rapor sekmeleri">
+  <div class="data-tabs-nav no-print" role="tablist" aria-label="Yedek ve rapor sekmeleri" appTabList>
     <button
       type="button"
       class="data-tab-btn"
       [class.active]="activeTab() === 'report'"
       (click)="setTab('report')"
+      id="data-tab-report"
       role="tab"
       [attr.aria-selected]="activeTab() === 'report'"
     >
@@ -43,7 +44,9 @@
       class="data-tab-btn"
       [class.active]="activeTab() === 'export'"
       (click)="setTab('export')"
+      id="data-tab-export"
       role="tab"
+      aria-controls="data-panel-export"
       [attr.aria-selected]="activeTab() === 'export'"
     >
       <svg class="svg-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -56,7 +59,9 @@
         class="data-tab-btn"
         [class.active]="activeTab() === 'restore'"
         (click)="setTab('restore')"
+        id="data-tab-restore"
         role="tab"
+        aria-controls="data-panel-restore"
         [attr.aria-selected]="activeTab() === 'restore'"
       >
         <svg class="svg-icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -69,7 +74,9 @@
       class="data-tab-btn"
       [class.active]="activeTab() === 'history'"
       (click)="setTab('history')"
+      id="data-tab-history"
       role="tab"
+      aria-controls="data-panel-history"
       [attr.aria-selected]="activeTab() === 'history'"
     >
       <svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -297,7 +304,7 @@
 
   <!-- TAB 2: EXPORT -->
   @if (activeTab() === 'export') {
-    <div class="data-tools no-print">
+    <div class="data-tools no-print" id="data-panel-export" role="tabpanel" aria-labelledby="data-tab-export">
       <section class="data-panel tool-panel">
         <h2 class="data-panel-title">Dışa aktar</h2>
         <p class="data-panel-sub">
@@ -332,7 +339,7 @@
 
   <!-- TAB 3: RESTORE -->
   @if (activeTab() === 'restore' && !isExpense()) {
-    <div class="data-tools no-print">
+    <div class="data-tools no-print" id="data-panel-restore" role="tabpanel" aria-labelledby="data-tab-restore">
       <section class="data-panel tool-panel">
         <h2 class="data-panel-title">Geri yükle</h2>
         <p class="data-panel-sub">Daha önce indirdiğiniz JSON yedeğini seçin.</p>
@@ -348,7 +355,7 @@
 
   <!-- TAB 4: HISTORY -->
   @if (activeTab() === 'history') {
-    <div class="data-secondary no-print">
+    <div class="data-secondary no-print" id="data-panel-history" role="tabpanel" aria-labelledby="data-tab-history">
       @if (!isExpense()) {
       <section class="data-panel">
         <div class="data-panel-head">

@@ -32,6 +32,7 @@ import { isExpensePlan, planHomeCommands } from '../../core/utils/plan-routes';
 import { CurrencyTryPipe } from '../../shared/pipes/currency-try.pipe';
 import { MoneyInputDirective } from '../../shared/directives/money-input.directive';
 import { FocusTrapDirective } from '../../shared/directives/focus-trap.directive';
+import { TabListDirective } from '../../shared/directives/tab-list.directive';
 import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmService } from '../../shared/confirm/confirm.service';
 import { formatDateTr, shareTypeLabel, shareTypeToNumber } from '../../shared/utils/format';
@@ -86,6 +87,7 @@ const PARTNER_COLORS = ['#38bdf8', '#fb923c', '#a855f7', '#ec4899', '#10b981', '
     MoneyInputDirective,
     IconTrashComponent,
     FocusTrapDirective,
+    TabListDirective,
   ],
   templateUrl: './setup.component.html',
   styleUrl: './setup.component.scss',

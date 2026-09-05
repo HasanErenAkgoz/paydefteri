@@ -23,12 +23,13 @@
     }
 
     <!-- Tab Navigation Strip -->
-    <div class="setup-tabs-nav" role="tablist" aria-label="Kurulum sekmeleri">
+    <div class="setup-tabs-nav" role="tablist" aria-label="Kurulum sekmeleri" appTabList>
       <button
         type="button"
         class="setup-tab-btn"
         [class.active]="activeTab() === 'settings'"
         (click)="setTab('settings')"
+        id="setup-tab-settings"
         role="tab"
         [attr.aria-selected]="activeTab() === 'settings'"
       >
@@ -41,7 +42,9 @@
         class="setup-tab-btn"
         [class.active]="activeTab() === 'partners'"
         (click)="setTab('partners')"
+        id="setup-tab-partners"
         role="tab"
+        aria-controls="setup-panel-partners"
         [attr.aria-selected]="activeTab() === 'partners'"
       >
         <svg class="svg-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -54,6 +57,7 @@
         class="setup-tab-btn"
         [class.active]="activeTab() === 'items'"
         (click)="setTab('items')"
+        id="setup-tab-items"
         role="tab"
         [attr.aria-selected]="activeTab() === 'items'"
       >
@@ -69,7 +73,9 @@
         class="setup-tab-btn"
         [class.active]="activeTab() === 'templates'"
         (click)="setTab('templates')"
+        id="setup-tab-templates"
         role="tab"
+        aria-controls="setup-panel-templates"
         [attr.aria-selected]="activeTab() === 'templates'"
       >
         <svg class="svg-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -241,7 +247,7 @@
 
     <!-- TAB 4: TEMPLATES & IMPORT -->
     @if (activeTab() === 'templates') {
-      <div class="card">
+      <div class="card" id="setup-panel-templates" role="tabpanel" aria-labelledby="setup-tab-templates">
         <div class="card-title">⚡ Yeni plan / şablon &amp; İçe Aktarma</div>
         <p class="muted" style="margin-bottom: 16px; font-size: 0.8rem">
           Şablon ve boş plan <strong>ayrı bir plan</strong> olarak açılır — mevcut planınız silinmez.
@@ -595,7 +601,7 @@
 
     <!-- TAB 2: PARTNERS & STAKEHOLDERS -->
     @if (activeTab() === 'partners') {
-      <div class="card">
+      <div class="card" id="setup-panel-partners" role="tabpanel" aria-labelledby="setup-tab-partners">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
         <span>👥 Ortaklar ve Varsayılan Pay Oranları</span>
         @if (isOwner()) {
