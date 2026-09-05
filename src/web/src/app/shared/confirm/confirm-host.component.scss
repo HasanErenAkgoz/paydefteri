@@ -5,7 +5,9 @@
 .confirm-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 4200;
+  // Above .mobile-bottom-bar (z-index: 9999, app.component.scss) so the
+  // dialog's action buttons aren't clipped behind the fixed nav on mobile.
+  z-index: 10000;
   display: grid;
   place-items: center;
   padding: 16px;
