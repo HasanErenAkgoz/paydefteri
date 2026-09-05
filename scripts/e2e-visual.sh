@@ -37,5 +37,6 @@ docker run --rm \
       echo "Angular sunucusuna ulaşılamadı. Host tarafında: npm start -- --host 0.0.0.0" >&2
       exit 1
     }
-    npx playwright test '"$*"'
-  '
+    # "$@" ile ilet: tırnaklı argümanlar (ör. --grep "giriş ekranı") bozulmasın.
+    exec npx playwright test "$@"
+  ' _ "$@"
