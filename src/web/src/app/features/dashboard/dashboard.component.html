@@ -438,7 +438,8 @@
                     <button
                       type="button"
                       class="btn btn-secondary btn-sm"
-                      title="WhatsApp'ta Hatırlat"
+                      [class.is-coming-soon]="!whatsappShareEnabled"
+                      [title]="whatsappShareEnabled ? 'WhatsApp\'ta Hatırlat' : 'WhatsApp\'ta Hatırlat — çok yakında'"
                       (click)="shareInstallmentWhatsapp(inst, $event)"
                     >
                       💬
@@ -537,10 +538,14 @@
               type="button"
               class="btn btn-secondary btn-sm"
               style="display: inline-flex; align-items: center; gap: 4px"
-              title="WhatsApp ile Hatırlat"
+              [class.is-coming-soon]="!whatsappShareEnabled"
+              [title]="whatsappShareEnabled ? 'WhatsApp ile Hatırlat' : 'WhatsApp ile Hatırlat — çok yakında'"
               (click)="shareInstallmentWhatsapp(inst, $event)"
             >
               💬 WhatsApp
+              @if (!whatsappShareEnabled) {
+                <span class="coming-soon-badge">Çok yakında</span>
+              }
             </button>
             @if (d.isOwner) {
               <button type="button" class="btn btn-secondary btn-sm" (click)="goEditInstallment(inst)">

@@ -21,7 +21,7 @@ import { MoneyInputDirective } from '../../shared/directives/money-input.directi
 import { FocusTrapDirective } from '../../shared/directives/focus-trap.directive';
 import { formatDateTr, formatTry, shareTypeToNumber } from '../../shared/utils/format';
 import { CelebrationService } from '../../core/services/celebration.service';
-import { ShareService } from '../../core/services/share.service';
+import { ShareService, WHATSAPP_SHARE_ENABLED } from '../../core/services/share.service';
 import { MilestoneBadgeComponent } from '../../shared/components/milestone-badge.component';
 import { HorizonBarComponent, HorizonInstallmentItem } from '../../shared/components/horizon-bar.component';
 import { CategoryDonutComponent, DonutCategory } from '../../shared/components/category-donut.component';
@@ -273,10 +273,17 @@ export class DashboardComponent implements OnInit {
     ];
   });
 
+  readonly whatsappShareEnabled = WHATSAPP_SHARE_ENABLED;
+
   shareInstallmentWhatsapp(inst: DashboardInstallmentDto, event?: Event): void {
     if (event) event.stopPropagation();
     const d = this.dashboard();
     if (!d) return;
+
+    if (!this.whatsappShareEnabled) {
+      this.toast.info('WhatsApp ile hatırlatma çok yakında.');
+      return;
+    }
 
     let shareAmount = inst.totalAmount;
     if (d.myPartnerId) {
@@ -307,6 +314,10 @@ export class DashboardComponent implements OnInit {
     if (actionName === 'add-expense') {
       this.router.navigate(['/plans', this.planId, 'expenses']);
     } else if (actionName === 'share-whatsapp') {
+      if (!this.whatsappShareEnabled) {
+        this.toast.info('WhatsApp ile hatırlatma çok yakında.');
+        return;
+      }
       const nextInst = d.installments.find(
         (i) => String(i.status) !== 'Full' && String(i.status) !== '2'
       );

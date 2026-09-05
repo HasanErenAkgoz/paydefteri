@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { formatTry } from '../../shared/utils/format';
 
+/** WhatsApp paylaşımı henüz yayında değil; arayüz "çok yakında" olarak işaretlenir. */
+export const WHATSAPP_SHARE_ENABLED = false;
+
 export interface InstallmentShareData {
   planTitle: string;
   installmentName: string;
@@ -13,7 +16,11 @@ export interface InstallmentShareData {
 
 @Injectable({ providedIn: 'root' })
 export class ShareService {
-  shareViaWhatsapp(data: InstallmentShareData): void {
+  shareViaWhatsapp(data: InstallmentShareData): boolean {
+    if (!WHATSAPP_SHARE_ENABLED) {
+      return false;
+    }
+
     const text = this.buildInstallmentMessage(data);
     const encoded = encodeURIComponent(text);
     const url = `https://wa.me/?text=${encoded}`;
@@ -21,6 +28,8 @@ export class ShareService {
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
     }
+
+    return true;
   }
 
   async copyToClipboard(data: InstallmentShareData): Promise<boolean> {

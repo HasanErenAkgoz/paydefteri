@@ -1,5 +1,6 @@
 import { Component, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { WHATSAPP_SHARE_ENABLED } from '../../core/services/share.service';
 
 @Component({
   selector: 'app-quick-action-fab',
@@ -37,11 +38,23 @@ import { CommonModule } from '@angular/common';
             </div>
           </button>
 
-          <button type="button" class="sheet-btn" (click)="onAction('share-whatsapp')">
+          <button
+            type="button"
+            class="sheet-btn"
+            [class.is-coming-soon]="!whatsappShareEnabled"
+            (click)="onAction('share-whatsapp')"
+          >
             <span class="action-icon">💬</span>
             <div class="action-text">
-              <span class="title">WhatsApp ile Durum Paylaş</span>
-              <span class="sub">Ortaklara hazır taksit özeti gönder</span>
+              <span class="title">
+                WhatsApp ile Durum Paylaş
+                @if (!whatsappShareEnabled) {
+                  <span class="coming-soon-badge">Çok yakında</span>
+                }
+              </span>
+              <span class="sub">
+                {{ whatsappShareEnabled ? 'Ortaklara hazır taksit özeti gönder' : 'Bu özellik henüz aktif değil, çok yakında' }}
+              </span>
             </div>
           </button>
 
@@ -65,6 +78,21 @@ import { CommonModule } from '@angular/common';
     }
   `,
   styles: [`
+    .sheet-btn.is-coming-soon {
+      opacity: 0.65;
+    }
+
+    .coming-soon-badge {
+      margin-left: 6px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.18);
+      color: #f59e0b;
+      font-size: 0.68rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
     .fab-btn {
       position: fixed;
       bottom: 84px;
@@ -207,6 +235,7 @@ import { CommonModule } from '@angular/common';
 })
 export class QuickActionFabComponent {
   readonly isOpen = signal<boolean>(false);
+  readonly whatsappShareEnabled = WHATSAPP_SHARE_ENABLED;
   readonly actionSelected = output<string>();
 
   toggleOpen(): void {
