@@ -32,7 +32,13 @@
         (drop)="onDrop($event)"
       >
         <strong>{{ uploading() ? 'İşlemler okunuyor…' : 'Dosyayı buraya bırak' }}</strong>
-        <span id="statement-upload-hint">veya bilgisayarından seç · en fazla 15 MB</span>
+        <span id="statement-upload-hint">
+          veya bilgisayarından seç · CSV, XLSX veya metin tabanlı PDF · en fazla 15 MB
+        </span>
+        <span class="format-note">
+          Bu ekran ekstreyi satır satır okur, bu yüzden fotoğraf ve taranmış görsel kabul etmez.
+          Ekstrenin fotoğrafını yüklemek istiyorsan gider planındaki “Ekstre aktar” akışını kullan.
+        </span>
         <input type="file" accept=".csv,.xlsx,.pdf" hidden aria-label="Ekstre dosyası seç" aria-describedby="statement-upload-hint" [disabled]="uploading()" (change)="onFileInput($event)">
       </label>
     </div>

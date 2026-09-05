@@ -231,7 +231,10 @@ export class SpendingAnalysisComponent implements OnInit {
   upload(file: File): void {
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (!extension || !['csv', 'xlsx', 'pdf'].includes(extension)) {
-      this.toast.error('PDF, XLSX veya CSV formatında bir ekstre seçin.');
+      this.toast.error(
+        'Bu ekran ekstreyi satır satır okuduğu için yalnızca CSV, XLSX ve metin tabanlı PDF kabul eder. ' +
+          'Ekstre fotoğrafı yüklemek istiyorsan gider planındaki “Ekstre aktar” akışını kullan.'
+      );
       return;
     }
     if (file.size > 15 * 1024 * 1024) {
