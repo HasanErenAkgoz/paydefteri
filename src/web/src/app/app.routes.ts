@@ -80,6 +80,18 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'privacy',
+    loadComponent: () =>
+      import('./features/privacy/privacy.component').then((m) => m.PrivacyComponent),
+    data: {
+      seo: publicSeo(
+        'Gizlilik Politikası | PayDefteri',
+        'PayDefteri kişisel verileri nasıl işler ve korur?',
+        '/privacy'
+      ),
+    },
+  },
+  {
     path: 'invite/:token',
     loadComponent: () =>
       import('./features/invite/invite.component').then((m) => m.InviteComponent),
