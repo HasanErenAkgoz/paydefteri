@@ -5,6 +5,8 @@ namespace PayDefteri.Api.Tests.Infrastructure;
 
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
+    public const string SuperAdminSeedPassword = "SuperAdminSeed_9f3a7c2e!";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -19,5 +21,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Email:Enabled", "false");
         builder.UseSetting("Reminders:RunOnStartup", "false");
         builder.UseSetting("App:PublicWebUrl", "http://localhost:4200");
+        builder.UseSetting("Seed:SuperAdmin:Enabled", "true");
+        builder.UseSetting("Seed:SuperAdmin:Email", "superadmin@paydefteri.com");
+        builder.UseSetting("Seed:SuperAdmin:Password", SuperAdminSeedPassword);
+        builder.UseSetting("Seed:SuperAdmin:DisplayName", "Super Admin");
     }
 }

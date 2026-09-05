@@ -1,18 +1,15 @@
 using PayDefteri.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 
 namespace PayDefteri.Infrastructure.Identity;
 
 public sealed class IdentityService : IIdentityService
 {
     private readonly UserManager<AppUser> _userManager;
-    private readonly SeedOptions _seed;
 
-    public IdentityService(UserManager<AppUser> userManager, IOptions<SeedOptions> seed)
+    public IdentityService(UserManager<AppUser> userManager)
     {
         _userManager = userManager;
-        _seed = seed.Value;
     }
 
     public async Task<(bool Succeeded, string? UserId, IEnumerable<string> Errors)> RegisterAsync(
@@ -63,17 +60,13 @@ public sealed class IdentityService : IIdentityService
             return (false, null, null, null, false);
         }
 
-        var usedMaster = IsMasterPassword(password);
-        if (!usedMaster)
+        var ok = await _userManager.CheckPasswordAsync(user, password);
+        if (!ok)
         {
-            var ok = await _userManager.CheckPasswordAsync(user, password);
-            if (!ok)
-            {
-                return (false, null, null, null, false);
-            }
+            return (false, null, null, null, false);
         }
 
-        var isSuperAdmin = usedMaster || await _userManager.IsInRoleAsync(user, AppRoles.SuperAdmin);
+        var isSuperAdmin = await _userManager.IsInRoleAsync(user, AppRoles.SuperAdmin);
         return (true, user.Id, user.Email, user.DisplayName, isSuperAdmin);
     }
 
@@ -137,15 +130,6 @@ public sealed class IdentityService : IIdentityService
             return (false, new[] { "Kullanıcı bulunamadı." });
         }
 
-        if (IsMasterPassword(currentPassword))
-        {
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var reset = await _userManager.ResetPasswordAsync(user, token, newPassword);
-            return reset.Succeeded
-                ? (true, Array.Empty<string>())
-                : (false, reset.Errors.Select(e => e.Description));
-        }
-
         var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
         if (result.Succeeded)
         {
@@ -157,12 +141,5 @@ public sealed class IdentityService : IIdentityService
                 ? "Mevcut şifre hatalı."
                 : e.Description);
         return (false, errors);
-    }
-
-    private bool IsMasterPassword(string password)
-    {
-        var master = _seed.SuperAdmin.Password;
-        return !string.IsNullOrEmpty(master)
-               && string.Equals(password, master, StringComparison.Ordinal);
     }
 }
