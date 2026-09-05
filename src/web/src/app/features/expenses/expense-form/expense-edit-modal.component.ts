@@ -10,6 +10,7 @@ import { ExpensePartnerOption } from '../expense-partner-option';
 import { ExpenseCustomSharesComponent } from './expense-custom-shares.component';
 import { amountsMatchTotal } from './expense-form-calculations';
 import { ExpensePayerInputsComponent, ExpensePayerState } from './expense-payer-inputs.component';
+import { FocusTrapDirective } from '../../../shared/directives/focus-trap.directive';
 
 type ExpenseShareUi = 'Equal' | 'Default' | 'sole' | 'Custom';
 
@@ -21,7 +22,12 @@ export interface ExpenseEditSaveEvent {
 @Component({
   selector: 'app-expense-edit-modal',
   standalone: true,
-  imports: [FormsModule, ExpenseCustomSharesComponent, ExpensePayerInputsComponent],
+  imports: [
+    FormsModule,
+    ExpenseCustomSharesComponent,
+    ExpensePayerInputsComponent,
+    FocusTrapDirective,
+  ],
   templateUrl: './expense-edit-modal.component.html',
   styleUrl: './expense-edit-modal.component.scss',
 })

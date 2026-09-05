@@ -13,6 +13,7 @@ import { PlanContextService } from '../../core/services/plan-context.service';
 import { PlansApi } from '../../core/services/plans.api';
 import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmService } from '../../shared/confirm/confirm.service';
+import { FocusTrapDirective } from '../../shared/directives/focus-trap.directive';
 import { isExpensePlan } from '../../core/utils/plan-routes';
 import { apiErrorMessage } from '../../shared/utils/api-error';
 import { ExpenseListControlsComponent } from './expense-list-controls/expense-list-controls.component';
@@ -45,6 +46,7 @@ import {
     ExpenseEditModalComponent,
     StatementImportModalComponent,
     CurrencyTryPipe,
+    FocusTrapDirective,
   ],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss',

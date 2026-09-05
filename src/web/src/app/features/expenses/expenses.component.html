@@ -126,7 +126,7 @@
       <!-- DEDICATED ADD EXPENSE MODAL DIALOG -->
       @if (showAddForm()) {
         <div class="modal-overlay active" (click)="closeAddForm()">
-          <div class="modal-content expense-add-modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="expense-add-modal-title">
+          <div class="modal-content expense-add-modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="expense-add-modal-title" appFocusTrap (dismissed)="closeAddForm()">
             <div class="mobile-sheet-handle"></div>
             <div class="modal-header" style="margin-bottom: 8px">
               <h3 class="modal-title" id="expense-add-modal-title">➕ Yeni Gider Ekle</h3>

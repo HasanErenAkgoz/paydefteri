@@ -922,6 +922,8 @@
       (click)="$event.stopPropagation()"
       role="dialog"
       aria-modal="true"
+      appFocusTrap
+      (dismissed)="closePreview()"
     >
       <div class="modal-header">
         <div>
@@ -1128,7 +1130,7 @@
 
 @if (showInstModal()) {
   <div class="modal-overlay active" (click)="closeInstallmentModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog">
+    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" appFocusTrap (dismissed)="closeInstallmentModal()">
       <div class="modal-header">
         <h3 class="modal-title">{{ editingInstallmentId ? 'Taksit Düzenle' : 'Taksit Ekle' }}</h3>
         <button type="button" class="close-btn" (click)="closeInstallmentModal()">✕</button>

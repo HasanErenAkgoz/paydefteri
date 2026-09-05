@@ -1,9 +1,11 @@
 import { Component, inject } from '@angular/core';
+import { FocusTrapDirective } from '../directives/focus-trap.directive';
 import { ConfirmService } from './confirm.service';
 
 @Component({
   selector: 'app-confirm-host',
   standalone: true,
+  imports: [FocusTrapDirective],
   templateUrl: './confirm-host.component.html',
   styleUrl: './confirm-host.component.scss',
 })

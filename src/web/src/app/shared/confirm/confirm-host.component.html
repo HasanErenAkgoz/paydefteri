@@ -7,6 +7,8 @@
       [attr.aria-labelledby]="'confirm-title'"
       [attr.aria-describedby]="'confirm-message'"
       (click)="$event.stopPropagation()"
+      appFocusTrap
+      (dismissed)="cancel()"
     >
       <div class="mobile-sheet-handle" aria-hidden="true"></div>
       <div

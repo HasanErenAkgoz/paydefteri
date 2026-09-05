@@ -1,5 +1,5 @@
 <div class="modal-overlay active" (click)="closed.emit()">
-  <section class="statement-modal" role="dialog" aria-modal="true" aria-labelledby="statement-import-title" (click)="$event.stopPropagation()">
+  <section class="statement-modal" role="dialog" aria-modal="true" aria-labelledby="statement-import-title" (click)="$event.stopPropagation()" appFocusTrap (dismissed)="closed.emit()">
     <header>
       <div>
         <p class="eyebrow">💳 Kredi kartı ekstresi</p>

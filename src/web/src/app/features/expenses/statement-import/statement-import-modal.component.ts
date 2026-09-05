@@ -11,13 +11,14 @@ import { ExpensesApi } from '../../../core/services/expenses.api';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { apiErrorMessage } from '../../../shared/utils/api-error';
 import { ExpensePartnerOption } from '../expense-partner-option';
+import { FocusTrapDirective } from '../../../shared/directives/focus-trap.directive';
 
 type ImportRow = StatementTransactionItemDto & { selected: boolean; categoryId: string | null };
 
 @Component({
   selector: 'app-statement-import-modal',
   standalone: true,
-  imports: [FormsModule, DatePipe, DecimalPipe],
+  imports: [FormsModule, DatePipe, DecimalPipe, FocusTrapDirective],
   templateUrl: './statement-import-modal.component.html',
   styleUrl: './statement-import-modal.component.scss',
 })

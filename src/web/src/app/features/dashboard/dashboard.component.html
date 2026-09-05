@@ -578,7 +578,7 @@
 
 @if (showEditModal()) {
   <div class="modal-overlay active" (click)="closeEditModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" appFocusTrap (dismissed)="closeEditModal()">
       <div class="modal-header">
         <h3 class="modal-title">✏️ Taksit Düzenle</h3>
         <button type="button" class="close-btn" (click)="closeEditModal()">✕</button>
@@ -663,7 +663,7 @@
 
 @if (showBulkModal()) {
   <div class="modal-overlay active" (click)="closeBulkModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog">
+    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" appFocusTrap (dismissed)="closeBulkModal()">
       <div class="modal-header">
         <h3 class="modal-title">📈 Taksit Artış Simülatörü (Enflasyon / TEFE)</h3>
         <button type="button" class="close-btn" (click)="closeBulkModal()">✕</button>
@@ -699,7 +699,7 @@
 
 @if (dialog(); as dlg) {
   <div class="modal-overlay active" (click)="closeDialog()">
-    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    <div class="modal-content" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" appFocusTrap (dismissed)="closeDialog()">
       <div class="modal-header">
         <h3 class="modal-title">💳 Ödeme Detayı & Dekont Notu</h3>
         <button type="button" class="close-btn" (click)="closeDialog()">✕</button>

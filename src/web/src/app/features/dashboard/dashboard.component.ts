@@ -18,6 +18,7 @@ import { downloadIcs } from '../../shared/utils/export-files';
 import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmService } from '../../shared/confirm/confirm.service';
 import { MoneyInputDirective } from '../../shared/directives/money-input.directive';
+import { FocusTrapDirective } from '../../shared/directives/focus-trap.directive';
 import { formatDateTr, formatTry, shareTypeToNumber } from '../../shared/utils/format';
 import { CelebrationService } from '../../core/services/celebration.service';
 import { ShareService } from '../../core/services/share.service';
@@ -53,6 +54,7 @@ interface PaymentDialogState {
     HorizonBarComponent,
     CategoryDonutComponent,
     QuickActionFabComponent,
+    FocusTrapDirective,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',

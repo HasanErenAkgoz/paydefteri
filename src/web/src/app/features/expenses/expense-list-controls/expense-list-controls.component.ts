@@ -2,6 +2,7 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ExpenseCategoryDto } from '../../../core/models/api.models';
 import { CurrencyTryPipe } from '../../../shared/pipes/currency-try.pipe';
+import { FocusTrapDirective } from '../../../shared/directives/focus-trap.directive';
 import { ExpensePartnerOption } from '../expense-partner-option';
 import {
   DEFAULT_EXPENSE_FILTER_STATE,
@@ -16,7 +17,7 @@ import {
 @Component({
   selector: 'app-expense-list-controls',
   standalone: true,
-  imports: [FormsModule, CurrencyTryPipe],
+  imports: [FormsModule, CurrencyTryPipe, FocusTrapDirective],
   templateUrl: './expense-list-controls.component.html',
   styleUrl: './expense-list-controls.component.scss',
 })

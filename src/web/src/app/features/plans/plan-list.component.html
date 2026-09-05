@@ -509,7 +509,7 @@
   <!-- Dedicated Fintech Template Preview Modal -->
   @if (previewModal(); as pt) {
     <div class="modal-overlay" (click)="closePreviewModal()">
-      <div class="modal-card template-preview-modal" (click)="$event.stopPropagation()">
+      <div class="modal-card template-preview-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" appFocusTrap (dismissed)="closePreviewModal()">
         <div class="modal-header">
           <div class="modal-header-copy">
             <span class="preview-type-pill" [class.expense]="pt.key === 'couple' || pt.key === 'trip' || pt.key === 'teamlunch'">
