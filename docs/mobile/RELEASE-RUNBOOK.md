@@ -37,7 +37,7 @@ Production verisi test ortamına kopyalanmaz. Test ve production app configurati
 - [ ] Production config'te development endpoint/secret yok.
 - [ ] App icon, splash, screenshot ve mağaza açıklaması güncel.
 - [ ] Kamera/fotoğraf izin açıklamaları gerçek kullanımla uyumlu.
-- [ ] Privacy Manifest, Data Safety, gizlilik ve hesap silme URL'si hazır.
+- [ ] Privacy Manifest, Data Safety, gizlilik ve hesap silme URL'si hazır — cevaplar ve imza bilgileri [`../PLAY-STORE-SUBMISSION.md`](../PLAY-STORE-SUBMISSION.md) içinde.
 - [ ] Universal/App Link association dosyaları production domain'de doğrulandı.
 - [ ] Crash/metric dashboard ve eyleme dönük alert aktif.
 - [ ] Support iletişimi ve bilinen sorunlar hazır.

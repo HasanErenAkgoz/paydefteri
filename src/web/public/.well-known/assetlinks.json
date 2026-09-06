@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.paydefteri.app",
+      "sha256_cert_fingerprints": [
+        "EB:24:94:2B:7A:18:F9:E6:33:E7:DE:09:6B:C1:34:10:D0:BA:A6:DD:B1:69:95:BA:6B:B3:F3:C1:8D:A4:10:FC"
+      ]
+    }
+  }
+]
