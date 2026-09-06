@@ -5,9 +5,11 @@ const config: CapacitorConfig = {
   appName: 'PayDefteri',
   webDir: 'dist/web/browser',
   server: {
-    androidScheme: 'http',
-    cleartext: true,
-    allowNavigation: ['167.233.118.211', '167.233.118.211:8890', '*'],
+    androidScheme: 'https',
+    // No cleartext and no wildcard: the app reaches the API over TLS only.
+    // Both were Play Store review blockers as well as MITM exposure.
+    cleartext: false,
+    allowNavigation: ['paydefteri.com'],
   },
   plugins: {
     CapacitorHttp: {
