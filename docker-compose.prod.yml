@@ -20,6 +20,26 @@ services:
     networks:
       - internal
 
+  db-backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-paydefteri}
+      POSTGRES_DB: ${POSTGRES_DB:-paydefteri}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    entrypoint: ["/bin/sh", "/usr/local/bin/pg-backup.sh"]
+    volumes:
+      - ./deploy/pg-backup.sh:/usr/local/bin/pg-backup.sh:ro
+      - paydefteri_backups:/backups
+    networks:
+      - internal
+
   api:
     build:
       context: .
@@ -106,6 +126,7 @@ volumes:
   paydefteri_dataprotection:
   paydefteri_caddy_data:
   paydefteri_caddy_config:
+  paydefteri_backups:
 
 networks:
   internal:

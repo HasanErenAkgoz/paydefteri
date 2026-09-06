@@ -219,6 +219,18 @@ Servisler:
 - `api`: ASP.NET Core API, container içi port `8080`
 - `web`: Nginx ile Angular build; host portu yayınlamaz, yalnızca `caddy` üzerinden erişilir
 - `caddy`: TLS sonlandırma ve reverse proxy; host portları `80` ve `443`
+- `db-backup`: `deploy/pg-backup.sh` ile periyodik `pg_dump`; dosyalar `paydefteri_backups` volume'ünde
+
+Yedekleme varsayılanları: günde bir dump (`BACKUP_INTERVAL_SECONDS=86400`), 14 gün saklama
+(`BACKUP_RETENTION_DAYS=14`). Dosya adı `<db>_<UTC zaman damgası>.sql.gz`. Geri yükleme:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env run --rm \
+  -v paydefteri_backups:/backups db-backup \
+  -c 'gunzip -c /backups/<dosya>.sql.gz | psql -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+Yedekler sunucu diskinde durur; sunucu kaybı senaryosu için volume'ü düzenli olarak dışarı kopyalayın.
 
 `caddy` servisi `.env` içinde şu iki değişkeni bekler:
 
