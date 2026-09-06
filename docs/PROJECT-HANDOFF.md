@@ -217,9 +217,13 @@ Servisler:
 
 - `postgres`: PostgreSQL 16
 - `api`: ASP.NET Core API, container içi port `8080`
-- `web`: Nginx ile Angular build; host portu yayınlamaz, yalnızca `caddy` üzerinden erişilir
-- `caddy`: TLS sonlandırma ve reverse proxy; host portları `80` ve `443`
+- `web`: Nginx ile Angular build, host port `8890` (`WEB_HOST_PORT` ile değiştirilebilir)
 - `db-backup`: `deploy/pg-backup.sh` ile periyodik `pg_dump`; dosyalar `paydefteri_backups` volume'ünde
+
+TLS zinciri: Cloudflare (`paydefteri.com`) → sunucudaki mevcut Caddy → `web:8890`. Bu Caddy compose
+dosyasının parçası değil, host üzerinde ayrı çalışır; 80 ve 443'ü o tutar. `web` servisinin portu bu
+yüzden yayında kalır. Proxy aynı host'taysa portu internete kapatmak için `.env` içine
+`WEB_HOST_BIND=127.0.0.1` yazın.
 
 Yedekleme varsayılanları: günde bir dump (`BACKUP_INTERVAL_SECONDS=86400`), 14 gün saklama
 (`BACKUP_RETENTION_DAYS=14`). Dosya adı `<db>_<UTC zaman damgası>.sql.gz`. Geri yükleme:
@@ -232,16 +236,24 @@ docker compose -f docker-compose.prod.yml --env-file .env run --rm \
 
 Yedekler sunucu diskinde durur; sunucu kaybı senaryosu için volume'ü düzenli olarak dışarı kopyalayın.
 
-`caddy` servisi `.env` içinde şu iki değişkeni bekler:
+### 8.1 Reverse proxy olmayan bir host için (opsiyonel)
+
+Compose dosyasında `edge-tls` profilinde bir `caddy` servisi vardır. Varsayılan `up` komutuyla
+başlamaz; yalnızca host'ta 80/443'ü tutan başka bir proxy yoksa kullanılır:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env --profile edge-tls up -d
+```
+
+Bu profil `.env` içinde iki değişken bekler:
 
 ```text
 PUBLIC_DOMAIN                  Sertifika alınacak alan adı, ör. paydefteri.com
 ACME_EMAIL                     Let's Encrypt bildirimleri için e-posta
 ```
 
-Alan adının A kaydı sunucunun IP'sine bakmalıdır; ACME HTTP doğrulaması port `80` üzerinden yapılır.
-Host'ta 80/443'ü kullanan başka bir proxy varsa `caddy` servisini başlatmayın ve TLS'i o proxy'de
-sonlandırın.
+Alan adının A kaydı sunucunun IP'sine bakmalı ve ACME HTTP doğrulaması için port `80` dışarıdan
+erişilebilir olmalıdır. Mevcut üretim host'unda zaten Caddy çalıştığı için bu profil kullanılmaz.
 
 Deployment akışı:
 

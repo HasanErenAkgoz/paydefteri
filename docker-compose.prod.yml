@@ -93,23 +93,29 @@ services:
     restart: unless-stopped
     depends_on:
       - api
-    # Reached through caddy only, so the stack has no plaintext entrypoint.
-    expose:
-      - "80"
+    # The host already runs a reverse proxy (Caddy) that terminates TLS for
+    # paydefteri.com and forwards here, so this port stays published for it.
+    # Set WEB_HOST_BIND=127.0.0.1 to close the port to the internet when that
+    # proxy runs on the same host.
+    ports:
+      - "${WEB_HOST_BIND:-0.0.0.0}:${WEB_HOST_PORT:-8890}:80"
     networks:
       - internal
 
+  # Opt-in TLS terminator for a host with no reverse proxy of its own:
+  #   docker compose -f docker-compose.prod.yml --env-file .env --profile edge-tls up -d
+  # The current production host already runs Caddy on 80/443, so this service
+  # stays out of the default set — starting it there would fail on bound ports.
   caddy:
     image: caddy:2-alpine
+    profiles: ["edge-tls"]
     restart: unless-stopped
     depends_on:
       - web
     environment:
-      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN}
-      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL}
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:-}
+      ACME_EMAIL: ${ACME_EMAIL:-}
     # Port 80 is required for the ACME HTTP challenge and the HTTPS redirect.
-    # If another proxy on this host already owns 80/443, terminate TLS there
-    # and do not start this service.
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
