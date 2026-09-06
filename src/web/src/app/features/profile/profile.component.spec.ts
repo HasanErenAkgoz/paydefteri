@@ -16,13 +16,22 @@ describe('ProfileComponent accessibility', () => {
           provide: AuthService,
           useValue: {
             isMobileApp: false,
-            me: () => of({ email: 'ayse@example.com', displayName: 'Ayse Yilmaz' }),
+            me: () =>
+              of({
+                userId: 'user-id',
+                email: 'ayse@example.com',
+                displayName: 'Ayse Yilmaz',
+                emailConfirmed: true,
+              }),
             updateProfile: () => of(void 0),
             changePassword: () => of(void 0),
             logout: () => undefined,
           },
         },
-        { provide: ToastService, useValue: { error: () => undefined, success: () => undefined } },
+        {
+          provide: ToastService,
+          useValue: { error: () => undefined, success: () => undefined, info: () => undefined },
+        },
         { provide: PlanContextService, useValue: { clear: () => undefined } },
       ],
     }).compileComponents();

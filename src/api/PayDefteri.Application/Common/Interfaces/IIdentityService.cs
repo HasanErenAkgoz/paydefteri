@@ -6,6 +6,7 @@ public interface IIdentityService
         string email,
         string password,
         string displayName,
+        bool emailConfirmed,
         CancellationToken cancellationToken = default);
 
     Task<(bool Succeeded, string? UserId, string? Email, string? DisplayName, bool IsSuperAdmin)> ValidateCredentialsAsync(
@@ -22,6 +23,19 @@ public interface IIdentityService
         CancellationToken cancellationToken = default);
 
     Task<(string? UserId, string? Email, string? DisplayName, bool IsSuperAdmin)> FindSessionUserByIdAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<(string? Token, string? Email, string? DisplayName)> CreateEmailConfirmationTokenAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<(bool Succeeded, IEnumerable<string> Errors)> ConfirmEmailAsync(
+        string userId,
+        string token,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> IsEmailConfirmedAsync(
         string userId,
         CancellationToken cancellationToken = default);
 

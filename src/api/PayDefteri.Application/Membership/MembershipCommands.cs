@@ -154,6 +154,14 @@ public sealed class CreateInviteCommandHandler : IRequestHandler<CreateInviteCom
         await _auth.EnsureOwnerAsync(request.PlanId, cancellationToken);
         var inviterId = _currentUser.UserId ?? throw new ForbiddenException();
 
+        // Sending mail to an arbitrary address on behalf of an unverified
+        // account would make the invite flow an open relay for spam.
+        if (!await _identity.IsEmailConfirmedAsync(inviterId, cancellationToken))
+        {
+            throw new ForbiddenException(
+                "Davet gönderebilmek için önce kendi e-posta adresinizi doğrulayın.");
+        }
+
         var email = request.Email.Trim().ToLowerInvariant();
         var partner = await _db.Partners
             .FirstOrDefaultAsync(p => p.Id == request.PartnerId && p.PlanId == request.PlanId, cancellationToken)

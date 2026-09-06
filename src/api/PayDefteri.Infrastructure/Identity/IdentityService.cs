@@ -16,6 +16,7 @@ public sealed class IdentityService : IIdentityService
         string email,
         string password,
         string displayName,
+        bool emailConfirmed,
         CancellationToken cancellationToken = default)
     {
         var user = new AppUser
@@ -23,7 +24,7 @@ public sealed class IdentityService : IIdentityService
             UserName = email,
             Email = email,
             DisplayName = displayName,
-            EmailConfirmed = true
+            EmailConfirmed = emailConfirmed
         };
 
         var result = await _userManager.CreateAsync(user, password);
@@ -98,6 +99,50 @@ public sealed class IdentityService : IIdentityService
 
         return (user.Id, user.Email, user.DisplayName,
             await _userManager.IsInRoleAsync(user, AppRoles.SuperAdmin));
+    }
+
+    public async Task<(string? Token, string? Email, string? DisplayName)> CreateEmailConfirmationTokenAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null || string.IsNullOrWhiteSpace(user.Email))
+        {
+            return (null, null, null);
+        }
+
+        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        return (token, user.Email, user.DisplayName);
+    }
+
+    public async Task<(bool Succeeded, IEnumerable<string> Errors)> ConfirmEmailAsync(
+        string userId,
+        string token,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return (false, new[] { "Doğrulama bağlantısı geçersiz." });
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return (true, Array.Empty<string>());
+        }
+
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        return result.Succeeded
+            ? (true, Array.Empty<string>())
+            : (false, new[] { "Doğrulama bağlantısı geçersiz veya süresi dolmuş." });
+    }
+
+    public async Task<bool> IsEmailConfirmedAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        return user is not null && user.EmailConfirmed;
     }
 
     public async Task<bool> CheckPasswordAsync(

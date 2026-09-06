@@ -92,6 +92,14 @@ export const routes: Routes = [
     },
   },
   {
+    path: 'verify-email',
+    loadComponent: () =>
+      import('./features/auth/verify-email/verify-email.component').then(
+        (m) => m.VerifyEmailComponent
+      ),
+    data: { seo: noindexSeo('E-posta Doğrulama | PayDefteri') },
+  },
+  {
     path: 'invite/:token',
     loadComponent: () =>
       import('./features/invite/invite.component').then((m) => m.InviteComponent),

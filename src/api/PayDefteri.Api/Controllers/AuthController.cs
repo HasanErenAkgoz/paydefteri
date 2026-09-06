@@ -1,4 +1,5 @@
 using PayDefteri.Application.Auth;
+using PayDefteri.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,7 @@ public sealed class AuthController : ControllerBase
     public sealed record UpdateProfileRequest(string DisplayName);
     public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
     public sealed record DeleteAccountRequest(string CurrentPassword);
+    public sealed record ConfirmEmailRequest(string UserId, string Token);
 
     [AllowAnonymous]
     [EnableRateLimiting("auth")]
@@ -84,6 +86,21 @@ public sealed class AuthController : ControllerBase
         await _sender.Send(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword), ct);
         return NoContent();
     }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("verify-email")]
+    public async Task<IActionResult> VerifyEmail([FromBody] ConfirmEmailRequest request, CancellationToken ct)
+    {
+        await _sender.Send(new ConfirmEmailCommand(request.UserId, request.Token), ct);
+        return NoContent();
+    }
+
+    [Authorize]
+    [EnableRateLimiting("auth")]
+    [HttpPost("verify-email/resend")]
+    public async Task<ActionResult<EmailVerificationResult>> ResendVerification(CancellationToken ct)
+        => Ok(await _sender.Send(new ResendEmailVerificationCommand(), ct));
 
     [Authorize]
     [EnableRateLimiting("auth")]

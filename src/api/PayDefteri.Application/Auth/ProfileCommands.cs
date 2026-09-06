@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PayDefteri.Application.Auth;
 
-public sealed record UserProfileDto(string UserId, string Email, string DisplayName);
+public sealed record UserProfileDto(string UserId, string Email, string DisplayName, bool EmailConfirmed);
 
 public sealed record GetMyProfileQuery : IRequest<UserProfileDto>;
 
@@ -34,7 +34,8 @@ public sealed class GetMyProfileQueryHandler : IRequestHandler<GetMyProfileQuery
             ? (_currentUser.DisplayName ?? user.Email)
             : user.DisplayName!;
 
-        return new UserProfileDto(user.UserId, user.Email, displayName);
+        var emailConfirmed = await _identity.IsEmailConfirmedAsync(user.UserId, cancellationToken);
+        return new UserProfileDto(user.UserId, user.Email, displayName, emailConfirmed);
     }
 }
 

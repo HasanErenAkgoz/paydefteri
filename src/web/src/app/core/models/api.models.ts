@@ -21,6 +21,7 @@ export interface UserProfileDto {
   userId: string;
   email: string;
   displayName: string;
+  emailConfirmed: boolean;
 }
 
 export interface PlanDto {

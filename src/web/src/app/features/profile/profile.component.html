@@ -20,9 +20,9 @@
           <div class="user-meta">
             <div class="user-name-title">{{ savedName() || 'Kullanıcı' }}</div>
             <div class="user-email-text">{{ email() }}</div>
-            <div class="user-badge-pill">
+            <div class="user-badge-pill" [class.unverified]="!emailConfirmed()">
               <span class="badge-dot"></span>
-              <span>Doğrulanmış Hesap</span>
+              <span>{{ emailConfirmed() ? 'Doğrulanmış Hesap' : 'E-posta Doğrulanmadı' }}</span>
             </div>
           </div>
         </div>
@@ -138,6 +138,26 @@
                   </div>
                 </div>
               </div>
+
+              @if (!emailConfirmed()) {
+                <div class="verify-banner">
+                  <div class="verify-banner__text">
+                    <strong>E-posta adresiniz doğrulanmadı</strong>
+                    <span>
+                      Doğrulama bağlantısını {{ email() }} adresine gönderdik. Adresinizi
+                      doğrulayana kadar plan daveti gönderemezsiniz.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn-hub-primary"
+                    [disabled]="resendingVerification()"
+                    (click)="resendVerification()"
+                  >
+                    {{ resendingVerification() ? 'Gönderiliyor…' : '✉️ Tekrar Gönder' }}
+                  </button>
+                </div>
+              }
 
               <!-- EMAIL ROW (READONLY) -->
               <div class="settings-row">

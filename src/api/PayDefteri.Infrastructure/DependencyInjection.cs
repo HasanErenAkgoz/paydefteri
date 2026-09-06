@@ -147,6 +147,7 @@ public static class DependencyInjection
         }
 
         services.AddSingleton<IInviteEmailService, InviteEmailService>();
+        services.AddSingleton<IEmailVerificationService, EmailVerificationService>();
         services.AddSingleton<IReminderEmailService, ReminderEmailService>();
 
         services.Configure<ReminderOptions>(configuration.GetSection(ReminderOptions.SectionName));

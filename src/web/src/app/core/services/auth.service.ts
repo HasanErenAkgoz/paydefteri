@@ -15,6 +15,8 @@ export class AuthService {
 
   private readonly profileSignal = signal<UserProfileDto | null>(null);
   readonly isAuthenticated = computed(() => this.profileSignal() !== null);
+  /** False only for a signed-in account whose address is still unverified. */
+  readonly emailConfirmed = computed(() => this.profileSignal()?.emailConfirmed !== false);
   readonly isMobileApp = this.mobileSession.enabled;
 
   login(email: string, password: string, rememberMe = false): Observable<UserProfileDto> {
@@ -37,6 +39,7 @@ export class AuthService {
                       userId: '',
                       email,
                       displayName: email.split('@')[0],
+                      emailConfirmed: false,
                     },
                   })
                   .pipe(switchMap(() => this.me()));
@@ -80,6 +83,7 @@ export class AuthService {
                         userId: '',
                         email,
                         displayName,
+                        emailConfirmed: false,
                       },
                     })
                     .pipe(switchMap(() => this.me()));
@@ -127,6 +131,17 @@ export class AuthService {
       currentPassword,
       newPassword,
     });
+  }
+
+  confirmEmail(userId: string, token: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/verify-email`, { userId, token });
+  }
+
+  resendEmailVerification(): Observable<{ sent: boolean; configured: boolean }> {
+    return this.http.post<{ sent: boolean; configured: boolean }>(
+      `${environment.apiUrl}/auth/verify-email/resend`,
+      {}
+    );
   }
 
   deleteAccount(currentPassword: string): Observable<void> {

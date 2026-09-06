@@ -113,22 +113,52 @@ public sealed class MobileRegisterCommandHandler : IRequestHandler<MobileRegiste
 {
     private readonly IIdentityService _identity;
     private readonly MobileSessionIssuer _issuer;
+    private readonly IEmailSender _emailSender;
+    private readonly IEmailVerificationService _verification;
 
-    public MobileRegisterCommandHandler(IIdentityService identity, MobileSessionIssuer issuer)
+    public MobileRegisterCommandHandler(
+        IIdentityService identity,
+        MobileSessionIssuer issuer,
+        IEmailSender emailSender,
+        IEmailVerificationService verification)
     {
         _identity = identity;
         _issuer = issuer;
+        _emailSender = emailSender;
+        _verification = verification;
     }
 
     public async Task<MobileAuthResult> Handle(MobileRegisterCommand request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim();
         var displayName = request.DisplayName.Trim();
-        var registration = await _identity.RegisterAsync(email, request.Password, displayName, cancellationToken);
+        var requiresVerification = _emailSender.IsConfigured;
+        var registration = await _identity.RegisterAsync(
+            email,
+            request.Password,
+            displayName,
+            emailConfirmed: !requiresVerification,
+            cancellationToken);
         if (!registration.Succeeded || registration.UserId is null)
         {
             throw new ValidationException(registration.Errors.Select(error =>
                 new FluentValidation.Results.ValidationFailure(nameof(request.Email), error)));
+        }
+
+        if (requiresVerification)
+        {
+            var (confirmationToken, confirmationEmail, _) =
+                await _identity.CreateEmailConfirmationTokenAsync(registration.UserId, cancellationToken);
+            if (confirmationToken is not null && confirmationEmail is not null)
+            {
+                await _verification.SendVerificationAsync(
+                    new EmailVerificationRequest(
+                        confirmationEmail,
+                        displayName,
+                        registration.UserId,
+                        confirmationToken),
+                    cancellationToken);
+            }
         }
 
         return await _issuer.IssueAsync(
@@ -353,12 +383,18 @@ public sealed class MobileSessionIssuer
     private readonly IAppDbContext _db;
     private readonly IJwtTokenService _jwt;
     private readonly IMobileRefreshTokenService _tokens;
+    private readonly IIdentityService _identity;
 
-    public MobileSessionIssuer(IAppDbContext db, IJwtTokenService jwt, IMobileRefreshTokenService tokens)
+    public MobileSessionIssuer(
+        IAppDbContext db,
+        IJwtTokenService jwt,
+        IMobileRefreshTokenService tokens,
+        IIdentityService identity)
     {
         _db = db;
         _jwt = jwt;
         _tokens = tokens;
+        _identity = identity;
     }
 
     public async Task<MobileAuthResult> IssueAsync(
@@ -397,6 +433,10 @@ public sealed class MobileSessionIssuer
             refreshToken,
             session.ExpiresAtUtc,
             session.Id,
-            new UserProfileDto(userId, email, displayName));
+            new UserProfileDto(
+                userId,
+                email,
+                displayName,
+                await _identity.IsEmailConfirmedAsync(userId, cancellationToken)));
     }
 }

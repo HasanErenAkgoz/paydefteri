@@ -113,6 +113,7 @@ describe('MobileSessionService', () => {
         userId: 'user-id',
         email: 'user@example.com',
         displayName: 'Test User',
+        emailConfirmed: true,
       },
     };
   }

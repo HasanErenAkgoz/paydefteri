@@ -24,6 +24,8 @@ export class ProfileComponent implements OnInit {
   readonly savingProfile = signal(false);
   readonly savingPassword = signal(false);
   readonly deletingAccount = signal(false);
+  readonly emailConfirmed = signal(true);
+  readonly resendingVerification = signal(false);
   readonly sessionsLoading = signal(false);
   readonly revokingSessionId = signal<string | null>(null);
   readonly mobileSessions = signal<MobileSessionDto[]>([]);
@@ -91,6 +93,7 @@ export class ProfileComponent implements OnInit {
         this.email.set(me.email);
         this.savedName.set(me.displayName);
         this.displayName = me.displayName;
+        this.emailConfirmed.set(me.emailConfirmed);
         this.loading.set(false);
         if (this.isMobileApp) {
           this.loadMobileSessions();
@@ -171,6 +174,29 @@ export class ProfileComponent implements OnInit {
       error: (err) => {
         this.savingPassword.set(false);
         this.toast.error(apiErrorMessage(err, 'Şifre güncellenemedi.'));
+      },
+    });
+  }
+
+  resendVerification(): void {
+    if (this.resendingVerification()) {
+      return;
+    }
+    this.resendingVerification.set(true);
+    this.auth.resendEmailVerification().subscribe({
+      next: (result) => {
+        this.resendingVerification.set(false);
+        if (result.sent) {
+          this.toast.success('Doğrulama e-postası gönderildi. Gelen kutunuzu kontrol edin.');
+        } else if (!result.configured) {
+          this.toast.error('E-posta gönderimi bu ortamda yapılandırılmamış.');
+        } else {
+          this.toast.info('E-posta adresiniz zaten doğrulanmış.');
+        }
+      },
+      error: (err) => {
+        this.resendingVerification.set(false);
+        this.toast.error(apiErrorMessage(err, 'Doğrulama e-postası gönderilemedi.'));
       },
     });
   }
