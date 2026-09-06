@@ -73,9 +73,30 @@ services:
     restart: unless-stopped
     depends_on:
       - api
-    # Public :8890 until paydefteri.erenakgoz.dev DNS + Caddy are wired.
+    # Reached through caddy only, so the stack has no plaintext entrypoint.
+    expose:
+      - "80"
+    networks:
+      - internal
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL}
+    # Port 80 is required for the ACME HTTP challenge and the HTTPS redirect.
+    # If another proxy on this host already owns 80/443, terminate TLS there
+    # and do not start this service.
     ports:
-      - "8890:80"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - paydefteri_caddy_data:/data
+      - paydefteri_caddy_config:/config
     networks:
       - internal
 
@@ -83,6 +104,8 @@ volumes:
   paydefteri_pgdata:
   paydefteri_receipts:
   paydefteri_dataprotection:
+  paydefteri_caddy_data:
+  paydefteri_caddy_config:
 
 networks:
   internal:

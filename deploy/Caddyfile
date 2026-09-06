@@ -1,0 +1,33 @@
+# Reverse proxy for the production stack.
+# Caddy terminates TLS (automatic Let's Encrypt certificates) and forwards to
+# the nginx container, which serves the Angular bundle and proxies /api to the
+# API container. Set PUBLIC_DOMAIN and ACME_EMAIL in .env before starting.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$PUBLIC_DOMAIN} {
+	encode zstd gzip
+
+	# Uploads: keep in sync with nginx (client_max_body_size 20m) and the
+	# API's RequestSizeLimit attributes, whose largest value is 16 MB.
+	request_body {
+		max_size 20MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy web:80
+
+	log {
+		output stdout
+		format console
+	}
+}

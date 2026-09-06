@@ -217,7 +217,19 @@ Servisler:
 
 - `postgres`: PostgreSQL 16
 - `api`: ASP.NET Core API, container içi port `8080`
-- `web`: Nginx ile Angular build, host port `8890`
+- `web`: Nginx ile Angular build; host portu yayınlamaz, yalnızca `caddy` üzerinden erişilir
+- `caddy`: TLS sonlandırma ve reverse proxy; host portları `80` ve `443`
+
+`caddy` servisi `.env` içinde şu iki değişkeni bekler:
+
+```text
+PUBLIC_DOMAIN                  Sertifika alınacak alan adı, ör. paydefteri.com
+ACME_EMAIL                     Let's Encrypt bildirimleri için e-posta
+```
+
+Alan adının A kaydı sunucunun IP'sine bakmalıdır; ACME HTTP doğrulaması port `80` üzerinden yapılır.
+Host'ta 80/443'ü kullanan başka bir proxy varsa `caddy` servisini başlatmayın ve TLS'i o proxy'de
+sonlandırın.
 
 Deployment akışı:
 
@@ -232,7 +244,7 @@ Doğrulama:
 
 ```bash
 docker compose -f docker-compose.prod.yml --env-file .env ps
-curl -fsS http://localhost:8890/health
+curl -fsS https://$PUBLIC_DOMAIN/health
 ```
 
 Notlar:
