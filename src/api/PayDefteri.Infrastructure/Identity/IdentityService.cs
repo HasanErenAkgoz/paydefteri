@@ -100,6 +100,31 @@ public sealed class IdentityService : IIdentityService
             await _userManager.IsInRoleAsync(user, AppRoles.SuperAdmin));
     }
 
+    public async Task<bool> CheckPasswordAsync(
+        string userId,
+        string password,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        return user is not null && await _userManager.CheckPasswordAsync(user, password);
+    }
+
+    public async Task<(bool Succeeded, IEnumerable<string> Errors)> DeleteUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return (false, new[] { "Kullanıcı bulunamadı." });
+        }
+
+        var result = await _userManager.DeleteAsync(user);
+        return result.Succeeded
+            ? (true, Array.Empty<string>())
+            : (false, result.Errors.Select(e => e.Description));
+    }
+
     public async Task<(bool Succeeded, IEnumerable<string> Errors)> UpdateDisplayNameAsync(
         string userId,
         string displayName,

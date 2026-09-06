@@ -27,6 +27,7 @@ public sealed class AuthController : ControllerBase
     public sealed record LoginRequest(string Email, string Password, bool RememberMe = false);
     public sealed record UpdateProfileRequest(string DisplayName);
     public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+    public sealed record DeleteAccountRequest(string CurrentPassword);
 
     [AllowAnonymous]
     [EnableRateLimiting("auth")]
@@ -85,14 +86,29 @@ public sealed class AuthController : ControllerBase
     }
 
     [Authorize]
+    [EnableRateLimiting("auth")]
+    [HttpDelete("account")]
+    public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request, CancellationToken ct)
+    {
+        await _sender.Send(new DeleteAccountCommand(request.CurrentPassword), ct);
+        ClearSessionCookies();
+        return NoContent();
+    }
+
+    [Authorize]
     [HttpPost("logout")]
     public IActionResult Logout()
+    {
+        ClearSessionCookies();
+        return NoContent();
+    }
+
+    private void ClearSessionCookies()
     {
         var cookie = BrowserCookie(httpOnly: false);
         Response.Cookies.Delete("paydefteri_session", cookie);
         Response.Cookies.Delete("paydefteri_xsrf", cookie);
         Response.Cookies.Delete("paydefteri_antiforgery", cookie);
-        return NoContent();
     }
 
     private void SetSessionCookie(LoginResult result) => Response.Cookies.Append(

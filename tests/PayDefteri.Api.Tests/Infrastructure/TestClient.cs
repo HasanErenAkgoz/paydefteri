@@ -47,6 +47,12 @@ public sealed class TestClient
 
     public Task<HttpResponseMessage> DeleteAsync(string url) => _http.DeleteAsync(url);
 
+    public Task<HttpResponseMessage> DeleteAsync(string url, object body) =>
+        _http.SendAsync(new HttpRequestMessage(HttpMethod.Delete, url)
+        {
+            Content = JsonContent.Create(body),
+        });
+
     public Task<HttpResponseMessage> PostEmptyAsync(string url) => _http.PostAsync(url, null);
 
     public async Task<string> RegisterAndLoginAsync(string? email = null, string password = "Secret123!", string displayName = "Test User")

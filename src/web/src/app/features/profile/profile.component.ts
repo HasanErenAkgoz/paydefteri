@@ -5,6 +5,7 @@ import { ToastService } from '../../shared/toast/toast.service';
 import { apiErrorMessage } from '../../shared/utils/api-error';
 import { MobileSessionDto } from '../../core/models/mobile-auth.models';
 import { PlanContextService } from '../../core/services/plan-context.service';
+import { ConfirmService } from '../../shared/confirm/confirm.service';
 
 @Component({
   selector: 'app-profile',
@@ -17,10 +18,12 @@ export class ProfileComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly planContext = inject(PlanContextService);
+  private readonly confirm = inject(ConfirmService);
 
   readonly loading = signal(true);
   readonly savingProfile = signal(false);
   readonly savingPassword = signal(false);
+  readonly deletingAccount = signal(false);
   readonly sessionsLoading = signal(false);
   readonly revokingSessionId = signal<string | null>(null);
   readonly mobileSessions = signal<MobileSessionDto[]>([]);
@@ -34,6 +37,7 @@ export class ProfileComponent implements OnInit {
   currentPassword = '';
   newPassword = '';
   confirmPassword = '';
+  deletePassword = '';
 
   readonly showCurrentPassword = signal(false);
   readonly showNewPassword = signal(false);
@@ -167,6 +171,41 @@ export class ProfileComponent implements OnInit {
       error: (err) => {
         this.savingPassword.set(false);
         this.toast.error(apiErrorMessage(err, 'Şifre güncellenemedi.'));
+      },
+    });
+  }
+
+  async deleteAccount(): Promise<void> {
+    if (this.deletingAccount()) {
+      return;
+    }
+    if (!this.deletePassword) {
+      this.toast.error('Hesabı silmek için şifrenizi girin.');
+      return;
+    }
+    const confirmed = await this.confirm.ask({
+      title: 'Hesabı kalıcı olarak sil',
+      message:
+        'Hesabınız, sahibi olduğunuz planlar ve tüm kayıtlarınız kalıcı olarak silinir. Bu işlem geri alınamaz.',
+      confirmLabel: 'Hesabımı sil',
+      danger: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletingAccount.set(true);
+    this.auth.deleteAccount(this.deletePassword).subscribe({
+      next: () => {
+        this.deletingAccount.set(false);
+        this.deletePassword = '';
+        this.planContext.clear();
+        this.toast.success('Hesabınız silindi.');
+        this.auth.logout('/');
+      },
+      error: (err) => {
+        this.deletingAccount.set(false);
+        this.toast.error(apiErrorMessage(err, 'Hesap silinemedi.'));
       },
     });
   }

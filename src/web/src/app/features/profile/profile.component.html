@@ -351,6 +351,47 @@
                 </div>
               </div>
             </div>
+
+            <div class="danger-zone">
+              <h3 class="danger-zone__title">⚠️ Hesabı Sil</h3>
+              <p class="danger-zone__text">
+                Hesabınız, sahibi olduğunuz planlar, giderler, taksitler, dekontlar ve ekstre
+                analizleri kalıcı olarak silinir. Ortak olduğunuz başkalarına ait planlardan
+                çıkarılırsınız. Bu işlem geri alınamaz.
+              </p>
+
+              <div class="settings-row">
+                <div class="row-info">
+                  <label class="row-label" for="delete-password">Şifrenizi doğrulayın</label>
+                  <span class="row-desc">Silme işlemi için mevcut şifrenizi girin.</span>
+                </div>
+                <div class="row-control">
+                  <input
+                    id="delete-password"
+                    class="hub-input"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="Mevcut şifreniz"
+                    [(ngModel)]="deletePassword"
+                    [disabled]="deletingAccount()"
+                  />
+                </div>
+              </div>
+
+              <div class="settings-row action-row">
+                <div class="row-info"></div>
+                <div class="row-control">
+                  <button
+                    type="button"
+                    class="btn-hub-danger"
+                    [disabled]="deletingAccount() || !deletePassword"
+                    (click)="deleteAccount()"
+                  >
+                    {{ deletingAccount() ? 'Siliniyor…' : '🗑️ Hesabımı Kalıcı Olarak Sil' }}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         }
 

@@ -25,6 +25,15 @@ public interface IIdentityService
         string userId,
         CancellationToken cancellationToken = default);
 
+    Task<bool> CheckPasswordAsync(
+        string userId,
+        string password,
+        CancellationToken cancellationToken = default);
+
+    Task<(bool Succeeded, IEnumerable<string> Errors)> DeleteUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
     Task<(bool Succeeded, IEnumerable<string> Errors)> UpdateDisplayNameAsync(
         string userId,
         string displayName,

@@ -129,6 +129,12 @@ export class AuthService {
     });
   }
 
+  deleteAccount(currentPassword: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/auth/account`, {
+      body: { currentPassword },
+    });
+  }
+
   listMobileSessions(): Observable<MobileSessionDto[]> {
     return this.http.get<MobileSessionDto[]>(`${environment.apiUrl}/mobile/v1/auth/sessions`);
   }

@@ -878,3 +878,54 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* DANGER ZONE — account deletion */
+.danger-zone {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.danger-zone__title {
+  margin: 0 0 8px;
+  color: #fca5a5;
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.danger-zone__text {
+  margin: 0 0 16px;
+  color: rgba(226, 232, 240, 0.75);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.btn-hub-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 20px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  border-radius: 10px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
