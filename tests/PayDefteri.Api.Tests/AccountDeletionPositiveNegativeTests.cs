@@ -35,7 +35,45 @@ public sealed class AccountDeletionPositiveNegativeTests
     {
         var email = $"delete_plans_{Guid.NewGuid():N}@example.com";
         await _api.RegisterAndLoginAsync(email);
-        var (plan, _) = await PlanTestHelper.CreatePlanWithPartnersAsync(_api, "Kalmaması gereken plan");
+        var (plan, partners) = await PlanTestHelper.CreatePlanWithPartnersAsync(_api, "Kalmaması gereken plan");
+
+        // A plan with real content: expense shares, installment shares and
+        // payments all point at partners through restricted foreign keys, so an
+        // empty plan would not exercise the delete order at all.
+        await PlanTestHelper.CreateInstallmentAsync(_api, plan.Id);
+
+        var (expensePlanCreated, expensePlan) = await _api.PostAsync<PayDefteri.Api.Tests.Infrastructure.PlanDto>(
+            "/api/plans",
+            new { title = "Ortak gider", description = "silinecek", planType = "Expense" });
+        expensePlanCreated.EnsureSuccessStatusCode();
+        var expensePartners = new List<PayDefteri.Api.Tests.Infrastructure.PartnerDto>();
+        foreach (var (name, order) in new[] { ("Ayşe", 1), ("Mehmet", 2) })
+        {
+            var (partnerCreated, partner) = await _api.PostAsync<PayDefteri.Api.Tests.Infrastructure.PartnerDto>(
+                $"/api/plans/{expensePlan!.Id}/partners",
+                new { name, color = "#38bdf8", defaultPct = 50m, sortOrder = order, iban = (string?)null });
+            partnerCreated.EnsureSuccessStatusCode();
+            expensePartners.Add(partner!);
+        }
+
+        var (expenseCreated, _) = await _api.PostAsync<object>($"/api/plans/{expensePlan!.Id}/expenses", new
+        {
+            name = "Market",
+            occurredOn = "2026-08-05",
+            totalAmount = 300m,
+            shareType = "Equal",
+            status = "Paid",
+            paidByPartnerId = (Guid?)null,
+            categoryId = (Guid?)null,
+            note = "",
+            customShares = (object?)null,
+            payments = new[]
+            {
+                new { partnerId = expensePartners[0].Id, amount = 200m },
+                new { partnerId = expensePartners[1].Id, amount = 100m },
+            },
+        });
+        expenseCreated.EnsureSuccessStatusCode();
 
         (await _api.DeleteAsync("/api/auth/account", new { currentPassword = "Secret123!" }))
             .EnsureSuccessStatusCode();

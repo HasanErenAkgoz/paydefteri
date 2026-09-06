@@ -77,9 +77,65 @@ public sealed class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountC
 
         await _db.ExecuteInTransactionAsync(async ct =>
         {
-            var ownedPlans = await _db.Plans
-                .Where(p => ownedPlanIds.Contains(p.Id))
+            // Rows that point at a partner (shares, payments, transfers) use
+            // Restrict, so letting the database cascade from the plan fails.
+            // Load the whole tree instead: with every child tracked, EF orders
+            // the deletes so children go before the partners they reference.
+            var expenses = await _db.Expenses
+                .Where(x => ownedPlanIds.Contains(x.PlanId))
                 .ToListAsync(ct);
+            var expenseIds = expenses.Select(x => x.Id).ToList();
+            _db.ExpensePayments.RemoveRange(
+                await _db.ExpensePayments.Where(x => expenseIds.Contains(x.ExpenseId)).ToListAsync(ct));
+            _db.ExpenseShares.RemoveRange(
+                await _db.ExpenseShares.Where(x => expenseIds.Contains(x.ExpenseId)).ToListAsync(ct));
+            _db.Expenses.RemoveRange(expenses);
+
+            var recurrences = await _db.ExpenseRecurrences
+                .Where(x => ownedPlanIds.Contains(x.PlanId))
+                .ToListAsync(ct);
+            var recurrenceIds = recurrences.Select(x => x.Id).ToList();
+            _db.ExpenseShareTemplates.RemoveRange(
+                await _db.ExpenseShareTemplates
+                    .Where(x => recurrenceIds.Contains(x.RecurrenceId))
+                    .ToListAsync(ct));
+            _db.ExpenseRecurrences.RemoveRange(recurrences);
+            _db.ExpenseCategories.RemoveRange(
+                await _db.ExpenseCategories.Where(x => ownedPlanIds.Contains(x.PlanId)).ToListAsync(ct));
+
+            var installments = await _db.Installments
+                .Where(x => ownedPlanIds.Contains(x.PlanId))
+                .ToListAsync(ct);
+            var installmentIds = installments.Select(x => x.Id).ToList();
+            _db.Payments.RemoveRange(
+                await _db.Payments.Where(x => installmentIds.Contains(x.InstallmentId)).ToListAsync(ct));
+            _db.InstallmentShares.RemoveRange(
+                await _db.InstallmentShares
+                    .Where(x => installmentIds.Contains(x.InstallmentId))
+                    .ToListAsync(ct));
+            _db.Installments.RemoveRange(installments);
+
+            var ownedPlans = await _db.Plans
+                .Where(x => ownedPlanIds.Contains(x.Id))
+                .ToListAsync(ct);
+            foreach (var plan in ownedPlans)
+            {
+                // The plan points back at one of the installments being removed.
+                plan.DeliveryInstallmentId = null;
+            }
+
+            _db.SettlementTransfers.RemoveRange(
+                await _db.SettlementTransfers.Where(x => ownedPlanIds.Contains(x.PlanId)).ToListAsync(ct));
+            _db.PaymentReminderLogs.RemoveRange(
+                await _db.PaymentReminderLogs.Where(x => ownedPlanIds.Contains(x.PlanId)).ToListAsync(ct));
+            _db.PlanActivityLogs.RemoveRange(
+                await _db.PlanActivityLogs.Where(x => ownedPlanIds.Contains(x.PlanId)).ToListAsync(ct));
+            _db.PlanInvites.RemoveRange(
+                await _db.PlanInvites.Where(x => ownedPlanIds.Contains(x.PlanId)).ToListAsync(ct));
+            _db.PlanMembers.RemoveRange(
+                await _db.PlanMembers.Where(x => ownedPlanIds.Contains(x.PlanId)).ToListAsync(ct));
+            _db.Partners.RemoveRange(
+                await _db.Partners.Where(x => ownedPlanIds.Contains(x.PlanId)).ToListAsync(ct));
             _db.Plans.RemoveRange(ownedPlans);
 
             // Plans owned by someone else keep their history; only the link back
