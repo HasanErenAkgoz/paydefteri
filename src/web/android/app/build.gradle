@@ -34,7 +34,16 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            // Without the upload keystore env vars the signing config has no
+            // store file, and attaching it makes the bundle task fail with a
+            // bare NullPointerException. Build unsigned instead, so a local
+            // release build still produces an artifact.
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            } else {
+                logger.warn('PAYDEFTERI_UPLOAD_* not set: building an UNSIGNED release artifact.')
+                signingConfig null
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
