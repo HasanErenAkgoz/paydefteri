@@ -463,9 +463,19 @@ export class PlanListComponent implements OnInit {
       error: (err) => this.toast.error(err?.error?.detail ?? 'Plan arşivlenemedi.'),
     });
   }
-  copyPlan(plan: PlanDto, event: Event): void {
+  async copyPlan(plan: PlanDto, event: Event): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
+    if (
+      !(await this.confirm.ask({
+        title: 'Planı kopyala',
+        message: `“${plan.title}” planının bir kopyasını oluşturmak istediğinize emin misiniz?`,
+        confirmLabel: 'Kopyala',
+        success: true,
+      }))
+    ) {
+      return;
+    }
     this.creating.set(true);
     this.plansApi.copy(plan.id).subscribe({
       next: (copied) => {
