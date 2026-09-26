@@ -73,6 +73,19 @@ export class MobileSessionService {
     );
   }
 
+  /** Trades the ID token from the native picker for a mobile session. */
+  googleLogin(idToken: string): Observable<MobileAuthResult> {
+    return from(this.deviceInfo()).pipe(
+      switchMap((device) =>
+        this.http.post<MobileAuthResult>(`${environment.apiUrl}/mobile/v1/auth/google`, {
+          idToken,
+          device,
+        })
+      ),
+      switchMap((result) => this.accept(result))
+    );
+  }
+
   ensureAccessToken(): Observable<string> {
     const accessToken = this.accessToken;
     return accessToken ? of(accessToken) : this.refreshAccessToken();

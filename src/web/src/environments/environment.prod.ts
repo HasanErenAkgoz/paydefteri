@@ -6,4 +6,6 @@ export const environment = {
   // Google Cloud OAuth "Web application" client id. Empty hides the
   // Google button instead of rendering one that cannot work.
   googleClientId: '',
+  // Native only — the browser never uses it.
+  googleIosClientId: '',
 };

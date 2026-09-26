@@ -57,6 +57,8 @@ services:
       Jwt__ExpiryMinutes: ${JWT_EXPIRY_MINUTES:-30}
       MobileSession__RefreshTokenDays: ${MOBILE_REFRESH_TOKEN_DAYS:-30}
       Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+      # Native sign-in may hand back a token minted for the iOS client instead.
+      Authentication__Google__AdditionalClientIds__0: ${GOOGLE_IOS_CLIENT_ID:-}
       Gemini__ApiKey: ${GEMINI_API_KEY:-}
       Gemini__ReceiptModel: ${GEMINI_RECEIPT_MODEL:-gemini-3.1-flash-lite}
       Gemini__StatementModel: ${GEMINI_STATEMENT_MODEL:-gemini-3.1-flash-lite}

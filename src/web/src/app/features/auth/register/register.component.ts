@@ -33,6 +33,11 @@ export class RegisterComponent {
     this.showPassword.update((v) => !v);
   }
 
+  /** The native picker opened but failed; a dismissal never reaches here. */
+  reportGoogleFailure(): void {
+    this.toast.error('Google ile kayıt başarısız.');
+  }
+
   signInWithGoogle(idToken: string): void {
     if (this.googleLoading()) {
       return;

@@ -112,6 +112,14 @@ export class AuthService {
    * address turns up — so login and register can share it.
    */
   loginWithGoogle(idToken: string): Observable<UserProfileDto> {
+    if (this.mobileSession.enabled) {
+      // The native shell has no session cookie; it carries a bearer token.
+      return this.mobileSession.googleLogin(idToken).pipe(
+        tap((result) => this.profileSignal.set(result.user)),
+        map((result) => result.user)
+      );
+    }
+
     return this.http
       .post(`${environment.apiUrl}/auth/google`, { idToken, rememberMe: true })
       .pipe(switchMap(() => this.me()));

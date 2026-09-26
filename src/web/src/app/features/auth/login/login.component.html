@@ -180,6 +180,7 @@
         [busy]="googleLoading()"
         (credential)="signInWithGoogle($event)"
         (unavailable)="googleVisible.set(false)"
+        (nativeError)="reportGoogleFailure()"
       />
 
       <p class="login-card__footer">

@@ -35,17 +35,117 @@ interface GoogleIdentityApi {
 
 type GoogleGlobal = { accounts?: { id?: GoogleIdentityApi } };
 
+/**
+ * How Google sign-in can be offered here. The Capacitor shell runs on an origin
+ * Google will not authorise, so it cannot use the browser button and goes
+ * through the native plugin instead.
+ */
+export type GoogleSignInMode = 'web' | 'native' | 'unavailable';
+
+/**
+ * The person backed out of the native account picker. Distinct from a failure
+ * because dismissing a sheet should not raise an error at them.
+ */
+export class GoogleSignInCancelledError extends Error {
+  constructor() {
+    super('Google sign-in was dismissed.');
+    this.name = 'GoogleSignInCancelledError';
+  }
+}
+
+/** Dismissals surface differently per platform, so match on what they all carry. */
+function isDismissal(error: unknown): boolean {
+  const parts = [
+    (error as { message?: unknown } | null)?.message,
+    (error as { code?: unknown } | null)?.code,
+    (error as { errorMessage?: unknown } | null)?.errorMessage,
+  ]
+    .filter((v) => typeof v === 'string' || typeof v === 'number')
+    .map((v) => String(v).toLowerCase());
+
+  return parts.some(
+    (p) =>
+      p.includes('cancel') ||
+      p.includes('dismiss') ||
+      p.includes('closed') ||
+      // Android's SIGN_IN_CANCELLED status code.
+      p === '12501'
+  );
+}
+
 @Injectable({ providedIn: 'root' })
 export class GoogleAuthService {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private scriptLoad: Promise<GoogleIdentityApi> | null = null;
+  private nativeInit: Promise<void> | null = null;
+
+  get mode(): GoogleSignInMode {
+    if (!this.isBrowser || !environment.googleClientId) {
+      return 'unavailable';
+    }
+    return environment.mobile ? 'native' : 'web';
+  }
+
+  get available(): boolean {
+    return this.mode !== 'unavailable';
+  }
 
   /**
-   * The Capacitor shell runs on an origin Google cannot authorise, so the web
-   * button is a browser-only affordance; native sign-in needs a native plugin.
+   * Opens the native account picker and returns the ID token. Google mints it
+   * for the web client id even on a phone, so the API validates it exactly the
+   * way it validates one from the browser button.
    */
-  get available(): boolean {
-    return this.isBrowser && !environment.mobile && !!environment.googleClientId;
+  async signInNative(): Promise<string> {
+    if (this.mode !== 'native') {
+      throw new Error('Native Google sign-in is not available on this build.');
+    }
+
+    const { SocialLogin } = await this.nativePlugin();
+    await this.ensureNativeInitialized();
+
+    let response;
+    try {
+      response = await SocialLogin.login({
+        provider: 'google',
+        options: { scopes: ['email', 'profile'] },
+      });
+    } catch (error) {
+      throw isDismissal(error) ? new GoogleSignInCancelledError() : error;
+    }
+
+    const result = response.result as { idToken?: string | null } | undefined;
+    const idToken = result?.idToken;
+    if (!idToken) {
+      throw new Error('Google did not return an ID token.');
+    }
+    return idToken;
+  }
+
+  /**
+   * Loaded on demand so the plugin's web stub stays out of the browser bundle,
+   * where it is never used.
+   */
+  private nativePlugin() {
+    return import('@capgo/capacitor-social-login');
+  }
+
+  private ensureNativeInitialized(): Promise<void> {
+    this.nativeInit ??= (async () => {
+      const { SocialLogin } = await this.nativePlugin();
+      await SocialLogin.initialize({
+        google: {
+          // Android and the token audience both key off the web client id.
+          webClientId: environment.googleClientId,
+          iOSClientId: environment.googleIosClientId || undefined,
+          iOSServerClientId: environment.googleClientId,
+        },
+      });
+    })().catch((error) => {
+      // A failed init must not poison every later attempt.
+      this.nativeInit = null;
+      throw error;
+    });
+    return this.nativeInit;
   }
 
   /**
@@ -57,8 +157,8 @@ export class GoogleAuthService {
     options: { text: GoogleButtonText; width: number },
     onCredential: (idToken: string) => void
   ): Promise<void> {
-    if (!this.available) {
-      throw new Error('Google sign-in is not available on this build.');
+    if (this.mode !== 'web') {
+      throw new Error('The Google button is only available in the browser.');
     }
 
     const api = await this.load();

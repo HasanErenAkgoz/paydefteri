@@ -52,6 +52,11 @@ export class LoginComponent implements OnInit {
     this.toast.info('Şifre sıfırlama yakında eklenecek.');
   }
 
+  /** The native picker opened but failed; a dismissal never reaches here. */
+  reportGoogleFailure(): void {
+    this.toast.error('Google ile giriş başarısız.');
+  }
+
   signInWithGoogle(idToken: string): void {
     if (this.googleLoading()) {
       return;
