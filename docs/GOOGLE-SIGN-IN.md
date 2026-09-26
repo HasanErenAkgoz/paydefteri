@@ -108,10 +108,17 @@ izleri ise sertifika özetidir.
 | PayDefteri iOS | iOS | `623515520878-or9gj6l238th8dv0fiv8see321c08f80` |
 | PayDefteri Android (debug) | Android | SHA-1 `2E:45:AA:CC:44:8E:4B:2F:3F:03:CD:FF:CA:97:BD:F8:2F:5E:1D:FE` |
 | PayDefteri Android (Play app signing) | Android | SHA-1 `E1:9E:31:9F:42:D6:6F:DD:85:62:95:FB:72:AE:04:0C:E7:DB:17:6F` |
+| PayDefteri Android (upload key) | Android | SHA-1 `44:29:88:F7:C4:2E:E6:5D:DC:24:1B:23:25:53:BB:18:21:C2:4F:3C` |
 
 Debug parmak izi `~/.android/debug.keystore`'dan, Play parmak izi Play Console →
 Uygulama imzalama → "Klasik anahtar" sütunundan gelir. İmza anahtarı bir gün
 döndürülürse yeni SHA-1 için yeni bir Android client açılmalıdır.
+
+Üçüncü Android client, `~/paydefteri-upload.jks` ile imzalanıp doğrudan cihaza
+kurulan release derlemeleri içindir. Mağazadan kurulanı Play'in imzalama anahtarı
+imzaladığı için oraya bu parmak izi uygulanmaz; bu client yalnızca
+`assembleRelease` çıktısı telefonda denenirken devreye girer. Olmadığında Google
+hesap seçici hiç açılmaz, `DEVELOPER_ERROR` ile döner.
 
 ### iOS
 
