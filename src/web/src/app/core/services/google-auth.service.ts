@@ -105,10 +105,10 @@ export class GoogleAuthService {
 
     let response;
     try {
-      response = await SocialLogin.login({
-        provider: 'google',
-        options: { scopes: ['email', 'profile'] },
-      });
+      // No explicit scopes: asking for them on Android requires patching
+      // MainActivity, and the ID token already carries email and profile
+      // through the default OIDC scopes, which is all the API reads.
+      response = await SocialLogin.login({ provider: 'google', options: {} });
     } catch (error) {
       throw isDismissal(error) ? new GoogleSignInCancelledError() : error;
     }
