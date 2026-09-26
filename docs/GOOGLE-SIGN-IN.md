@@ -97,6 +97,22 @@ Play App Signing aktifken mağazadan kurulan uygulamayı **upload anahtarı değ
 Play'in uygulama imzalama anahtarı imzalar — Android client'a o SHA-1 girilmezse
 mağaza sürümünde Google girişi sessizce başarısız olur.
 
+### Kayıtlı client'lar ve parmak izleri
+
+Bunların hiçbiri gizli değil; client id'ler sayfa kaynağında görünür, parmak
+izleri ise sertifika özetidir.
+
+| Client | Tip | Değer |
+|---|---|---|
+| PayDefteri Web | Web | `623515520878-igetq8uafv653fofpsv1vodu4is6ievp` |
+| PayDefteri iOS | iOS | `623515520878-or9gj6l238th8dv0fiv8see321c08f80` |
+| PayDefteri Android (debug) | Android | SHA-1 `2E:45:AA:CC:44:8E:4B:2F:3F:03:CD:FF:CA:97:BD:F8:2F:5E:1D:FE` |
+| PayDefteri Android (Play app signing) | Android | SHA-1 `E1:9E:31:9F:42:D6:6F:DD:85:62:95:FB:72:AE:04:0C:E7:DB:17:6F` |
+
+Debug parmak izi `~/.android/debug.keystore`'dan, Play parmak izi Play Console →
+Uygulama imzalama → "Klasik anahtar" sütunundan gelir. İmza anahtarı bir gün
+döndürülürse yeni SHA-1 için yeni bir Android client açılmalıdır.
+
 ### iOS
 
 `Info.plist` içinde ters çevrilmiş iOS client id bir URL scheme olarak kayıtlı
