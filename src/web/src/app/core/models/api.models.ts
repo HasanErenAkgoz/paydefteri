@@ -22,6 +22,8 @@ export interface UserProfileDto {
   email: string;
   displayName: string;
   emailConfirmed: boolean;
+  /** False for a Google-only account: there is no password to change or to confirm a deletion with. */
+  hasPassword: boolean;
 }
 
 export interface PlanDto {

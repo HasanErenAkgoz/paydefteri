@@ -172,6 +172,59 @@ public sealed class MobileRegisterCommandHandler : IRequestHandler<MobileRegiste
     }
 }
 
+public sealed record MobileGoogleLoginCommand(
+    string IdToken,
+    MobileDeviceInfo Device) : IRequest<MobileAuthResult>;
+
+public sealed class MobileGoogleLoginCommandValidator : AbstractValidator<MobileGoogleLoginCommand>
+{
+    public MobileGoogleLoginCommandValidator()
+    {
+        RuleFor(x => x.IdToken).NotEmpty().MaximumLength(4096);
+        RuleFor(x => x.Device).NotNull().SetValidator(new MobileDeviceInfoValidator());
+    }
+}
+
+public sealed class MobileGoogleLoginCommandHandler
+    : IRequestHandler<MobileGoogleLoginCommand, MobileAuthResult>
+{
+    private readonly IGoogleIdentityValidator _google;
+    private readonly IIdentityService _identity;
+    private readonly MobileSessionIssuer _issuer;
+    private readonly ILogger<MobileGoogleLoginCommandHandler> _logger;
+
+    public MobileGoogleLoginCommandHandler(
+        IGoogleIdentityValidator google,
+        IIdentityService identity,
+        MobileSessionIssuer issuer,
+        ILogger<MobileGoogleLoginCommandHandler> logger)
+    {
+        _google = google;
+        _identity = identity;
+        _issuer = issuer;
+        _logger = logger;
+    }
+
+    public async Task<MobileAuthResult> Handle(MobileGoogleLoginCommand request, CancellationToken cancellationToken)
+    {
+        var account = await GoogleSignIn.ResolveAsync(
+            _google,
+            _identity,
+            request.IdToken,
+            _logger,
+            cancellationToken);
+
+        return await _issuer.IssueAsync(
+            account.UserId,
+            account.Email,
+            account.DisplayName,
+            account.IsSuperAdmin,
+            request.Device,
+            familyId: null,
+            cancellationToken);
+    }
+}
+
 public sealed record RefreshMobileSessionCommand(string RefreshToken) : IRequest<MobileAuthResult>;
 
 public sealed class RefreshMobileSessionCommandValidator : AbstractValidator<RefreshMobileSessionCommand>
@@ -437,6 +490,7 @@ public sealed class MobileSessionIssuer
                 userId,
                 email,
                 displayName,
-                await _identity.IsEmailConfirmedAsync(userId, cancellationToken)));
+                await _identity.IsEmailConfirmedAsync(userId, cancellationToken),
+                await _identity.HasPasswordAsync(userId, cancellationToken)));
     }
 }

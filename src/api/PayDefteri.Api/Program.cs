@@ -148,8 +148,12 @@ app.Use(async (context, next) =>
         // Bearer remains available for automated API clients; browser sessions use the cookie.
         && !context.Request.Headers.ContainsKey("Authorization");
 
+    // Signing in is allowed to arrive without an XSRF token: the caller may
+    // still be carrying a stale session cookie, and the credentials in the body
+    // (password, or a Google ID token only Google can mint) are the real proof.
     var isPublicAuthenticationRequest = context.Request.Path.Equals("/api/auth/login")
-        || context.Request.Path.Equals("/api/auth/register");
+        || context.Request.Path.Equals("/api/auth/register")
+        || context.Request.Path.Equals("/api/auth/google");
 
     if (isUnsafeApiRequest && !isPublicAuthenticationRequest)
     {

@@ -1,5 +1,8 @@
+using PayDefteri.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PayDefteri.Api.Tests.Infrastructure;
 
@@ -25,5 +28,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Seed:SuperAdmin:Email", "superadmin@paydefteri.com");
         builder.UseSetting("Seed:SuperAdmin:Password", SuperAdminSeedPassword);
         builder.UseSetting("Seed:SuperAdmin:DisplayName", "Super Admin");
+
+        // Google's real validator would need a live ID token; the stub keeps the
+        // rest of the sign-in path — account lookup, linking, session — intact.
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<StubGoogleIdentityValidator>();
+            services.AddSingleton<IGoogleIdentityValidator>(
+                sp => sp.GetRequiredService<StubGoogleIdentityValidator>());
+        });
     }
 }

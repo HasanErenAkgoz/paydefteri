@@ -40,6 +40,7 @@ export class AuthService {
                       email,
                       displayName: email.split('@')[0],
                       emailConfirmed: false,
+                      hasPassword: true,
                     },
                   })
                   .pipe(switchMap(() => this.me()));
@@ -84,6 +85,7 @@ export class AuthService {
                         email,
                         displayName,
                         emailConfirmed: false,
+                        hasPassword: true,
                       },
                     })
                     .pipe(switchMap(() => this.me()));
@@ -101,6 +103,17 @@ export class AuthService {
         password,
         displayName,
       })
+      .pipe(switchMap(() => this.me()));
+  }
+
+  /**
+   * Exchanges the ID token from Google's button for a PayDefteri session. The
+   * same call covers sign-up — the API creates the account the first time an
+   * address turns up — so login and register can share it.
+   */
+  loginWithGoogle(idToken: string): Observable<UserProfileDto> {
+    return this.http
+      .post(`${environment.apiUrl}/auth/google`, { idToken, rememberMe: true })
       .pipe(switchMap(() => this.me()));
   }
 
@@ -144,7 +157,8 @@ export class AuthService {
     );
   }
 
-  deleteAccount(currentPassword: string): Observable<void> {
+  /** `currentPassword` is null for a Google-only account, which has none. */
+  deleteAccount(currentPassword: string | null): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}/auth/account`, {
       body: { currentPassword },
     });

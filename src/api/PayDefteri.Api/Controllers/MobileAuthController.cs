@@ -20,6 +20,7 @@ public sealed class MobileAuthController : ControllerBase
     public sealed record DeviceRequest(string DeviceName, string Platform, string AppVersion);
     public sealed record LoginRequest(string Email, string Password, DeviceRequest Device);
     public sealed record RegisterRequest(string Email, string Password, string DisplayName, DeviceRequest Device);
+    public sealed record GoogleLoginRequest(string IdToken, DeviceRequest Device);
     public sealed record RefreshRequest(string RefreshToken);
 
     [AllowAnonymous]
@@ -43,6 +44,14 @@ public sealed class MobileAuthController : ControllerBase
             ToDevice(request.Device)), ct);
         return Created(string.Empty, result);
     }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("google")]
+    public async Task<ActionResult<MobileAuthResult>> GoogleLogin(GoogleLoginRequest request, CancellationToken ct) =>
+        Ok(await _sender.Send(new MobileGoogleLoginCommand(
+            request.IdToken,
+            ToDevice(request.Device)), ct));
 
     [AllowAnonymous]
     [EnableRateLimiting("auth")]

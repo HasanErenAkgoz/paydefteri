@@ -25,6 +25,8 @@ export class ProfileComponent implements OnInit {
   readonly savingPassword = signal(false);
   readonly deletingAccount = signal(false);
   readonly emailConfirmed = signal(true);
+  /** False for a Google-only account: nothing to change, nothing to confirm a deletion with. */
+  readonly hasPassword = signal(true);
   readonly resendingVerification = signal(false);
   readonly sessionsLoading = signal(false);
   readonly revokingSessionId = signal<string | null>(null);
@@ -94,6 +96,7 @@ export class ProfileComponent implements OnInit {
         this.savedName.set(me.displayName);
         this.displayName = me.displayName;
         this.emailConfirmed.set(me.emailConfirmed);
+        this.hasPassword.set(me.hasPassword);
         this.loading.set(false);
         if (this.isMobileApp) {
           this.loadMobileSessions();
@@ -205,7 +208,7 @@ export class ProfileComponent implements OnInit {
     if (this.deletingAccount()) {
       return;
     }
-    if (!this.deletePassword) {
+    if (this.hasPassword() && !this.deletePassword) {
       this.toast.error('Hesabı silmek için şifrenizi girin.');
       return;
     }
@@ -221,7 +224,7 @@ export class ProfileComponent implements OnInit {
     }
 
     this.deletingAccount.set(true);
-    this.auth.deleteAccount(this.deletePassword).subscribe({
+    this.auth.deleteAccount(this.hasPassword() ? this.deletePassword : null).subscribe({
       next: () => {
         this.deletingAccount.set(false);
         this.deletePassword = '';

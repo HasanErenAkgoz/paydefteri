@@ -6,7 +6,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PayDefteri.Application.Auth;
 
-public sealed record UserProfileDto(string UserId, string Email, string DisplayName, bool EmailConfirmed);
+/// <param name="HasPassword">
+/// False for an account created through Google, which has no password to change
+/// or to confirm an account deletion with.
+/// </param>
+public sealed record UserProfileDto(
+    string UserId,
+    string Email,
+    string DisplayName,
+    bool EmailConfirmed,
+    bool HasPassword);
 
 public sealed record GetMyProfileQuery : IRequest<UserProfileDto>;
 
@@ -35,7 +44,8 @@ public sealed class GetMyProfileQueryHandler : IRequestHandler<GetMyProfileQuery
             : user.DisplayName!;
 
         var emailConfirmed = await _identity.IsEmailConfirmedAsync(user.UserId, cancellationToken);
-        return new UserProfileDto(user.UserId, user.Email, displayName, emailConfirmed);
+        var hasPassword = await _identity.HasPasswordAsync(user.UserId, cancellationToken);
+        return new UserProfileDto(user.UserId, user.Email, displayName, emailConfirmed, hasPassword);
     }
 }
 

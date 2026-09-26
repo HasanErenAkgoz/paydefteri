@@ -18,6 +18,24 @@ public interface IIdentityService
         string email,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Resolves the account behind an external sign-in (today: Google). Matches
+    /// the stored login first, then falls back to the address so an existing
+    /// password account is linked instead of duplicated, and otherwise creates a
+    /// passwordless account.
+    /// </summary>
+    Task<(bool Succeeded, string? UserId, string? Email, string? DisplayName, bool IsSuperAdmin, bool Created, IEnumerable<string> Errors)> FindOrCreateExternalUserAsync(
+        string provider,
+        string providerKey,
+        string email,
+        string displayName,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>False for an account that only ever signed in through a provider.</summary>
+    Task<bool> HasPasswordAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
     Task<(string? UserId, string? Email, string? DisplayName)> FindByIdAsync(
         string userId,
         CancellationToken cancellationToken = default);

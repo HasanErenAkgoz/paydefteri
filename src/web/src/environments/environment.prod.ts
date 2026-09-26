@@ -3,4 +3,7 @@ export const environment = {
   mobile: false,
   // Same-origin via nginx reverse proxy (/api → API container).
   apiUrl: '/api',
+  // Google Cloud OAuth "Web application" client id. Empty hides the
+  // Google button instead of rendering one that cannot work.
+  googleClientId: '',
 };

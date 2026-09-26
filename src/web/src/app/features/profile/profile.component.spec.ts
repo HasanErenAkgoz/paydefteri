@@ -22,6 +22,7 @@ describe('ProfileComponent accessibility', () => {
                 email: 'ayse@example.com',
                 displayName: 'Ayse Yilmaz',
                 emailConfirmed: true,
+                hasPassword: true,
               }),
             updateProfile: () => of(void 0),
             changePassword: () => of(void 0),

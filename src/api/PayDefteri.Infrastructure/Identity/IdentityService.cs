@@ -79,6 +79,79 @@ public sealed class IdentityService : IIdentityService
         return user is null ? (null, null, null) : (user.Id, user.Email, user.DisplayName);
     }
 
+    public async Task<(bool Succeeded, string? UserId, string? Email, string? DisplayName, bool IsSuperAdmin, bool Created, IEnumerable<string> Errors)> FindOrCreateExternalUserAsync(
+        string provider,
+        string providerKey,
+        string email,
+        string displayName,
+        CancellationToken cancellationToken = default)
+    {
+        var created = false;
+        var user = await _userManager.FindByLoginAsync(provider, providerKey);
+
+        if (user is null)
+        {
+            user = await _userManager.FindByEmailAsync(email);
+        }
+
+        if (user is null)
+        {
+            user = new AppUser
+            {
+                UserName = email,
+                Email = email,
+                DisplayName = displayName,
+                // The provider already proved the address belongs to the person,
+                // so there is nothing left for our own verification mail to add.
+                EmailConfirmed = true,
+            };
+
+            var createResult = await _userManager.CreateAsync(user);
+            if (!createResult.Succeeded)
+            {
+                return (false, null, null, null, false, false, createResult.Errors.Select(LocalizeIdentityError));
+            }
+
+            created = true;
+        }
+        else if (!user.EmailConfirmed)
+        {
+            // An address that was waiting on our verification mail is confirmed
+            // the moment the provider vouches for it.
+            user.EmailConfirmed = true;
+            await _userManager.UpdateAsync(user);
+        }
+
+        var logins = await _userManager.GetLoginsAsync(user);
+        if (!logins.Any(l => l.LoginProvider == provider && l.ProviderKey == providerKey))
+        {
+            var linkResult = await _userManager.AddLoginAsync(
+                user,
+                new UserLoginInfo(provider, providerKey, provider));
+            if (!linkResult.Succeeded)
+            {
+                return (false, null, null, null, false, false, linkResult.Errors.Select(LocalizeIdentityError));
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(user.DisplayName) && !string.IsNullOrWhiteSpace(displayName))
+        {
+            user.DisplayName = displayName;
+            await _userManager.UpdateAsync(user);
+        }
+
+        var isSuperAdmin = await _userManager.IsInRoleAsync(user, AppRoles.SuperAdmin);
+        return (true, user.Id, user.Email, user.DisplayName, isSuperAdmin, created, Array.Empty<string>());
+    }
+
+    public async Task<bool> HasPasswordAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        return user is not null && await _userManager.HasPasswordAsync(user);
+    }
+
     public async Task<(string? UserId, string? Email, string? DisplayName)> FindByIdAsync(
         string userId,
         CancellationToken cancellationToken = default)

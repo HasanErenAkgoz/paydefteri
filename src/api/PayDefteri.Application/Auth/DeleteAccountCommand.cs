@@ -11,13 +11,16 @@ namespace PayDefteri.Application.Auth;
 /// the Play Store account deletion policy, so the flow has to be reachable from
 /// inside the app and must leave nothing behind that identifies the user.
 /// </summary>
-public sealed record DeleteAccountCommand(string CurrentPassword) : IRequest;
+/// <param name="CurrentPassword">Empty for an account that only signs in through Google — there is no password to confirm with.</param>
+public sealed record DeleteAccountCommand(string? CurrentPassword) : IRequest;
 
 public sealed class DeleteAccountCommandValidator : AbstractValidator<DeleteAccountCommand>
 {
     public DeleteAccountCommandValidator()
     {
-        RuleFor(x => x.CurrentPassword).NotEmpty().WithMessage("Hesabı silmek için şifrenizi girin.");
+        // Whether a password is actually required depends on the account, so
+        // the handler enforces it; the validator only bounds the input.
+        RuleFor(x => x.CurrentPassword).MaximumLength(128);
     }
 }
 
@@ -47,14 +50,21 @@ public sealed class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountC
     {
         var userId = _currentUser.UserId ?? throw new ForbiddenException();
 
-        if (!await _identity.CheckPasswordAsync(userId, request.CurrentPassword, cancellationToken))
+        if (await _identity.HasPasswordAsync(userId, cancellationToken))
         {
-            throw new ValidationException(new[]
+            var password = request.CurrentPassword ?? string.Empty;
+            if (password.Length == 0
+                || !await _identity.CheckPasswordAsync(userId, password, cancellationToken))
             {
-                new FluentValidation.Results.ValidationFailure(
-                    nameof(request.CurrentPassword),
-                    "Mevcut şifre hatalı."),
-            });
+                throw new ValidationException(new[]
+                {
+                    new FluentValidation.Results.ValidationFailure(
+                        nameof(request.CurrentPassword),
+                        password.Length == 0
+                            ? "Hesabı silmek için şifrenizi girin."
+                            : "Mevcut şifre hatalı."),
+                });
+            }
         }
 
         var user = await _identity.FindByIdAsync(userId, cancellationToken);

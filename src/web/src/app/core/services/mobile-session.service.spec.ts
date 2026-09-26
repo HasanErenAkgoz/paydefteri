@@ -114,6 +114,7 @@ describe('MobileSessionService', () => {
         email: 'user@example.com',
         displayName: 'Test User',
         emailConfirmed: true,
+        hasPassword: true,
       },
     };
   }

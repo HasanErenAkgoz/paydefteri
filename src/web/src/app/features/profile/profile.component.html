@@ -204,172 +204,179 @@
             </header>
 
             <div class="pane-body">
-              <!-- CURRENT PASSWORD -->
-              <div class="settings-row">
-                <div class="row-info">
-                  <label class="row-label" for="currentPassword">Mevcut Şifre</label>
-                  <span class="row-desc">Değişiklik yapabilmek için mevcut şifrenizi girin.</span>
-                </div>
-                <div class="row-control">
-                  <div class="password-input-wrap">
-                    <input
-                      id="currentPassword"
-                      class="hub-input"
-                      [type]="showCurrentPassword() ? 'text' : 'password'"
-                      name="currentPassword"
-                      [(ngModel)]="currentPassword"
-                      autocomplete="current-password"
-                      placeholder="Mevcut şifreniz"
-                    />
-                    <button
-                      type="button"
-                      class="btn-eye"
-                      (click)="showCurrentPassword.set(!showCurrentPassword())"
-                      [title]="showCurrentPassword() ? 'Gizle' : 'Göster'"
-                      tabindex="-1"
-                      aria-label="Mevcut şifreyi göster veya gizle"
-                    >
-                      @if (showCurrentPassword()) {
-                        <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                          <line x1="1" y1="1" x2="23" y2="23"/>
-                        </svg>
-                      } @else {
-                        <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                      }
-                    </button>
+              @if (hasPassword()) {
+                <!-- CURRENT PASSWORD -->
+                <div class="settings-row">
+                  <div class="row-info">
+                    <label class="row-label" for="currentPassword">Mevcut Şifre</label>
+                    <span class="row-desc">Değişiklik yapabilmek için mevcut şifrenizi girin.</span>
                   </div>
-                </div>
-              </div>
-
-              <!-- NEW PASSWORD -->
-              <div class="settings-row">
-                <div class="row-info">
-                  <label class="row-label" for="newPassword">Yeni Şifre</label>
-                  <span class="row-desc">En az 10 karakter; harf ve rakam içermelidir.</span>
-                </div>
-                <div class="row-control">
-                  <div class="password-input-wrap">
-                    <input
-                      id="newPassword"
-                      class="hub-input"
-                      [type]="showNewPassword() ? 'text' : 'password'"
-                      name="newPassword"
-                      [(ngModel)]="newPassword"
-                      autocomplete="new-password"
-                      placeholder="Yeni şifreniz"
-                    />
-                    <button
-                      type="button"
-                      class="btn-eye"
-                      (click)="showNewPassword.set(!showNewPassword())"
-                      [title]="showNewPassword() ? 'Gizle' : 'Göster'"
-                      tabindex="-1"
-                      aria-label="Yeni şifreyi göster veya gizle"
-                    >
-                      @if (showNewPassword()) {
-                        <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                          <line x1="1" y1="1" x2="23" y2="23"/>
-                        </svg>
-                      } @else {
-                        <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                      }
-                    </button>
-                  </div>
-
-                  <!-- STRENGTH BAR & LIVE PILLS -->
-                  @if (newPassword) {
-                    <div class="strength-box">
-                      <div class="strength-track">
-                        <div
-                          class="strength-fill"
-                          [class.s1]="passwordStrengthScore === 1"
-                          [class.s2]="passwordStrengthScore === 2"
-                          [class.s3]="passwordStrengthScore === 3"
-                          [class.s4]="passwordStrengthScore >= 4"
-                        ></div>
-                      </div>
-                      <div class="criteria-list">
-                        <span class="crit-tag" [class.ok]="hasMinLength">
-                          {{ hasMinLength ? '✓' : '○' }} 10+ Karakter
-                        </span>
-                        <span class="crit-tag" [class.ok]="hasLetter">
-                          {{ hasLetter ? '✓' : '○' }} Harf
-                        </span>
-                        <span class="crit-tag" [class.ok]="hasNumber">
-                          {{ hasNumber ? '✓' : '○' }} Rakam
-                        </span>
-                        <span class="crit-tag" [class.ok]="passwordsMatch">
-                          {{ passwordsMatch ? '✓' : '○' }} Eşleşti
-                        </span>
-                      </div>
+                  <div class="row-control">
+                    <div class="password-input-wrap">
+                      <input
+                        id="currentPassword"
+                        class="hub-input"
+                        [type]="showCurrentPassword() ? 'text' : 'password'"
+                        name="currentPassword"
+                        [(ngModel)]="currentPassword"
+                        autocomplete="current-password"
+                        placeholder="Mevcut şifreniz"
+                      />
+                      <button
+                        type="button"
+                        class="btn-eye"
+                        (click)="showCurrentPassword.set(!showCurrentPassword())"
+                        [title]="showCurrentPassword() ? 'Gizle' : 'Göster'"
+                        tabindex="-1"
+                        aria-label="Mevcut şifreyi göster veya gizle"
+                      >
+                        @if (showCurrentPassword()) {
+                          <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                          </svg>
+                        } @else {
+                          <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
+                        }
+                      </button>
                     </div>
-                  }
+                  </div>
                 </div>
-              </div>
 
-              <!-- CONFIRM PASSWORD -->
-              <div class="settings-row">
-                <div class="row-info">
-                  <label class="row-label" for="confirmPassword">Yeni Şifre (Tekrar)</label>
-                  <span class="row-desc">Doğrulamak için yeni şifrenizi tekrar yazın.</span>
+                <!-- NEW PASSWORD -->
+                <div class="settings-row">
+                  <div class="row-info">
+                    <label class="row-label" for="newPassword">Yeni Şifre</label>
+                    <span class="row-desc">En az 10 karakter; harf ve rakam içermelidir.</span>
+                  </div>
+                  <div class="row-control">
+                    <div class="password-input-wrap">
+                      <input
+                        id="newPassword"
+                        class="hub-input"
+                        [type]="showNewPassword() ? 'text' : 'password'"
+                        name="newPassword"
+                        [(ngModel)]="newPassword"
+                        autocomplete="new-password"
+                        placeholder="Yeni şifreniz"
+                      />
+                      <button
+                        type="button"
+                        class="btn-eye"
+                        (click)="showNewPassword.set(!showNewPassword())"
+                        [title]="showNewPassword() ? 'Gizle' : 'Göster'"
+                        tabindex="-1"
+                        aria-label="Yeni şifreyi göster veya gizle"
+                      >
+                        @if (showNewPassword()) {
+                          <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                          </svg>
+                        } @else {
+                          <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
+                        }
+                      </button>
+                    </div>
+
+                    <!-- STRENGTH BAR & LIVE PILLS -->
+                    @if (newPassword) {
+                      <div class="strength-box">
+                        <div class="strength-track">
+                          <div
+                            class="strength-fill"
+                            [class.s1]="passwordStrengthScore === 1"
+                            [class.s2]="passwordStrengthScore === 2"
+                            [class.s3]="passwordStrengthScore === 3"
+                            [class.s4]="passwordStrengthScore >= 4"
+                          ></div>
+                        </div>
+                        <div class="criteria-list">
+                          <span class="crit-tag" [class.ok]="hasMinLength">
+                            {{ hasMinLength ? '✓' : '○' }} 10+ Karakter
+                          </span>
+                          <span class="crit-tag" [class.ok]="hasLetter">
+                            {{ hasLetter ? '✓' : '○' }} Harf
+                          </span>
+                          <span class="crit-tag" [class.ok]="hasNumber">
+                            {{ hasNumber ? '✓' : '○' }} Rakam
+                          </span>
+                          <span class="crit-tag" [class.ok]="passwordsMatch">
+                            {{ passwordsMatch ? '✓' : '○' }} Eşleşti
+                          </span>
+                        </div>
+                      </div>
+                    }
+                  </div>
                 </div>
-                <div class="row-control">
-                  <div class="password-input-wrap">
-                    <input
-                      id="confirmPassword"
-                      class="hub-input"
-                      [type]="showConfirmPassword() ? 'text' : 'password'"
-                      name="confirmPassword"
-                      [(ngModel)]="confirmPassword"
-                      autocomplete="new-password"
-                      placeholder="Şifre tekrarı"
-                    />
+
+                <!-- CONFIRM PASSWORD -->
+                <div class="settings-row">
+                  <div class="row-info">
+                    <label class="row-label" for="confirmPassword">Yeni Şifre (Tekrar)</label>
+                    <span class="row-desc">Doğrulamak için yeni şifrenizi tekrar yazın.</span>
+                  </div>
+                  <div class="row-control">
+                    <div class="password-input-wrap">
+                      <input
+                        id="confirmPassword"
+                        class="hub-input"
+                        [type]="showConfirmPassword() ? 'text' : 'password'"
+                        name="confirmPassword"
+                        [(ngModel)]="confirmPassword"
+                        autocomplete="new-password"
+                        placeholder="Şifre tekrarı"
+                      />
+                      <button
+                        type="button"
+                        class="btn-eye"
+                        (click)="showConfirmPassword.set(!showConfirmPassword())"
+                        [title]="showConfirmPassword() ? 'Gizle' : 'Göster'"
+                        tabindex="-1"
+                        aria-label="Şifre tekrarını göster veya gizle"
+                      >
+                        @if (showConfirmPassword()) {
+                          <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                          </svg>
+                        } @else {
+                          <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
+                        }
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- UPDATE BUTTON ROW -->
+                <div class="settings-row action-row">
+                  <div class="row-info"></div>
+                  <div class="row-control">
                     <button
                       type="button"
-                      class="btn-eye"
-                      (click)="showConfirmPassword.set(!showConfirmPassword())"
-                      [title]="showConfirmPassword() ? 'Gizle' : 'Göster'"
-                      tabindex="-1"
-                      aria-label="Şifre tekrarını göster veya gizle"
+                      class="btn-hub-primary"
+                      [disabled]="savingPassword() || !currentPassword || !hasMinLength || !hasLetter || !hasNumber || !passwordsMatch"
+                      (click)="savePassword()"
                     >
-                      @if (showConfirmPassword()) {
-                        <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                          <line x1="1" y1="1" x2="23" y2="23"/>
-                        </svg>
-                      } @else {
-                        <svg class="eye-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                      }
+                      {{ savingPassword() ? 'Güncelleniyor…' : '🔐 Şifreyi Güncelle' }}
                     </button>
                   </div>
                 </div>
-              </div>
-
-              <!-- UPDATE BUTTON ROW -->
-              <div class="settings-row action-row">
-                <div class="row-info"></div>
-                <div class="row-control">
-                  <button
-                    type="button"
-                    class="btn-hub-primary"
-                    [disabled]="savingPassword() || !currentPassword || !hasMinLength || !hasLetter || !hasNumber || !passwordsMatch"
-                    (click)="savePassword()"
-                  >
-                    {{ savingPassword() ? 'Güncelleniyor…' : '🔐 Şifreyi Güncelle' }}
-                  </button>
-                </div>
-              </div>
+              } @else {
+                <p class="row-desc">
+                  Bu hesaba Google ile giriş yapıyorsunuz, bu yüzden değiştirilecek bir
+                  şifresi yok. Güvenliği Google hesabınızın ayarlarından yönetebilirsiniz.
+                </p>
+              }
             </div>
 
             <div class="danger-zone">
@@ -380,23 +387,25 @@
                 çıkarılırsınız. Bu işlem geri alınamaz.
               </p>
 
-              <div class="settings-row">
-                <div class="row-info">
-                  <label class="row-label" for="delete-password">Şifrenizi doğrulayın</label>
-                  <span class="row-desc">Silme işlemi için mevcut şifrenizi girin.</span>
+              @if (hasPassword()) {
+                <div class="settings-row">
+                  <div class="row-info">
+                    <label class="row-label" for="delete-password">Şifrenizi doğrulayın</label>
+                    <span class="row-desc">Silme işlemi için mevcut şifrenizi girin.</span>
+                  </div>
+                  <div class="row-control">
+                    <input
+                      id="delete-password"
+                      class="hub-input"
+                      type="password"
+                      autocomplete="current-password"
+                      placeholder="Mevcut şifreniz"
+                      [(ngModel)]="deletePassword"
+                      [disabled]="deletingAccount()"
+                    />
+                  </div>
                 </div>
-                <div class="row-control">
-                  <input
-                    id="delete-password"
-                    class="hub-input"
-                    type="password"
-                    autocomplete="current-password"
-                    placeholder="Mevcut şifreniz"
-                    [(ngModel)]="deletePassword"
-                    [disabled]="deletingAccount()"
-                  />
-                </div>
-              </div>
+              }
 
               <div class="settings-row action-row">
                 <div class="row-info"></div>
@@ -404,7 +413,7 @@
                   <button
                     type="button"
                     class="btn-hub-danger"
-                    [disabled]="deletingAccount() || !deletePassword"
+                    [disabled]="deletingAccount() || (hasPassword() && !deletePassword)"
                     (click)="deleteAccount()"
                   >
                     {{ deletingAccount() ? 'Siliniyor…' : '🗑️ Hesabımı Kalıcı Olarak Sil' }}

@@ -26,9 +26,10 @@ public sealed class AuthController : ControllerBase
 
     public sealed record RegisterRequest(string Email, string Password, string DisplayName);
     public sealed record LoginRequest(string Email, string Password, bool RememberMe = false);
+    public sealed record GoogleLoginRequest(string IdToken, bool RememberMe = true);
     public sealed record UpdateProfileRequest(string DisplayName);
     public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
-    public sealed record DeleteAccountRequest(string CurrentPassword);
+    public sealed record DeleteAccountRequest(string? CurrentPassword);
     public sealed record ConfirmEmailRequest(string UserId, string Token);
 
     [AllowAnonymous]
@@ -48,6 +49,17 @@ public sealed class AuthController : ControllerBase
     public async Task<ActionResult<LoginResult>> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
         var result = await _sender.Send(new LoginCommand(request.Email, request.Password, request.RememberMe), ct);
+        SetSessionCookie(result);
+        return Ok(result);
+    }
+
+    /// <summary>Signs in or signs up with the ID token from Google's sign-in button.</summary>
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("google")]
+    public async Task<ActionResult<LoginResult>> GoogleLogin([FromBody] GoogleLoginRequest request, CancellationToken ct)
+    {
+        var result = await _sender.Send(new GoogleLoginCommand(request.IdToken, request.RememberMe), ct);
         SetSessionCookie(result);
         return Ok(result);
     }

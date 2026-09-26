@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.Configure<GeminiOptions>(configuration.GetSection(GeminiOptions.SectionName));
         services.Configure<OpenAiOptions>(configuration.GetSection(OpenAiOptions.SectionName));
         services.Configure<MobileSessionOptions>(configuration.GetSection(MobileSessionOptions.SectionName));
+        services.Configure<GoogleAuthOptions>(configuration.GetSection(GoogleAuthOptions.SectionName));
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is missing.");
@@ -99,6 +100,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IMobileRefreshTokenService, MobileRefreshTokenService>();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddSingleton<IGoogleIdentityValidator, GoogleIdentityValidator>();
         services.AddScoped<ICurrentUser, CurrentUserService>();
         services.AddScoped<IPlanAuthorization, PlanAuthorizationService>();
         services.AddHttpClient<IGeminiExpenseReceiptAnalyzer, GeminiExpenseReceiptAnalyzer>((serviceProvider, client) =>

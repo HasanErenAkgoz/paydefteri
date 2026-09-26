@@ -3,14 +3,17 @@ import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { GoogleAuthService } from '../../../core/services/google-auth.service';
+import { GoogleSignInButtonComponent } from '../../../shared/google-sign-in/google-sign-in-button.component';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { apiErrorMessage } from '../../../shared/utils/api-error';
 
 const REMEMBER_EMAIL_KEY = 'paydefteri.rememberEmail';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, GoogleSignInButtonComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -19,12 +22,16 @@ export class LoginComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly google = inject(GoogleAuthService);
 
   email = '';
   password = '';
   rememberMe = false;
   readonly showPassword = signal(false);
   readonly loading = signal(false);
+  readonly googleLoading = signal(false);
+  /** Drops the "veya" divider when the Google button cannot be shown. */
+  readonly googleVisible = signal(this.google.available);
 
   ngOnInit(): void {
     if (!this.isBrowser) {
@@ -45,8 +52,22 @@ export class LoginComponent implements OnInit {
     this.toast.info('Şifre sıfırlama yakında eklenecek.');
   }
 
-  googleLogin(): void {
-    this.toast.info('Google ile giriş yakında eklenecek.');
+  signInWithGoogle(idToken: string): void {
+    if (this.googleLoading()) {
+      return;
+    }
+
+    this.googleLoading.set(true);
+    this.auth.loginWithGoogle(idToken).subscribe({
+      next: () => {
+        this.googleLoading.set(false);
+        void this.router.navigateByUrl('/home');
+      },
+      error: (err) => {
+        this.googleLoading.set(false);
+        this.toast.error(apiErrorMessage(err, 'Google ile giriş başarısız.'));
+      },
+    });
   }
 
   submit(): void {
