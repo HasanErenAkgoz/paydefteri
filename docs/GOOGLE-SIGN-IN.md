@@ -107,12 +107,18 @@ izleri ise sertifika özetidir.
 | PayDefteri Web | Web | `623515520878-igetq8uafv653fofpsv1vodu4is6ievp` |
 | PayDefteri iOS | iOS | `623515520878-or9gj6l238th8dv0fiv8see321c08f80` |
 | PayDefteri Android (debug) | Android | SHA-1 `2E:45:AA:CC:44:8E:4B:2F:3F:03:CD:FF:CA:97:BD:F8:2F:5E:1D:FE` |
-| PayDefteri Android (Play app signing) | Android | SHA-1 `E1:9E:31:9F:42:D6:6F:DD:85:62:95:FB:72:AE:04:0C:E7:DB:17:6F` |
+| PayDefteri Android (Play app signing) | Android | SHA-1 `24:42:B4:2A:C6:88:35:36:01:3E:87:8A:DA:CF:A3:6F:25:DA:BF:E6` |
 | PayDefteri Android (upload key) | Android | SHA-1 `44:29:88:F7:C4:2E:E6:5D:DC:24:1B:23:25:53:BB:18:21:C2:4F:3C` |
 
-Debug parmak izi `~/.android/debug.keystore`'dan, Play parmak izi Play Console →
-Uygulama imzalama → "Klasik anahtar" sütunundan gelir. İmza anahtarı bir gün
-döndürülürse yeni SHA-1 için yeni bir Android client açılmalıdır.
+Debug parmak izi `~/.android/debug.keystore`'dan gelir. Play parmak izi için
+Uygulama imzalama sayfasında **iki ayrı bölüm** vardır ve karıştırılması kolaydır:
+üstteki "Uygulama imzalama anahtarı" kutusunun yanındaki **SHA-1 sertifika parmak
+izi** butonu mağazadan kurulan sürümü imzalayan anahtarı verir; alttaki "Yükleme
+anahtarı sertifikası" bölümü ise bizim keystore'umuzundur. Android client'a
+**üstteki** değer girilir. Bir kez yanlışı girildi ve belirti yanıltıcıydı: hesap
+seçici açılıyor, hesap seçiliyor, ardından GMS token üretemediği için seçici bir
+daha gösteriliyor ve giriş hata veriyor — `DEVELOPER_ERROR` gibi net bir sinyal
+gelmiyor. İmza anahtarı bir gün döndürülürse yeni SHA-1 için client güncellenmeli.
 
 Üçüncü Android client, `~/paydefteri-upload.jks` ile imzalanıp doğrudan cihaza
 kurulan release derlemeleri içindir. Mağazadan kurulanı Play'in imzalama anahtarı
