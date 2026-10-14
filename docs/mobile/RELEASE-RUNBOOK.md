@@ -52,6 +52,22 @@ Production verisi test ortamına kopyalanmaz. Test ve production app configurati
 6. Go/no-go onayından sonra staged rollout başlat: `%10 → %25 → %50 → %100`.
 7. Her aşamada en az 24 saat veya yeterli oturum örneği gözle; hata bütçesi aşılırsa durdur.
 
+### Android otomasyonu
+
+`.github/workflows/android-release.yml` Actions sekmesinden elle tetiklenir; imzalı AAB üretip `internal` veya `alpha` kanalına yükler. `versionCode` CI'da `<run_number>0` olur. Production'a terfi Play Console'da elle yapılır.
+
+Gerekli GitHub secret'ları:
+
+| Secret | İçerik |
+|---|---|
+| `PAYDEFTERI_UPLOAD_KEYSTORE_BASE64` | Upload keystore'un `base64 -i upload.jks` çıktısı |
+| `PAYDEFTERI_UPLOAD_STORE_PASSWORD` | Keystore şifresi |
+| `PAYDEFTERI_UPLOAD_KEY_ALIAS` | Key alias |
+| `PAYDEFTERI_UPLOAD_KEY_PASSWORD` | Key şifresi |
+| `PLAY_SERVICE_ACCOUNT_JSON` | Play Console'da yetkilendirilmiş service account'un JSON anahtarı |
+
+Service account: `paydefteri` GCP projesinde Google Play Android Developer API etkin olmalı; hesap Play Console → Kullanıcılar ve izinler'de PayDefteri uygulamasına "sürüm yayınlama" yetkisiyle davet edilmelidir.
+
 ## Sağlıklı durum
 
 - API `/health` başarılı.

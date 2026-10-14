@@ -7,7 +7,9 @@ android {
         applicationId "com.paydefteri.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
+        // CI passes a run-derived code so every Play upload is strictly
+        // higher; local builds keep the last manually released one.
+        versionCode((System.getenv('PAYDEFTERI_VERSION_CODE') ?: '3') as int)
         versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

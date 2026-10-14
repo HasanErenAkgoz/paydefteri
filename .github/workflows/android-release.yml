@@ -1,0 +1,85 @@
+name: Android release
+
+# Elle tetiklenir: imzalı AAB üretir ve Play'in test kanalına yükler.
+# Production'a terfi, runbook gereği Play Console'da açık onayla yapılır.
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Play kanalı'
+        type: choice
+        options: [internal, alpha]
+        default: internal
+      status:
+        description: 'Yayın durumu (draft: Play Console''da elle gözden geçir)'
+        type: choice
+        options: [draft, completed]
+        default: draft
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/web
+    env:
+      # Elle yüklenen son sürüm 3; CI kodları her zaman bunun üstünde kalır.
+      PAYDEFTERI_VERSION_CODE: ${{ github.run_number }}0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/web/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (mobile configuration)
+        run: npm run build:mobile
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Restore upload keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PAYDEFTERI_UPLOAD_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+          echo "PAYDEFTERI_UPLOAD_STORE_FILE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+
+      - name: Build signed bundle
+        working-directory: src/web/android
+        env:
+          PAYDEFTERI_UPLOAD_STORE_PASSWORD: ${{ secrets.PAYDEFTERI_UPLOAD_STORE_PASSWORD }}
+          PAYDEFTERI_UPLOAD_KEY_ALIAS: ${{ secrets.PAYDEFTERI_UPLOAD_KEY_ALIAS }}
+          PAYDEFTERI_UPLOAD_KEY_PASSWORD: ${{ secrets.PAYDEFTERI_UPLOAD_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon bundleRelease
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.paydefteri.app
+          releaseFiles: src/web/android/app/build/outputs/bundle/release/app-release.aab
+          track: ${{ inputs.track }}
+          status: ${{ inputs.status }}
+
+      - name: Keep the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ env.PAYDEFTERI_VERSION_CODE }}
+          path: src/web/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
